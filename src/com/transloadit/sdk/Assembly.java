@@ -4,6 +4,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,11 +20,21 @@ public class Assembly {
 
     public HttpResponse<JsonNode> list(Map options) throws UnirestException {
         Request request = new Request(transloadit);
-        return request.get("http://api2.transloadit.com/assemblies", options);
+        return request.get("/assemblies", options);
     }
 
-    public void create() {
+    public HttpResponse<JsonNode> create(Map options, File[] files) throws UnirestException {
+        Map extraData = new HashMap();
+        for (int i = 0; i < files.length; i++) {
+            extraData.put("file_" + i, files[i]);
+        }
+        Request request = new Request(transloadit);
+        return request.post("/assemblies", options, extraData);
+    }
 
+    public HttpResponse<JsonNode> get(String id) throws UnirestException {
+        Request request = new Request(transloadit);
+        return request.get("/assemblies/" + id, new HashMap());
     }
 
 }

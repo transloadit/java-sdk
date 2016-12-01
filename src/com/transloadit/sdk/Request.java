@@ -14,43 +14,55 @@ import java.util.Map;
  */
 public class Request {
     public Transloadit transloadit;
+    public static final String BASEURL = "http://api2.transloadit.com";
 
     public Request(Transloadit transloadit) {
         this.transloadit = transloadit;
     }
 
-    public HttpResponse<JsonNode> post(String url, Map data) throws UnirestException {
-        return Unirest.post(url)
-                .body(getPayload(data))
+
+    public HttpResponse<JsonNode> get(String url, Map data) throws UnirestException {
+        return Unirest.get(BASEURL + url)
+                .queryString(toPayload(data))
                 .asJson();
     }
 
-    public HttpResponse<JsonNode> get(String url, Map data) throws UnirestException {
-        data.put("auth", getAuthData());
+    public HttpResponse<JsonNode> post(String url, Map data) throws UnirestException {
+        return Unirest.post(BASEURL + url)
+                .fields(toPayload(data))
+                .asJson();
+    }
 
-        return Unirest.get(url)
-                .queryString("signature", getSignature(data))
-                .queryString("params", jsonifyData(data))
+    public HttpResponse<JsonNode> post(String url, Map data, Map extraData) throws UnirestException {
+        Map payload = toPayload(data);
+        payload.putAll(extraData);
+
+        return Unirest.post(BASEURL + url)
+                .fields(payload)
                 .asJson();
     }
 
     public HttpResponse<JsonNode> delete(String url, Map data) throws UnirestException {
-        return Unirest.delete(url)
-                .body(getPayload(data))
+        return Unirest.delete(BASEURL + url)
+                .body(toPayload(data))
                 .asJson();
     }
 
     public HttpResponse<JsonNode> put(String url, Map data) throws UnirestException {
-        return Unirest.put(url)
-                .body(getPayload(data))
+        return Unirest.put(BASEURL + url)
+                .body(toPayload(data))
                 .asJson();
     }
 
-    private String getPayload(Map data) {
-        data.put("auth", getAuthData());
-        data.put("signature", getSignature(data));
+    private Map toPayload(Map data) {
+        Map dataClone = new HashMap(data);
+        dataClone.put("auth", transloadit.getAuthData());
 
-        return jsonifyData(data);
+        Map payload = new HashMap();
+        payload.put("params", jsonifyData(dataClone));
+        payload.put("signature", getSignature(dataClone));
+
+        return payload;
     }
 
     private String jsonifyData(Map data) {
@@ -60,15 +72,7 @@ public class Request {
         return stringData;
     }
 
-    private Map getAuthData() {
-        Map auth = new HashMap();
-        auth.put("key", transloadit.key);
-        auth.put("expires", "2017/11/21 01:01:20+00:00");
-
-        return auth;
-    }
-
     private String getSignature(Map data) {
-        return transloadit.getSignatureKey(jsonifyData(data));
+        return transloadit.getSignature(jsonifyData(data));
     }
 }
