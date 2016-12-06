@@ -1,15 +1,15 @@
 package com.transloadit.sdk;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.transloadit.sdk.response.AssemblyResponse;
+import com.transloadit.sdk.response.ListResponse;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by ifedapo on 17/11/2016.
+ * Model for Tranloadit Assembly Api
  */
 public class Assembly {
     public Transloadit transloadit;
@@ -18,23 +18,50 @@ public class Assembly {
         this.transloadit = transloadit;
     }
 
-    public HttpResponse<JsonNode> list(Map options) throws UnirestException {
+    /**
+     *
+     * Creates a new assembly
+     *
+     * @param options
+     * @param files array of files to upload.
+     * @return
+     */
+    public AssemblyResponse create(Map<String, Object> options, File[] files) throws UnirestException {
         Request request = new Request(transloadit);
-        return request.get("/assemblies", options);
+        return new AssemblyResponse(request.post("/assemblies", options, mapFiles(files)));
     }
 
-    public HttpResponse<JsonNode> create(Map options, File[] files) throws UnirestException {
-        Map extraData = new HashMap();
+    /**
+     * Returns a list of all assemblies under the user account
+     *
+     * @param options
+     * @return
+     * @throws UnirestException
+     */
+    public ListResponse list(Map<String, Object> options) throws UnirestException {
+        Request request = new Request(transloadit);
+        return new ListResponse(request.get("/assemblies", options));
+    }
+
+    /**
+     * Returns a single assembly.
+     *
+     * @param id id of the Assebly to retrieve.
+     * @return
+     * @throws UnirestException
+     */
+    public AssemblyResponse get(String id) throws UnirestException {
+        Request request = new Request(transloadit);
+        return new AssemblyResponse(request.get("/assemblies/" + id));
+    }
+
+    private Map<String, Object> mapFiles(File[] files){
+        Map<String, Object> map = new HashMap<>();
         for (int i = 0; i < files.length; i++) {
-            extraData.put("file_" + i, files[i]);
+            map.put("file_" + i, files[i]);
         }
-        Request request = new Request(transloadit);
-        return request.post("/assemblies", options, extraData);
-    }
 
-    public HttpResponse<JsonNode> get(String id) throws UnirestException {
-        Request request = new Request(transloadit);
-        return request.get("/assemblies/" + id, new HashMap());
+        return map;
     }
 
 }
