@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by ifedapo on 21/11/2016.
+ * Transloadit tailored Http Request class
  */
 public class Request {
     public Transloadit transloadit;
@@ -21,20 +21,22 @@ public class Request {
     }
 
 
-    public HttpResponse<JsonNode> get(String url, Map data) throws UnirestException {
+    public HttpResponse<JsonNode> get(String url, Map<String, Object> data) throws UnirestException {
         return Unirest.get(BASEURL + url)
                 .queryString(toPayload(data))
                 .asJson();
     }
 
-    public HttpResponse<JsonNode> post(String url, Map data) throws UnirestException {
-        return Unirest.post(BASEURL + url)
-                .fields(toPayload(data))
-                .asJson();
+    public HttpResponse<JsonNode> get(String url) throws UnirestException {
+        return get(url, new HashMap<>());
     }
 
-    public HttpResponse<JsonNode> post(String url, Map data, Map extraData) throws UnirestException {
-        Map payload = toPayload(data);
+    public HttpResponse<JsonNode> post(String url, Map<String, Object> data) throws UnirestException {
+        return post(url, data, new HashMap<>());
+    }
+
+    public HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData) throws UnirestException {
+        Map<String, Object> payload = toPayload(data);
         payload.putAll(extraData);
 
         return Unirest.post(BASEURL + url)
@@ -42,37 +44,36 @@ public class Request {
                 .asJson();
     }
 
-    public HttpResponse<JsonNode> delete(String url, Map data) throws UnirestException {
+    public HttpResponse<JsonNode> delete(String url, Map<String, Object> data) throws UnirestException {
         return Unirest.delete(BASEURL + url)
-                .body(toPayload(data))
+                .fields(toPayload(data))
                 .asJson();
     }
 
-    public HttpResponse<JsonNode> put(String url, Map data) throws UnirestException {
+    public HttpResponse<JsonNode> put(String url, Map<String, Object> data) throws UnirestException {
         return Unirest.put(BASEURL + url)
-                .body(toPayload(data))
+                .fields(toPayload(data))
                 .asJson();
     }
 
-    private Map toPayload(Map data) {
-        Map dataClone = new HashMap(data);
+    private Map<String, Object> toPayload(Map<String, Object> data) {
+        Map<String, Object> dataClone = new HashMap<>(data);
         dataClone.put("auth", transloadit.getAuthData());
 
-        Map payload = new HashMap();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("params", jsonifyData(dataClone));
         payload.put("signature", getSignature(dataClone));
 
         return payload;
     }
 
-    private String jsonifyData(Map data) {
+    private String jsonifyData(Map<String, Object> data) {
         JSONObject jsonData = new JSONObject(data);
-        String stringData = jsonData.toString();
 
-        return stringData;
+        return jsonData.toString();
     }
 
-    private String getSignature(Map data) {
+    private String getSignature(Map<String, Object> data) {
         return transloadit.getSignature(jsonifyData(data));
     }
 }
