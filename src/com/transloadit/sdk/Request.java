@@ -14,46 +14,62 @@ import java.util.Map;
  */
 public class Request {
     public Transloadit transloadit;
-    public static final String BASEURL = "http://api2.transloadit.com";
+    public static final String BASEURL = "https://api2.transloadit.com";
 
-    public Request(Transloadit transloadit) {
+    Request(Transloadit transloadit) {
         this.transloadit = transloadit;
     }
 
 
-    public HttpResponse<JsonNode> get(String url, Map<String, Object> data) throws UnirestException {
-        return Unirest.get(BASEURL + url)
-                .queryString(toPayload(data))
-                .asJson();
+    HttpResponse<JsonNode> get(String url, Map<String, Object> data) throws TransloaditRequestException {
+        try {
+            return Unirest.get(BASEURL + url)
+                    .queryString(toPayload(data))
+                    .asJson();
+        } catch (UnirestException e) {
+            throw new TransloaditRequestException(e);
+        }
     }
 
-    public HttpResponse<JsonNode> get(String url) throws UnirestException {
+    HttpResponse<JsonNode> get(String url) throws TransloaditRequestException {
         return get(url, new HashMap<>());
     }
 
-    public HttpResponse<JsonNode> post(String url, Map<String, Object> data) throws UnirestException {
+    HttpResponse<JsonNode> post(String url, Map<String, Object> data) throws TransloaditRequestException {
         return post(url, data, new HashMap<>());
     }
 
-    public HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData) throws UnirestException {
+    HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData) throws TransloaditRequestException {
         Map<String, Object> payload = toPayload(data);
         payload.putAll(extraData);
 
-        return Unirest.post(BASEURL + url)
-                .fields(payload)
-                .asJson();
+        try {
+            return Unirest.post(BASEURL + url)
+                    .fields(payload)
+                    .asJson();
+        } catch (UnirestException e) {
+            throw new TransloaditRequestException(e);
+        }
     }
 
-    public HttpResponse<JsonNode> delete(String url, Map<String, Object> data) throws UnirestException {
-        return Unirest.delete(BASEURL + url)
-                .fields(toPayload(data))
-                .asJson();
+    HttpResponse<JsonNode> delete(String url, Map<String, Object> data) throws TransloaditRequestException {
+        try {
+            return Unirest.delete(BASEURL + url)
+                    .fields(toPayload(data))
+                    .asJson();
+        } catch (UnirestException e) {
+            throw new TransloaditRequestException(e);
+        }
     }
 
-    public HttpResponse<JsonNode> put(String url, Map<String, Object> data) throws UnirestException {
-        return Unirest.put(BASEURL + url)
-                .fields(toPayload(data))
-                .asJson();
+    HttpResponse<JsonNode> put(String url, Map<String, Object> data) throws TransloaditRequestException {
+        try {
+            return Unirest.put(BASEURL + url)
+                    .fields(toPayload(data))
+                    .asJson();
+        } catch (UnirestException e) {
+            throw new TransloaditRequestException(e);
+        }
     }
 
     private Map<String, Object> toPayload(Map<String, Object> data) {
