@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Holds all the steps that would be added to a given assembly
+ * Holds all the steps that would be added to a given assembly.
  */
 public class Steps {
     private Map<String, Step> all;
@@ -24,8 +24,8 @@ public class Steps {
         /**
          *
          * @param name Name of the step.
-         * @param robot The name of the robot ot use with the step
-         * @param options
+         * @param robot The name of the robot ot use with the step.
+         * @param options extra options required for the step.
          */
         public Step(String name, String robot, Map<String, Object> options){
             this.name = name;
@@ -35,9 +35,9 @@ public class Steps {
 
         /**
          *
-         * @return Map representation of the Step
+         * @return Map representation of the Step.
          */
-        public Map<String, Object> asHash() {
+        public Map<String, Object> toMap() {
             Map<String, Object> options = new HashMap<>(this.options);
             options.put("robot", this.robot);
             return options;
@@ -47,9 +47,9 @@ public class Steps {
     /**
      * Adds a new step to the list of steps.
      *
-     * @param name Name of the step to add
-     * @param robot The name of the robot ot use with the step
-     * @param options
+     * @param name Name of the step to add.
+     * @param robot The name of the robot ot use with the step.
+     * @param options extra options required for the step.
      */
     public void addStep(String name, String robot, Map<String, Object> options) {
         all.put(name, new Step(name, robot, options));
@@ -68,9 +68,12 @@ public class Steps {
      *
      * @return Steps as a HashMap ready to be used by an assembly.
      */
-    public Map<String, Map> asHash(){
+    public Map<String, Map> toMap(){
         Map<String, Map> hash = new HashMap<>();
-        all.forEach((name, step)-> hash.put(name, step.asHash()));
+        for (Map.Entry<String, Step> entry :
+                all.entrySet()) {
+            hash.put(entry.getKey(), entry.getValue().toMap());
+        }
         return  hash;
     }
 }
