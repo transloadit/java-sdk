@@ -1,41 +1,35 @@
 package com.transloadit.sdk;
 
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Main {
 
     public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("KEY", "SECRET", 3600);
-        Assembly assemblyApi = transloadit.assembly();
+        AssemblyApi assemblyApi = transloadit.assemblyApi();
 
         try {
-            File[] files = new File[1];
-            files[0] = new File("LICENSE");
+            AssemblyApi.Assembly assembly = assemblyApi.new_();
+            assembly.addStep("encode", "/video/encode", new HashMap());
+            assembly.addFile(new File("LICENSE"));
 
-            Map options = new HashMap();
-            Steps steps = new Steps();
-            steps.addStep("encode", "/video/encode", new HashMap());
-            options.put("steps", steps.asHash());
+            AssemblyResponse ass = assembly.save();
 
-            AssemblyResponse assembly = assemblyApi.create(options, files);
+            System.out.println(ass.id);
+            System.out.println(ass.url);
+            System.out.println(ass.json());
 
-            System.out.println(assembly.id);
-            System.out.println(assembly.url);
-            System.out.println(assembly.json());
-
-            ListResponse list = assemblyApi.list(new HashMap());
+            ListResponse list = assemblyApi.list();
 
             System.out.println(list.json());
             System.out.println(list.items.get(0));
             System.out.println(list.size);
 
-        } catch (UnirestException e) {
+        } catch (TransloaditRequestException e) {
             e.printStackTrace();
         }
     }
