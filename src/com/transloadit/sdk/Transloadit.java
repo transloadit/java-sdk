@@ -43,17 +43,17 @@ public class Transloadit {
 
     /**
      *
-     * @return an assembly instance ({@link Assembly ) tied with the transloadit client.
+     * @return an assemblyApi instance ({@link AssemblyApi} ) tied with the transloadit client.
      */
-    public Assembly assembly() {
-        return new Assembly(this);
+    public AssemblyApi assemblyApi() {
+        return new AssemblyApi(this);
     }
 
     /**
      *
      * @return Map containing authentication key and the time it expires
      */
-    public Map<String, String> getAuthData() {
+    Map<String, String> getAuthData() {
         Map<String, String> authData = new HashMap<>();
         authData.put("key", key);
         authData.put("expires", expires);
@@ -66,7 +66,7 @@ public class Transloadit {
      * @param message String data that needs to be encrypted.
      * @return signature generate based on the message passed and the transloadit secret.
      */
-    public String getSignature(String message) {
+    String getSignature(String message) {
         byte[] kSecret = secret.getBytes(StandardCharsets.UTF_8);
         byte[] rawHmac = HmacSHA1(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
