@@ -29,6 +29,10 @@ public class AssemblyApi {
         return new ListResponse(request.get("/assemblies", options));
     }
 
+    public ListResponse list() throws TransloaditRequestException {
+        return list(new HashMap<>());
+    }
+
     /**
      * Returns a single assemblyApi.
      *
