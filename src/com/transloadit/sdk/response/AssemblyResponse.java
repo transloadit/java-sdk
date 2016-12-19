@@ -4,10 +4,10 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.transloadit.sdk.TransloaditRequestException;
 
 /**
- * An Assembly tailored Http Response
- *
+ * An AssemblyApi tailored Http Response
  */
 public class AssemblyResponse extends Response {
     public final String id;
@@ -22,24 +22,64 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     * reloads the assembly to get its updated status
+     * reloads the assemblyApi to get its updated status.
      */
-    public void reload() {
+    public void reload() throws TransloaditRequestException {
         try {
             httpResponse = Unirest.get(url).asJson();
         } catch (UnirestException e) {
-            throw new RuntimeException(e);
+            throw new TransloaditRequestException(e);
         }
     }
 
     /**
-     * cancels the execution of the assembly.
+     * cancels the execution of the assemblyApi.
      */
-    public void cancel() {
+    public void cancel() throws TransloaditRequestException{
         try {
             httpResponse = Unirest.delete(url).asJson();
         } catch (UnirestException e) {
-            throw new RuntimeException(e);
+            throw new TransloaditRequestException(e);
         }
+    }
+
+    /**
+     *
+     * @return {@link Boolean} indicating the assembly has completed.
+     */
+    public Boolean isCompleted() {
+        return json().getString("ok").equals("ASSEMBLY_COMPLETED");
+    }
+
+    /**
+     *
+     * @return {@link Boolean} indicating the assembly has aborted.
+     */
+    public Boolean isAborted() {
+        return json().getString("ok").equals("REQUEST_ABORTED");
+    }
+
+    /**
+     *
+     * @return {@link Boolean} indicating the assembly has canceled.
+     */
+    public Boolean isCanceled() {
+        return json().getString("ok").equals("ASSEMBLY_CANCELED");
+    }
+
+    /**
+     *
+     * @return {@link Boolean} indicating the assembly is still executing.
+     */
+    public Boolean isExecuting() {
+        return json().getString("ok").equals("ASSEMBLY_EXECUTING");
+    }
+
+    /**
+     *
+     * @return {@link Boolean} indicating the assembly has stopped executing.
+     */
+    public Boolean isFinished() {
+        return isAborted() || isCanceled() || isCompleted();
     }
 }
