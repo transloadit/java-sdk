@@ -19,7 +19,7 @@ public class AssemblyTest {
 
     @Before
     public void setUp() throws Exception {
-        assembly = new Assembly(new Transloadit("KEY", "SECRET", 3600, "http://localhost:9040"));
+        assembly = new Assembly(new Transloadit("KEY", "SECRET", "http://localhost:9040"));
     }
 
     @Test

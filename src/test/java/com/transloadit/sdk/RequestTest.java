@@ -20,7 +20,7 @@ public class RequestTest {
 
     @Before
     public void setUp() throws Exception {
-        Transloadit transloadit = new Transloadit("key", "secret", 300, "http://localhost:9040");
+        Transloadit transloadit = new Transloadit("key", "secret", "http://localhost:9040");
         request = new Request(transloadit);
 
         // stub returns no response when this request is run too quickly.

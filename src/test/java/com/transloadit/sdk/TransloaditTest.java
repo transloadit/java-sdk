@@ -21,7 +21,7 @@ public class TransloaditTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9040);
 
-    public Transloadit transloadit = new Transloadit("KEY", "SECRET", 3600, "http://localhost:9040");
+    public Transloadit transloadit = new Transloadit("KEY", "SECRET", "http://localhost:9040");
 
 
     @Test

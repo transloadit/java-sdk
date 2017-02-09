@@ -23,7 +23,7 @@ public class TemplateTest {
         // stub returns no response when this request is run too quickly.
         Thread.sleep(2000);
 
-        Template template = new Template(new Transloadit("KEY", "SECRET", 3600, "http://localhost:9040"), "template_name");
+        Template template = new Template(new Transloadit("KEY", "SECRET", "http://localhost:9040"), "template_name");
         Response newTemplate = template.save();
 
         assertEquals(newTemplate.json().get("ok"), "TEMPLATE_FOUND");
