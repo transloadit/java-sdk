@@ -1,4 +1,4 @@
-package com.transloadit.sdk;
+package com.transloadit.sdk.exceptions;
 
 /**
  * Exception thrown whenever something goes wrong while communication with Transloadit API.

@@ -1,5 +1,7 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.exceptions.TransloaditRequestException;
+import com.transloadit.sdk.exceptions.TransloaditSignatureException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 
@@ -9,11 +11,10 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("KEY", "SECRET", 3600);
-        AssemblyApi assemblyApi = transloadit.assemblyApi();
+        Transloadit transloadit = new Transloadit("KEY", "SECRET");
 
         try {
-            AssemblyApi.Assembly assembly = assemblyApi.new_();
+            Assembly assembly = transloadit.newAssembly();
             assembly.addStep("encode", "/video/encode", new HashMap());
             assembly.addFile(new File("LICENSE"));
 
@@ -23,13 +24,13 @@ public class Main {
             System.out.println(ass.url);
             System.out.println(ass.json());
 
-            ListResponse list = assemblyApi.list();
+            ListResponse list = transloadit.listAssemblies();
 
             System.out.println(list.json());
             System.out.println(list.items.get(0));
             System.out.println(list.size);
 
-        } catch (TransloaditRequestException e) {
+        } catch (TransloaditRequestException | TransloaditSignatureException e) {
             e.printStackTrace();
         }
     }

@@ -11,10 +11,9 @@ import com.transloadit.sdk.Transloadit;
 ...
 
 Transloadit transloadit = new Transloadit("Auth_key", "Auth_secret", 3600);
-AssemblyApi assemblyApi = transloadit.assemblyApi();
 
 // create an assembly
-AssemblyApi.Assembly assembly = assemblyApi.new_();
+Assembly assembly = transloadit.newAssembly();
 
 assembly.addStep("encode", "/video/encode", new HashMap());
 assembly.addFile(new File("LICENSE"));
@@ -28,13 +27,13 @@ try {
     System.out.println(assemblyResponse.id);
     System.out.println(assemblyResponse.url);
     System.out.println(assemblyResponse.json());
-} catch (TransloaditRequestException e) {
+} catch (TransloaditRequestException | TransloaditSignatureException e) {
   // handle exception here
 }
 
 
 // list all assemblies assemblies
-ListResponse list = assemblyApi.list();
+ListResponse list = transloadit.listAssemblies();
 
 // iterable json array
 list.items;

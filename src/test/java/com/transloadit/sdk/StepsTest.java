@@ -1,0 +1,53 @@
+package com.transloadit.sdk;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * test Steps
+ */
+public class StepsTest {
+    public Steps steps;
+
+    @Before
+    public void setUp() throws Exception {
+        steps = new Steps();
+    }
+
+    @Test
+    public void addStep() {
+        steps.addStep("encode", "/video/encode", new HashMap());
+        assertEquals(steps.getStep("encode").robot , "/video/encode");
+    }
+
+    @Test
+    public void getStep() throws Exception {
+        steps.addStep("encode", "/video/encode", new HashMap());
+        assertEquals(steps.getStep("encode").robot , "/video/encode");
+    }
+
+    @Test
+    public void toMap() throws Exception {
+        steps.addStep("encode", "/video/encode", new HashMap<>());
+        steps.addStep("thumbs", "/video/thumbs", new HashMap<>());
+
+        Map<String, Map> controlMap = new HashMap<>();
+
+        Map<String, String> encodeStep = new HashMap<>();
+        encodeStep.put("robot", "/video/encode");
+
+        Map<String, String> thumbStep = new HashMap<>();
+        thumbStep.put("robot", "/video/thumbs");
+
+        controlMap.put("encode", encodeStep);
+        controlMap.put("thumbs", thumbStep);
+
+        assertEquals(controlMap, steps.toMap());
+    }
+
+}
