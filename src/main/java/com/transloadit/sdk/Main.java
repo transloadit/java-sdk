@@ -13,7 +13,7 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("KEY", "SECRET");
+        Transloadit transloadit = new Transloadit("key", "SECRET");
 
         try {
             Assembly assembly = transloadit.newAssembly();
