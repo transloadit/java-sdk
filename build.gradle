@@ -6,11 +6,13 @@ group 'com.transloadit.sdk'
 allprojects {
     repositories {
         mavenCentral()
+        jcenter()
     }
 }
 
 dependencies {
     compile 'org.jetbrains:annotations:13.0'
+    compile 'io.tus.java.client:tus-java-client:0.3.1'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     testCompile 'junit:junit:4.12'
     testCompile 'com.github.tomakehurst:wiremock-standalone:2.5.1'

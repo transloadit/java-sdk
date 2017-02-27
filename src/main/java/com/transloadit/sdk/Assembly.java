@@ -3,8 +3,11 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
 import com.transloadit.sdk.exceptions.TransloaditSignatureException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import io.tus.java.client.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,15 +58,64 @@ public class Assembly extends OptionsBuilder {
         files.put(name, file);
     }
 
+    private void processResumables(String assemblyUrl) throws IOException, ProtocolException {
+        for (Map.Entry<String, Object> entry :
+                files.entrySet()) {
+            resumableUpload((File) entry.getValue(), entry.getKey(), assemblyUrl);
+        }
+    }
+
+    private void resumableUpload(File file, String name, String assemblyUrl)
+            throws IOException, ProtocolException {
+        TusClient client = new TusClient();
+        client.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
+
+        client.enableResuming(new TusURLMemoryStore());
+        final TusUpload upload = new TusUpload(file);
+
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("filename", name);
+        metadata.put("assembly_url", assemblyUrl);
+        metadata.put("fieldname", "file");
+
+        upload.setMetadata(metadata);
+
+        TusUploader uploader = client.resumeOrCreateUpload(upload);
+        uploader.setChunkSize(1024);
+
+        int uploadedChunk = 0;
+        while (uploadedChunk > -1) {
+            uploadedChunk = uploader.uploadChunk();
+        }
+        uploader.finish();
+    }
+
     /**
      * Submits the configured assembly to Transloadit for processing.
      *
      * @return {@link AssemblyResponse}
      * @throws TransloaditRequestException
      */
-    public AssemblyResponse save() throws TransloaditRequestException, TransloaditSignatureException {
-        options.put("steps", steps.toMap());
+    public AssemblyResponse save(boolean useTus)
+            throws TransloaditRequestException, TransloaditSignatureException, IOException, ProtocolException {
         Request request = new Request(transloadit);
-        return new AssemblyResponse(request.post("/assemblies", options, files));
+        options.put("steps", steps.toMap());
+
+        if (!useTus) {
+            return new AssemblyResponse(request.post("/assemblies", options, files));
+        } else {
+            Map<String, Object> tusOptions = new HashMap<>();
+            tusOptions.put("tus_num_expected_upload_files", files.size());
+            AssemblyResponse response = new AssemblyResponse(
+                    request.post("/assemblies", options, tusOptions), true);
+            processResumables(response.sslUrl);
+            return response;
+        }
+    }
+
+    public  AssemblyResponse save()
+            throws ProtocolException, TransloaditSignatureException,
+            TransloaditRequestException, IOException {
+        return this.save(false);
     }
 }

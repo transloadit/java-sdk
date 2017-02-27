@@ -14,11 +14,21 @@ public class AssemblyResponse extends Response {
     public final String url;
     public final String sslUrl;
 
-    public AssemblyResponse(HttpResponse<JsonNode> response) {
+    public AssemblyResponse(HttpResponse<JsonNode> response, boolean usesTus) {
         super(response);
-        id = this.json().getString("assembly_id");
-        url = this.json().getString("assembly_url");
-        sslUrl = this.json().getString("assembly_ssl_url");
+
+        if (usesTus) {
+            id = this.json().getString("id");
+            sslUrl = url = this.json().getString("status_endpoint");
+        } else {
+            id = this.json().getString("assembly_id");
+            url = this.json().getString("assembly_url");
+            sslUrl = this.json().getString("assembly_ssl_url");
+        }
+    }
+
+    public AssemblyResponse(HttpResponse<JsonNode> response) {
+        this(response, false);
     }
 
     /**
