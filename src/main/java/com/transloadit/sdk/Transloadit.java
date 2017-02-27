@@ -18,7 +18,7 @@ public class Transloadit {
     String key;
     String secret;
     long duration;
-    String hostUrl;
+    public String hostUrl;
 
     /**
      * A new instance to transloadit client

@@ -58,14 +58,61 @@ public class Assembly extends OptionsBuilder {
         files.put(name, file);
     }
 
-    private void processResumables(String assemblyUrl) throws IOException, ProtocolException {
-        for (Map.Entry<String, Object> entry :
-                files.entrySet()) {
-            resumableUpload((File) entry.getValue(), entry.getKey(), assemblyUrl);
+    /**
+     * Submits the configured assembly to Transloadit for processing.
+     *
+     * @param isResumable boolean value that tells the assembly whether or not to use tus.
+     * @return {@link AssemblyResponse}
+     * @throws TransloaditRequestException
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
+    public AssemblyResponse save(boolean isResumable)
+            throws TransloaditRequestException, TransloaditSignatureException, IOException, ProtocolException {
+        Request request = new Request(transloadit);
+        options.put("steps", steps.toMap());
+
+        if (isResumable) {
+            Map<String, Object> tusOptions = new HashMap<>();
+            tusOptions.put("tus_num_expected_upload_files", files.size());
+
+            AssemblyResponse response = new AssemblyResponse(
+                    request.post("/assemblies", options, tusOptions), true);
+            processTusFiles(response.sslUrl);
+            return response;
+        } else {
+            return new AssemblyResponse(request.post("/assemblies", options, files));
         }
     }
 
-    private void resumableUpload(File file, String name, String assemblyUrl)
+    public  AssemblyResponse save()
+            throws ProtocolException, TransloaditSignatureException,
+            TransloaditRequestException, IOException {
+        return this.save(false);
+    }
+
+    /**
+     *
+     * @param assemblyUrl the assembly url affiliated with the tus upload
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
+    protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
+        for (Map.Entry<String, Object> entry :
+                files.entrySet()) {
+            processTusFile((File) entry.getValue(), entry.getKey(), assemblyUrl);
+        }
+    }
+
+    /**
+     *
+     * @param file to upload.
+     * @param name name of the file to be uploaded.
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
+    protected void processTusFile(File file, String name, String assemblyUrl)
             throws IOException, ProtocolException {
         TusClient client = new TusClient();
         client.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
@@ -80,42 +127,20 @@ public class Assembly extends OptionsBuilder {
 
         upload.setMetadata(metadata);
 
-        TusUploader uploader = client.resumeOrCreateUpload(upload);
-        uploader.setChunkSize(1024);
+        TusExecutor executor = new TusExecutor() {
+            @Override
+            protected void makeAttempt() throws ProtocolException, IOException {
+                TusUploader uploader = client.resumeOrCreateUpload(upload);
+                uploader.setChunkSize(1024);
 
-        int uploadedChunk = 0;
-        while (uploadedChunk > -1) {
-            uploadedChunk = uploader.uploadChunk();
-        }
-        uploader.finish();
-    }
+                int uploadedChunk = 0;
+                while (uploadedChunk > -1) {
+                    uploadedChunk = uploader.uploadChunk();
+                }
+                uploader.finish();
+            }
+        };
 
-    /**
-     * Submits the configured assembly to Transloadit for processing.
-     *
-     * @return {@link AssemblyResponse}
-     * @throws TransloaditRequestException
-     */
-    public AssemblyResponse save(boolean useTus)
-            throws TransloaditRequestException, TransloaditSignatureException, IOException, ProtocolException {
-        Request request = new Request(transloadit);
-        options.put("steps", steps.toMap());
-
-        if (!useTus) {
-            return new AssemblyResponse(request.post("/assemblies", options, files));
-        } else {
-            Map<String, Object> tusOptions = new HashMap<>();
-            tusOptions.put("tus_num_expected_upload_files", files.size());
-            AssemblyResponse response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions), true);
-            processResumables(response.sslUrl);
-            return response;
-        }
-    }
-
-    public  AssemblyResponse save()
-            throws ProtocolException, TransloaditSignatureException,
-            TransloaditRequestException, IOException {
-        return this.save(false);
+        executor.makeAttempts();
     }
 }

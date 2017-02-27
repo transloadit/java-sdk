@@ -28,6 +28,8 @@ public class Request {
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
+
+        Unirest.setDefaultHeader("User-Agent", "Transloadit Java SDK");
     }
 
     HttpResponse<JsonNode> get(String url, Map<String, Object> data)

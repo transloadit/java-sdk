@@ -6,9 +6,9 @@ import java.util.Map;
  * Base class for objects that use steps and send options to Transloadit.
  */
 public class OptionsBuilder {
-    Transloadit transloadit;
-    Steps steps;
-    Map<String, Object> options;
+    protected Transloadit transloadit;
+    protected Steps steps;
+    protected Map<String, Object> options;
 
     /**
      * Adds a step to the steps.
