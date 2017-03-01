@@ -98,32 +98,34 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
+        TusClient client = new TusClient();
+        client.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
+        client.enableResuming(new TusURLMemoryStore());
+
         for (Map.Entry<String, Object> entry :
                 files.entrySet()) {
-            processTusFile((File) entry.getValue(), entry.getKey(), assemblyUrl);
+            processTusFile(client, (File) entry.getValue(), entry.getKey(), assemblyUrl);
         }
     }
 
     /**
      *
+     * @param client {@link TusClient} tus client to mkae upload with.
      * @param file to upload.
      * @param name name of the file to be uploaded.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFile(File file, String name, String assemblyUrl)
+    protected void processTusFile(TusClient client, File file, String name, String assemblyUrl)
             throws IOException, ProtocolException {
-        TusClient client = new TusClient();
-        client.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
 
-        client.enableResuming(new TusURLMemoryStore());
         final TusUpload upload = new TusUpload(file);
 
         Map<String, String> metadata = new HashMap<>();
         metadata.put("filename", name);
         metadata.put("assembly_url", assemblyUrl);
-        metadata.put("fieldname", "file");
+        metadata.put("fieldname", name);
 
         upload.setMetadata(metadata);
 
