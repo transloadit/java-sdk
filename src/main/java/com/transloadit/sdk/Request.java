@@ -7,6 +7,9 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
 import com.transloadit.sdk.exceptions.TransloaditSignatureException;
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 
 import javax.crypto.Mac;
@@ -14,9 +17,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -117,12 +117,12 @@ public class Request {
         Map<String, String> authData = new HashMap<>();
         authData.put("key", transloadit.key);
 
-        Instant expiryTime = Instant.now().plusSeconds(transloadit.duration);
-        DateTimeFormatter formatter = DateTimeFormatter
-                .ofPattern("Y/MM/dd HH:mm:ss+00:00")
-                .withZone(ZoneOffset.UTC);
+        Instant expiryTime = Instant.now().plus(transloadit.duration * 1000);
+        DateTimeFormatter formatter = DateTimeFormat
+                .forPattern("Y/MM/dd HH:mm:ss+00:00")
+                .withZoneUTC();
 
-        authData.put("expires", formatter.format(expiryTime));
+        authData.put("expires", formatter.print(expiryTime));
 
         return authData;
     }
