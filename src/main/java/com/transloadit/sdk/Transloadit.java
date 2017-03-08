@@ -151,7 +151,7 @@ public class Transloadit {
      */
     public Response deleteTemplate(String id) throws TransloaditRequestException, TransloaditSignatureException {
         Request request = new Request(this);
-        return new Response(request.delete("/templates/" + id, new HashMap<>()));
+        return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
     }
 
     /**
@@ -171,7 +171,7 @@ public class Transloadit {
 
     public ListResponse listTemplates()
             throws TransloaditRequestException, TransloaditSignatureException {
-        return listTemplates(new HashMap<>());
+        return listTemplates(new HashMap<String, Object>());
     }
 
     /**
