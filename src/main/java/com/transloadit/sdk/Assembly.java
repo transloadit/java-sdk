@@ -18,7 +18,7 @@ public class Assembly extends OptionsBuilder {
     Map<String, Object> files;
 
     public Assembly(Transloadit transloadit) {
-        this(transloadit, new Steps(), new HashMap<>(), new HashMap<>());
+        this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
 
     /**
