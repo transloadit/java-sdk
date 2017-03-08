@@ -97,7 +97,7 @@ public class Transloadit {
     }
 
     public ListResponse listAssemblies() throws TransloaditRequestException, TransloaditSignatureException {
-        return listAssemblies(new HashMap<>());
+        return listAssemblies(new HashMap<String, Object>());
     }
 
     /**

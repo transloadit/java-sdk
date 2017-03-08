@@ -44,12 +44,12 @@ public class Request {
     }
 
     HttpResponse<JsonNode> get(String url) throws TransloaditRequestException, TransloaditSignatureException {
-        return get(url, new HashMap<>());
+        return get(url, new HashMap<String, Object>());
     }
 
     HttpResponse<JsonNode> post(String url, Map<String, Object> data)
             throws TransloaditRequestException, TransloaditSignatureException {
-        return post(url, data, new HashMap<>());
+        return post(url, data, new HashMap<String, Object>());
     }
 
     HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData)
