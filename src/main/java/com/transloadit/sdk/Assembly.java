@@ -19,7 +19,7 @@ public class Assembly extends OptionsBuilder {
     private TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
-        this(transloadit, new Steps(), new HashMap<>(), new HashMap<>());
+        this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
 
     /**
