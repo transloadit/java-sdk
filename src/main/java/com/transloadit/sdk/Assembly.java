@@ -31,7 +31,8 @@ public class Assembly extends OptionsBuilder {
     public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
         this.transloadit = transloadit;
         this.steps = steps;
-        this.files = new HashMap<>(files);
+        this.files = new HashMap<>();
+        this.files.putAll(files);
         this.options = options;
         tusClient = null;
     }
