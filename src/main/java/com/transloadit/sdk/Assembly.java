@@ -16,6 +16,7 @@ import java.util.Map;
  */
 public class Assembly extends OptionsBuilder {
     Map<String, Object> files;
+    TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -33,6 +34,7 @@ public class Assembly extends OptionsBuilder {
         this.files = new HashMap<>();
         this.files.putAll(files);
         this.options = options;
+        tusClient = null;
     }
 
     /**
@@ -99,26 +101,25 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
-        TusClient client = new TusClient();
-        client.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
-        client.enableResuming(new TusURLMemoryStore());
+        tusClient = new TusClient();
+        tusClient.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
+        tusClient.enableResuming(new TusURLMemoryStore());
 
         for (Map.Entry<String, Object> entry :
                 files.entrySet()) {
-            processTusFile(client, (File) entry.getValue(), entry.getKey(), assemblyUrl);
+            processTusFile((File) entry.getValue(), entry.getKey(), assemblyUrl);
         }
     }
 
     /**
      *
-     * @param client {@link TusClient} tus client to mkae upload with.
      * @param file to upload.
      * @param name name of the file to be uploaded.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFile(TusClient client, File file, String name, String assemblyUrl)
+    protected void processTusFile(File file, String name, String assemblyUrl)
             throws IOException, ProtocolException {
 
         final TusUpload upload = new TusUpload(file);
@@ -133,7 +134,7 @@ public class Assembly extends OptionsBuilder {
         TusExecutor executor = new TusExecutor() {
             @Override
             protected void makeAttempt() throws ProtocolException, IOException {
-                TusUploader uploader = client.resumeOrCreateUpload(upload);
+                TusUploader uploader = tusClient.resumeOrCreateUpload(upload);
                 uploader.setChunkSize(1024);
 
                 int uploadedChunk = 0;
