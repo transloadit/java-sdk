@@ -43,7 +43,7 @@ public class RequestTest {
         stubFor(post(urlPathEqualTo("/foo"))
                 .willReturn(aResponse().withBody("{}")));
 
-        request.post("/foo", new HashMap<>());
+        request.post("/foo", new HashMap<String, Object>());
 
         verify(postRequestedFor(urlPathEqualTo("/foo")));
     }
@@ -54,7 +54,7 @@ public class RequestTest {
         stubFor(delete(urlPathEqualTo("/foo"))
                 .willReturn(aResponse().withBody("{}")));
 
-        request.delete("/foo", new HashMap<>());
+        request.delete("/foo", new HashMap<String, Object>());
 
         verify(deleteRequestedFor(urlPathEqualTo("/foo")));
     }
@@ -64,7 +64,7 @@ public class RequestTest {
         stubFor(put(urlPathEqualTo("/foo"))
                 .willReturn(aResponse().withBody("{}")));
 
-        request.put("/foo", new HashMap<>());
+        request.put("/foo", new HashMap<String, Object>());
 
         verify(putRequestedFor(urlPathEqualTo("/foo")));
     }

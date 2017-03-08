@@ -21,20 +21,20 @@ public class StepsTest {
 
     @Test
     public void addStep() {
-        steps.addStep("encode", "/video/encode", new HashMap());
+        steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
         assertEquals(steps.getStep("encode").robot , "/video/encode");
     }
 
     @Test
     public void getStep() throws Exception {
-        steps.addStep("encode", "/video/encode", new HashMap());
+        steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
         assertEquals(steps.getStep("encode").robot , "/video/encode");
     }
 
     @Test
     public void toMap() throws Exception {
-        steps.addStep("encode", "/video/encode", new HashMap<>());
-        steps.addStep("thumbs", "/video/thumbs", new HashMap<>());
+        steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
+        steps.addStep("thumbs", "/video/thumbs", new HashMap<String, Object>());
 
         Map<String, Map> controlMap = new HashMap<>();
 

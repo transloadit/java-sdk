@@ -28,7 +28,7 @@ public class Template extends OptionsBuilder {
     }
 
     public Template(Transloadit transloadit, String name) {
-        this(transloadit, name, new Steps(), new HashMap<>());
+        this(transloadit, name, new Steps(), new HashMap<String, Object>());
     }
 
     /**

@@ -21,7 +21,7 @@ public class OptionsBuilderTest {
 
     @Test
     public void testAddStep() throws Exception {
-        optionsBuilder.addStep("encode", "/video/encode", new HashMap<>());
+        optionsBuilder.addStep("encode", "/video/encode", new HashMap<String, Object>());
 
         assertEquals(optionsBuilder.steps.getStep("encode").robot , "/video/encode");
     }

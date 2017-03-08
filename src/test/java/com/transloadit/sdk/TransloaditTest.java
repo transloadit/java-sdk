@@ -76,7 +76,8 @@ public class TransloaditTest {
         // stub returns no response when this request is run too quickly.
         Thread.sleep(2000);
 
-        Response template = transloadit.updateTemplate("55c965a063a311e6ba2d379ef10b28f7", new HashMap<>());
+        Response template = transloadit.updateTemplate("55c965a063a311e6ba2d379ef10b28f7",
+                new HashMap<String, Object>());
 
         assertEquals(template.json().get("ok"), "TEMPLATE_UPDATED");
     }
