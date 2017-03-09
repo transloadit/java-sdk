@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -133,11 +133,11 @@ public class Request {
      * @return signature generate based on the message passed and the transloadit secret.
      */
     private String getSignature(String message) throws TransloaditSignatureException {
-        byte[] kSecret = transloadit.secret.getBytes(StandardCharsets.UTF_8);
+        byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
         byte[] rawHmac = HmacSHA1(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
 
-        return new String(hexBytes, StandardCharsets.UTF_8);
+        return new String(hexBytes, Charset.forName("UTF-8"));
     }
 
     private byte[] HmacSHA1(byte[] key, String data) throws TransloaditSignatureException {
@@ -152,7 +152,6 @@ public class Request {
         } catch (InvalidKeyException e) {
             throw new TransloaditSignatureException(e);
         }
-
-        return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return mac.doFinal(data.getBytes(Charset.forName("UTF-8")));
     }
 }
