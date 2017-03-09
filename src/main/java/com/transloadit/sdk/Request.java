@@ -93,10 +93,10 @@ public class Request {
     }
 
     private Map<String, Object> toPayload(Map<String, Object> data) throws TransloaditSignatureException {
-        Map<String, Object> dataClone = new HashMap<>(data);
+        Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
 
-        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> payload = new HashMap<String, Object>();
         payload.put("params", jsonifyData(dataClone));
         payload.put("signature", getSignature(jsonifyData(dataClone)));
 
@@ -114,7 +114,7 @@ public class Request {
      * @return Map containing authentication key and the time it expires
      */
     private Map<String, String> getAuthData() {
-        Map<String, String> authData = new HashMap<>();
+        Map<String, String> authData = new HashMap<String, String>();
         authData.put("key", transloadit.key);
 
         Instant expiryTime = Instant.now().plus(transloadit.duration * 1000);
@@ -147,7 +147,9 @@ public class Request {
         try {
             mac = Mac.getInstance(ALGORITHM);
             mac.init(new SecretKeySpec(key, ALGORITHM));
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException e) {
+            throw new TransloaditSignatureException(e);
+        } catch (InvalidKeyException e) {
             throw new TransloaditSignatureException(e);
         }
 

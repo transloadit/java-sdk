@@ -13,11 +13,11 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("key", "SECRET");
+        Transloadit transloadit = new Transloadit("KEY", "SECRET");
 
         try {
             Assembly assembly = transloadit.newAssembly();
-            assembly.addStep("encode", "/video/encode", new HashMap());
+            assembly.addStep("encode", "/video/encode", new HashMap<String, Object>());
             assembly.addFile(new File("LICENSE"));
 
             AssemblyResponse ass = assembly.save(true);
@@ -32,7 +32,9 @@ public class Main {
             System.out.println(list.items.get(0));
             System.out.println(list.size);
 
-        } catch (TransloaditRequestException | TransloaditSignatureException e) {
+        } catch (TransloaditRequestException e) {
+            e.printStackTrace();
+        } catch (TransloaditSignatureException e){
             e.printStackTrace();
         } catch (ProtocolException e) {
             e.printStackTrace();

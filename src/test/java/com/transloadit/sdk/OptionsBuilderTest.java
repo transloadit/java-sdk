@@ -15,7 +15,7 @@ public class OptionsBuilderTest {
     public void setUp() throws Exception {
         optionsBuilder = new OptionsBuilder();
         optionsBuilder.steps = new Steps();
-        optionsBuilder.options = new HashMap<>();
+        optionsBuilder.options = new HashMap<String, Object>();
     }
 
 
@@ -28,7 +28,7 @@ public class OptionsBuilderTest {
 
     @Test
     public void testAddOptions() throws Exception {
-        Map<String, Object> options = new HashMap<>();
+        Map<String, Object> options = new HashMap<String, Object>();
         options.put("foo", "bar");
         options.put("red", "color");
 

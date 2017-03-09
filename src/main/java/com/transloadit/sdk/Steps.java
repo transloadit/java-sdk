@@ -10,7 +10,7 @@ public class Steps {
     private Map<String, Step> all;
 
     public Steps(){
-        all = new HashMap<>();
+        all = new HashMap<String, Step>();
     }
 
     /**
@@ -38,7 +38,7 @@ public class Steps {
          * @return Map representation of the Step.
          */
         public Map<String, Object> toMap() {
-            Map<String, Object> options = new HashMap<>(this.options);
+            Map<String, Object> options = new HashMap<String, Object>(this.options);
             options.put("robot", this.robot);
             return options;
         }
@@ -69,7 +69,7 @@ public class Steps {
      * @return Steps as a HashMap ready to be used by an assembly.
      */
     public Map<String, Map> toMap(){
-        Map<String, Map> hash = new HashMap<>();
+        Map<String, Map> hash = new HashMap<String, Map>();
         for (Map.Entry<String, Step> entry :
                 all.entrySet()) {
             hash.put(entry.getKey(), entry.getValue().toMap());

@@ -31,7 +31,7 @@ public class Assembly extends OptionsBuilder {
     public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
         this.transloadit = transloadit;
         this.steps = steps;
-        this.files = new HashMap<>();
+        this.files = new HashMap<String, Object>();
         this.files.putAll(files);
         this.options = options;
         tusClient = null;
@@ -76,7 +76,7 @@ public class Assembly extends OptionsBuilder {
         options.put("steps", steps.toMap());
 
         if (isResumable) {
-            Map<String, Object> tusOptions = new HashMap<>();
+            Map<String, Object> tusOptions = new HashMap<String, Object>();
             tusOptions.put("tus_num_expected_upload_files", files.size());
 
             AssemblyResponse response = new AssemblyResponse(
@@ -124,7 +124,7 @@ public class Assembly extends OptionsBuilder {
 
         final TusUpload upload = new TusUpload(file);
 
-        Map<String, String> metadata = new HashMap<>();
+        Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("filename", name);
         metadata.put("assembly_url", assemblyUrl);
         metadata.put("fieldname", name);

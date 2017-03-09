@@ -36,12 +36,12 @@ public class StepsTest {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
         steps.addStep("thumbs", "/video/thumbs", new HashMap<String, Object>());
 
-        Map<String, Map> controlMap = new HashMap<>();
+        Map<String, Map> controlMap = new HashMap<String, Map>();
 
-        Map<String, String> encodeStep = new HashMap<>();
+        Map<String, String> encodeStep = new HashMap<String, String>();
         encodeStep.put("robot", "/video/encode");
 
-        Map<String, String> thumbStep = new HashMap<>();
+        Map<String, String> thumbStep = new HashMap<String, String>();
         thumbStep.put("robot", "/video/thumbs");
 
         controlMap.put("encode", encodeStep);

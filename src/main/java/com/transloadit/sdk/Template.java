@@ -39,7 +39,7 @@ public class Template extends OptionsBuilder {
      * @throws TransloaditSignatureException
      */
     public Response save() throws TransloaditRequestException, TransloaditSignatureException {
-        Map<String, Object> templateData = new HashMap<>();
+        Map<String, Object> templateData = new HashMap<String, Object>();
         templateData.put("name", name);
 
         options.put("steps", steps.toMap());
