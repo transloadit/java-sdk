@@ -1,72 +1,63 @@
 package com.transloadit.sdk;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.junit.MockServerRule;
+import org.mockserver.model.HttpRequest;
 
 import java.util.HashMap;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 /**
  * test Request class.
  */
-public class RequestTest {
+public class RequestTest extends MockHttpService {
     public Request request;
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(9040);
+    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
+
+    private MockServerClient mockServerClient;
 
     @Before
     public void setUp() throws Exception {
-        Transloadit transloadit = new Transloadit("key", "secret", "http://localhost:9040");
         request = new Request(transloadit);
-
-        // stub returns no response when this request is run too quickly.
-        Thread.sleep(2000);
     }
 
 
     @Test
     public void testGet() throws Exception {
-        stubFor(get(urlPathEqualTo("/foo"))
-                .willReturn(aResponse().withBody("{}")));
-
         request.get("/foo");
 
-        verify(getRequestedFor(urlPathEqualTo("/foo")));
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/foo").withMethod("GET"));
+
     }
 
     @Test
     public void testPost() throws Exception {
-        stubFor(post(urlPathEqualTo("/foo"))
-                .willReturn(aResponse().withBody("{}")));
-
         request.post("/foo", new HashMap<String, Object>());
 
-        verify(postRequestedFor(urlPathEqualTo("/foo")));
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/foo").withMethod("POST"));
     }
 
 
     @Test
     public void testDelete() throws Exception {
-        stubFor(delete(urlPathEqualTo("/foo"))
-                .willReturn(aResponse().withBody("{}")));
-
         request.delete("/foo", new HashMap<String, Object>());
 
-        verify(deleteRequestedFor(urlPathEqualTo("/foo")));
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/foo").withMethod("DELETE"));
     }
 
     @Test
     public void testPut() throws Exception {
-        stubFor(put(urlPathEqualTo("/foo"))
-                .willReturn(aResponse().withBody("{}")));
-
         request.put("/foo", new HashMap<String, Object>());
 
-        verify(putRequestedFor(urlPathEqualTo("/foo")));
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/foo").withMethod("PUT"));
     }
 
 }

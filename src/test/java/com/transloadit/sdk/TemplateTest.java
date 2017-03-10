@@ -1,29 +1,31 @@
 package com.transloadit.sdk;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.transloadit.sdk.response.Response;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.junit.MockServerRule;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertEquals;
 
 /**
  * test for template class.
  */
-public class TemplateTest {
+public class TemplateTest extends MockHttpService {
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(9040);
+    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
+
+    private MockServerClient mockServerClient;
 
     @Test
     public void testSave() throws Exception {
-        stubFor(post(urlPathEqualTo("/templates"))
-                .willReturn(aResponse().withBodyFile("template.json")));
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/templates").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("template.json")));
 
-        // stub returns no response when this request is run too quickly.
-        Thread.sleep(2000);
-
-        Template template = new Template(new Transloadit("KEY", "SECRET", "http://localhost:9040"), "template_name");
+        Template template = new Template(transloadit, "template_name");
         Response newTemplate = template.save();
 
         assertEquals(newTemplate.json().get("ok"), "TEMPLATE_FOUND");

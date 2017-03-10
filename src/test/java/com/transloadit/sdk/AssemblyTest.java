@@ -1,25 +1,29 @@
 package com.transloadit.sdk;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.transloadit.sdk.response.Response;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.junit.MockServerRule;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.io.File;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertEquals;
 
-public class AssemblyTest {
+public class AssemblyTest extends MockHttpService {
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(9040);
+    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
+
+    private MockServerClient mockServerClient;
 
     public Assembly assembly;
 
     @Before
     public void setUp() throws Exception {
-        assembly = new Assembly(new Transloadit("KEY", "SECRET", "http://localhost:9040"));
+        assembly = new Assembly(transloadit);
     }
 
     @Test
@@ -32,8 +36,9 @@ public class AssemblyTest {
 
     @Test
     public void save() throws Exception {
-        stubFor(post(urlPathEqualTo("/assemblies"))
-                .willReturn(aResponse().withBodyFile("assembly.json")));
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
         Response savedAssembly = assembly.save();
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
