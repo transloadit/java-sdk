@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
+import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.*;
 
@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class Assembly extends OptionsBuilder {
     Map<String, Object> files;
-    private TusClient tusClient;
+    TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -67,11 +67,10 @@ public class Assembly extends OptionsBuilder {
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
      * @return {@link AssemblyResponse}
      * @throws TransloaditRequestException
-     * @throws IOException when there's a failure with file retrieval.
-     * @throws ProtocolException when there's a failure with tus upload.
+     * @throws TransloaditLocalOperationException
      */
     public AssemblyResponse save(boolean isResumable)
-            throws TransloaditRequestException, TransloaditSignatureException, IOException, ProtocolException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(transloadit);
         options.put("steps", steps.toMap());
 
@@ -81,17 +80,21 @@ public class Assembly extends OptionsBuilder {
 
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions), true);
-            processTusFiles(response.sslUrl);
+            try {
+                processTusFiles(response.sslUrl);
+            } catch (IOException e) {
+                throw new TransloaditLocalOperationException(e);
+            } catch (ProtocolException e) {
+                throw new TransloaditRequestException(e);
+            }
             return response;
         } else {
             return new AssemblyResponse(request.post("/assemblies", options, files));
         }
     }
 
-    public  AssemblyResponse save()
-            throws ProtocolException, TransloaditSignatureException,
-            TransloaditRequestException, IOException {
-        return this.save(false);
+    public  AssemblyResponse save() throws TransloaditLocalOperationException, TransloaditRequestException {
+        return this.save(true);
     }
 
     /**
@@ -102,7 +105,7 @@ public class Assembly extends OptionsBuilder {
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
         tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
+        tusClient.setUploadCreationURL(new URL(transloadit.getHostUrl() + "/resumable/files/"));
         tusClient.enableResuming(new TusURLMemoryStore());
 
         for (Map.Entry<String, Object> entry :
@@ -135,7 +138,7 @@ public class Assembly extends OptionsBuilder {
             @Override
             protected void makeAttempt() throws ProtocolException, IOException {
                 TusUploader uploader = tusClient.resumeOrCreateUpload(upload);
-                uploader.setChunkSize(1024);
+                uploader.setChunkSize(2 * 1024 * 1024); // 2MB
 
                 int uploadedChunk = 0;
                 while (uploadedChunk > -1) {

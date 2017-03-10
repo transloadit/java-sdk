@@ -40,7 +40,7 @@ public class AssemblyTest extends MockHttpService {
                 .withPath("/assemblies").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
-        Response savedAssembly = assembly.save();
+        Response savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
     }
 

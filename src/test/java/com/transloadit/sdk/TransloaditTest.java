@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
+import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
@@ -39,7 +39,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void testGetAssemblyByUrl() throws TransloaditSignatureException, TransloaditRequestException, IOException {
+    public void testGetAssemblyByUrl() throws TransloaditLocalOperationException, TransloaditRequestException, IOException {
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
@@ -54,7 +54,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void testListAssemblies() throws TransloaditRequestException, TransloaditSignatureException, IOException {
+    public void testListAssemblies() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
         mockServerClient.reset();
 
         mockServerClient.when(HttpRequest.request()
@@ -66,7 +66,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void testGetTemplate() throws TransloaditRequestException, TransloaditSignatureException, IOException {
+    public void testGetTemplate() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("template.json")));
@@ -79,7 +79,7 @@ public class TransloaditTest extends MockHttpService {
 
     @Test
     public void testUpdateTemplate()
-            throws TransloaditRequestException, TransloaditSignatureException, InterruptedException, IOException {
+            throws TransloaditRequestException, TransloaditLocalOperationException, InterruptedException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/55c965a063a311e6ba2d379ef10b28f7").withMethod("PUT"))
                 .respond(HttpResponse.response().withBody(getJson("update_template.json")));
@@ -92,7 +92,7 @@ public class TransloaditTest extends MockHttpService {
 
     @Test
     public void testDeleteTemplate()
-            throws TransloaditSignatureException, TransloaditRequestException, InterruptedException, IOException {
+            throws TransloaditLocalOperationException, TransloaditRequestException, InterruptedException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/11148db0ec4f11e6a05ca3d04d2a53e6").withMethod("DELETE"))
                 .respond(HttpResponse.response().withBody(getJson("delete_template.json")));
@@ -102,7 +102,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void testListTemplates() throws TransloaditRequestException, TransloaditSignatureException, IOException {
+    public void testListTemplates() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
         mockServerClient.reset();
 
         mockServerClient.when(HttpRequest.request()
@@ -114,7 +114,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void testGetBill() throws TransloaditSignatureException, TransloaditRequestException, IOException {
+    public void testGetBill() throws TransloaditLocalOperationException, TransloaditRequestException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/bill/2016-09").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("bill.json")));

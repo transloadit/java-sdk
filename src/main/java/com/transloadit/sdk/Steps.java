@@ -17,9 +17,9 @@ public class Steps {
      * This class represents a single step that may be added to an assembly.
      */
     public class Step {
-        public String name;
-        public String robot;
-        public Map<String, Object> options;
+        String name;
+        String robot;
+        Map<String, Object> options;
 
         /**
          *
@@ -53,6 +53,15 @@ public class Steps {
      */
     public void addStep(String name, String robot, Map<String, Object> options) {
         all.put(name, new Step(name, robot, options));
+    }
+
+    /**
+     * Removes step with the given name from the list of steps.
+     *
+     * @param name Name of the step to remove.
+     */
+    public void removeStep(String name) {
+        all.remove(name);
     }
 
     /**

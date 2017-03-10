@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
+import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
@@ -18,7 +18,7 @@ public class Transloadit {
     String key;
     String secret;
     long duration;
-    public String hostUrl;
+    String hostUrl;
 
     /**
      * A new instance to transloadit client
@@ -47,6 +47,14 @@ public class Transloadit {
     }
 
     /**
+     *
+     * @return the host url of the Transloadit server.
+     */
+    public String getHostUrl() {
+        return hostUrl;
+    }
+
+    /**
      * Returns an Assembly instance that can be used to create a new assembly.
      *
      * @return {@link Assembly}
@@ -61,9 +69,9 @@ public class Transloadit {
      * @param id id of the Assebly to retrieve.
      * @return {@link AssemblyResponse}
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
-    public AssemblyResponse getAssembly(String id) throws TransloaditRequestException, TransloaditSignatureException {
+    public AssemblyResponse getAssembly(String id) throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get("/assemblies/" + id));
     }
@@ -74,10 +82,10 @@ public class Transloadit {
      * @param url full url of the Assembly.
      * @return {@link AssemblyResponse}
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
     public AssemblyResponse getAssemblyByUrl(String url)
-            throws TransloaditRequestException, TransloaditSignatureException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get(url));
     }
@@ -88,15 +96,15 @@ public class Transloadit {
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
     public ListResponse listAssemblies(Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditSignatureException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/assemblies", options));
     }
 
-    public ListResponse listAssemblies() throws TransloaditRequestException, TransloaditSignatureException {
+    public ListResponse listAssemblies() throws TransloaditRequestException, TransloaditLocalOperationException {
         return listAssemblies(new HashMap<String, Object>());
     }
 
@@ -117,9 +125,9 @@ public class Transloadit {
      * @return {@link Response}
      *
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
-    public Response getTemplate(String id) throws TransloaditRequestException, TransloaditSignatureException {
+    public Response getTemplate(String id) throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/templates/" + id));
     }
@@ -132,10 +140,10 @@ public class Transloadit {
      * @return {@link Response}
      *
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
     public Response updateTemplate(String id, Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditSignatureException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new Response(request.put("/templates/" + id, options));
     }
@@ -147,9 +155,10 @@ public class Transloadit {
      * @return {@link Response}
      *
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
-    public Response deleteTemplate(String id) throws TransloaditRequestException, TransloaditSignatureException {
+    public Response deleteTemplate(String id)
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
     }
@@ -161,16 +170,16 @@ public class Transloadit {
      * @return {@link ListResponse}
      *
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
     public ListResponse listTemplates(Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditSignatureException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/templates", options));
     }
 
     public ListResponse listTemplates()
-            throws TransloaditRequestException, TransloaditSignatureException {
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         return listTemplates(new HashMap<String, Object>());
     }
 
@@ -182,9 +191,10 @@ public class Transloadit {
      * @return {@link Response}
      *
      * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws TransloaditLocalOperationException
      */
-    public Response getBill(int month, int year) throws TransloaditRequestException, TransloaditSignatureException {
+    public Response getBill(int month, int year)
+            throws TransloaditRequestException, TransloaditLocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/bill/" + year + String.format("-%02d", month)));
     }
