@@ -7,7 +7,7 @@ import java.util.Map;
  * Holds all the steps that would be added to a given assembly.
  */
 public class Steps {
-    private Map<String, Step> all;
+    Map<String, Step> all;
 
     public Steps(){
         all = new HashMap<String, Step>();

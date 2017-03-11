@@ -27,6 +27,11 @@ public class Template extends OptionsBuilder {
         this.options = options;
     }
 
+    /**
+     *
+     * @param transloadit {@link Transloadit} an instance of transloadit client class.
+     * @param name name of the template.
+     */
     public Template(Transloadit transloadit, String name) {
         this(transloadit, name, new Steps(), new HashMap<String, Object>());
     }

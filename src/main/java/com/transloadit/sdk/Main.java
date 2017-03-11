@@ -1,13 +1,11 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
 import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
-import io.tus.java.client.ProtocolException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
 public class Main {
@@ -34,11 +32,7 @@ public class Main {
 
         } catch (TransloaditRequestException e) {
             e.printStackTrace();
-        } catch (TransloaditSignatureException e){
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (TransloaditLocalOperationException e){
             e.printStackTrace();
         }
     }

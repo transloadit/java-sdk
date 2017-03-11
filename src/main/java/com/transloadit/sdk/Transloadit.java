@@ -26,6 +26,7 @@ public class Transloadit {
      * @param key User's transloadit key
      * @param secret User's transloadit secret.
      * @param duration for how long (in seconds) the request should be valid.
+     * @param hostUrl the host url to the transloadit service.
      */
     public Transloadit(String key, String secret, long duration, String hostUrl) {
         this.key = key;
@@ -34,14 +35,34 @@ public class Transloadit {
         this.hostUrl = hostUrl;
     }
 
+    /**
+     * A new instance to transloadit client
+     *
+     * @param key User's transloadit key
+     * @param secret User's transloadit secret.
+     * @param duration for how long (in seconds) the request should be valid.
+     */
     public Transloadit(String key, String secret, long duration) {
         this(key, secret, duration, DEFAULT_HOST_URL);
     }
 
+    /**
+     * A new instance to transloadit client
+     *
+     * @param key User's transloadit key
+     * @param secret User's transloadit secret.
+     * @param hostUrl the host url to the transloadit service.
+     */
     public Transloadit(String key, String secret, String hostUrl) {
         this(key, secret, 5 * 60, hostUrl);
     }
 
+    /**
+     * A new instance to transloadit client
+     *
+     * @param key User's transloadit key
+     * @param secret User's transloadit secret.
+     */
     public Transloadit(String key, String secret) {
         this(key, secret, 5 * 60, DEFAULT_HOST_URL);
     }
@@ -178,6 +199,14 @@ public class Transloadit {
         return new ListResponse(request.get("/templates", options));
     }
 
+    /**
+     * Returns a list of all templates under the user account
+     *
+     * @return {@link ListResponse}
+     *
+     * @throws TransloaditRequestException
+     * @throws TransloaditLocalOperationException
+     */
     public ListResponse listTemplates()
             throws TransloaditRequestException, TransloaditLocalOperationException {
         return listTemplates(new HashMap<String, Object>());
