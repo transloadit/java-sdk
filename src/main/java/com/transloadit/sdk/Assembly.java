@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.*;
 
@@ -66,11 +66,11 @@ public class Assembly extends OptionsBuilder {
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
      * @return {@link AssemblyResponse}
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public AssemblyResponse save(boolean isResumable)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(transloadit);
         options.put("steps", steps.toMap());
 
@@ -83,9 +83,9 @@ public class Assembly extends OptionsBuilder {
             try {
                 processTusFiles(response.sslUrl);
             } catch (IOException e) {
-                throw new TransloaditLocalOperationException(e);
+                throw new LocalOperationException(e);
             } catch (ProtocolException e) {
-                throw new TransloaditRequestException(e);
+                throw new RequestException(e);
             }
             return response;
         } else {
@@ -93,7 +93,7 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
-    public  AssemblyResponse save() throws TransloaditLocalOperationException, TransloaditRequestException {
+    public  AssemblyResponse save() throws LocalOperationException, RequestException {
         return this.save(true);
     }
 

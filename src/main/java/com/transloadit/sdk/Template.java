@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.Response;
 
 import java.util.HashMap;
@@ -56,10 +56,10 @@ public class Template extends OptionsBuilder {
      * Submits the configured template to Transloadit.
      *
      * @return {@link Response}
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
-    public Response save() throws TransloaditRequestException, TransloaditLocalOperationException {
+    public Response save() throws RequestException, LocalOperationException {
         Map<String, Object> templateData = new HashMap<String, Object>();
         templateData.put("name", name);
 

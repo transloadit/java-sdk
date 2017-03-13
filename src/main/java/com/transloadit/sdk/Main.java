@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 
@@ -30,9 +30,9 @@ public class Main {
             System.out.println(list.items.get(0));
             System.out.println(list.size);
 
-        } catch (TransloaditRequestException e) {
+        } catch (RequestException e) {
             e.printStackTrace();
-        } catch (TransloaditLocalOperationException e){
+        } catch (LocalOperationException e){
             e.printStackTrace();
         }
     }

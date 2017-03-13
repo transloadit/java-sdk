@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
@@ -51,7 +51,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void getAssemblyByUrl() throws TransloaditLocalOperationException, TransloaditRequestException, IOException {
+    public void getAssemblyByUrl() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json"))
@@ -65,7 +65,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void listAssemblies() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
+    public void listAssemblies() throws RequestException, LocalOperationException, IOException {
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies").withMethod("GET"))
@@ -76,7 +76,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void getTemplate() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
+    public void getTemplate() throws RequestException, LocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("template.json")));
@@ -89,7 +89,7 @@ public class TransloaditTest extends MockHttpService {
 
     @Test
     public void updateTemplate()
-            throws TransloaditRequestException, TransloaditLocalOperationException, InterruptedException, IOException {
+            throws RequestException, LocalOperationException, InterruptedException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/55c965a063a311e6ba2d379ef10b28f7").withMethod("PUT"))
                 .respond(HttpResponse.response().withBody(getJson("update_template.json")));
@@ -102,7 +102,7 @@ public class TransloaditTest extends MockHttpService {
 
     @Test
     public void deleteTemplate()
-            throws TransloaditLocalOperationException, TransloaditRequestException, InterruptedException, IOException {
+            throws LocalOperationException, RequestException, InterruptedException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/11148db0ec4f11e6a05ca3d04d2a53e6").withMethod("DELETE"))
                 .respond(HttpResponse.response().withBody(getJson("delete_template.json")));
@@ -112,7 +112,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void listTemplates() throws TransloaditRequestException, TransloaditLocalOperationException, IOException {
+    public void listTemplates() throws RequestException, LocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("templates.json")));
@@ -122,7 +122,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
-    public void getBill() throws TransloaditLocalOperationException, TransloaditRequestException, IOException {
+    public void getBill() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/bill/2016-09").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("bill.json")));

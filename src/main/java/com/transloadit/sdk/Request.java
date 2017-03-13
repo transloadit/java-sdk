@@ -4,8 +4,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
@@ -33,27 +33,27 @@ public class Request {
     }
 
     HttpResponse<JsonNode> get(String url, Map<String, Object> data)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         try {
             return Unirest.get(getFullUrl(url))
                     .queryString(toPayload(data))
                     .asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 
-    HttpResponse<JsonNode> get(String url) throws TransloaditRequestException, TransloaditLocalOperationException {
+    HttpResponse<JsonNode> get(String url) throws RequestException, LocalOperationException {
         return get(url, new HashMap<String, Object>());
     }
 
     HttpResponse<JsonNode> post(String url, Map<String, Object> data)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         return post(url, data, new HashMap<String, Object>());
     }
 
     HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Map<String, Object> payload = toPayload(data);
         payload.putAll(extraData);
 
@@ -62,29 +62,29 @@ public class Request {
                     .fields(payload)
                     .asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 
     HttpResponse<JsonNode> delete(String url, Map<String, Object> data)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         try {
             return Unirest.delete(getFullUrl(url))
                     .fields(toPayload(data))
                     .asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 
     HttpResponse<JsonNode> put(String url, Map<String, Object> data)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         try {
             return Unirest.put(getFullUrl(url))
                     .fields(toPayload(data))
                     .asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 
@@ -92,7 +92,7 @@ public class Request {
         return url.startsWith("https://") || url.startsWith("http://") ? url : transloadit.getHostUrl() + url;
     }
 
-    private Map<String, Object> toPayload(Map<String, Object> data) throws TransloaditLocalOperationException {
+    private Map<String, Object> toPayload(Map<String, Object> data) throws LocalOperationException {
         Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
 
@@ -132,7 +132,7 @@ public class Request {
      * @param message String data that needs to be encrypted.
      * @return signature generate based on the message passed and the transloadit secret.
      */
-    private String getSignature(String message) throws TransloaditLocalOperationException {
+    private String getSignature(String message) throws LocalOperationException {
         byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
         byte[] rawHmac = HmacSHA1(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
@@ -140,7 +140,7 @@ public class Request {
         return new String(hexBytes, Charset.forName("UTF-8"));
     }
 
-    private byte[] HmacSHA1(byte[] key, String data) throws TransloaditLocalOperationException {
+    private byte[] HmacSHA1(byte[] key, String data) throws LocalOperationException {
         final String ALGORITHM = "HmacSHA1";
         Mac mac;
 
@@ -148,9 +148,9 @@ public class Request {
             mac = Mac.getInstance(ALGORITHM);
             mac.init(new SecretKeySpec(key, ALGORITHM));
         } catch (NoSuchAlgorithmException e) {
-            throw new TransloaditLocalOperationException(e);
+            throw new LocalOperationException(e);
         } catch (InvalidKeyException e) {
-            throw new TransloaditLocalOperationException(e);
+            throw new LocalOperationException(e);
         }
         return mac.doFinal(data.getBytes(Charset.forName("UTF-8")));
     }

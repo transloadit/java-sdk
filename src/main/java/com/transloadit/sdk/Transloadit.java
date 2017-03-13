@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditLocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
@@ -89,10 +89,10 @@ public class Transloadit {
      *
      * @param id id of the Assebly to retrieve.
      * @return {@link AssemblyResponse}
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
-    public AssemblyResponse getAssembly(String id) throws TransloaditRequestException, TransloaditLocalOperationException {
+    public AssemblyResponse getAssembly(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get("/assemblies/" + id));
     }
@@ -102,11 +102,11 @@ public class Transloadit {
      *
      * @param url full url of the Assembly.
      * @return {@link AssemblyResponse}
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public AssemblyResponse getAssemblyByUrl(String url)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get(url));
     }
@@ -116,16 +116,16 @@ public class Transloadit {
      *
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public ListResponse listAssemblies(Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/assemblies", options));
     }
 
-    public ListResponse listAssemblies() throws TransloaditRequestException, TransloaditLocalOperationException {
+    public ListResponse listAssemblies() throws RequestException, LocalOperationException {
         return listAssemblies(new HashMap<String, Object>());
     }
 
@@ -145,10 +145,10 @@ public class Transloadit {
      * @param id id of the template to retrieve.
      * @return {@link Response}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
-    public Response getTemplate(String id) throws TransloaditRequestException, TransloaditLocalOperationException {
+    public Response getTemplate(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/templates/" + id));
     }
@@ -160,11 +160,11 @@ public class Transloadit {
      * @param options a Map of options to update/add.
      * @return {@link Response}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public Response updateTemplate(String id, Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.put("/templates/" + id, options));
     }
@@ -175,11 +175,11 @@ public class Transloadit {
      * @param id id of the template to delete.
      * @return {@link Response}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public Response deleteTemplate(String id)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
     }
@@ -190,11 +190,11 @@ public class Transloadit {
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public ListResponse listTemplates(Map<String, Object> options)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/templates", options));
     }
@@ -204,11 +204,11 @@ public class Transloadit {
      *
      * @return {@link ListResponse}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public ListResponse listTemplates()
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         return listTemplates(new HashMap<String, Object>());
     }
 
@@ -219,11 +219,11 @@ public class Transloadit {
      * @param year for which bill to retrieve.
      * @return {@link Response}
      *
-     * @throws TransloaditRequestException
-     * @throws TransloaditLocalOperationException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public Response getBill(int month, int year)
-            throws TransloaditRequestException, TransloaditLocalOperationException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/bill/" + year + String.format("-%02d", month)));
     }
