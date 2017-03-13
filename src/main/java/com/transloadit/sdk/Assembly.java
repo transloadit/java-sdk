@@ -117,20 +117,20 @@ public class Assembly extends OptionsBuilder {
     /**
      *
      * @param file to upload.
-     * @param name name of the file to be uploaded.
+     * @param fieldName name of the file to be uploaded.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFile(File file, String name, String assemblyUrl)
+    protected void processTusFile(File file, String fieldName, String assemblyUrl)
             throws IOException, ProtocolException {
 
         final TusUpload upload = new TusUpload(file);
 
         Map<String, String> metadata = new HashMap<String, String>();
-        metadata.put("filename", name);
+        metadata.put("filename", file.getName());
         metadata.put("assembly_url", assemblyUrl);
-        metadata.put("fieldname", name);
+        metadata.put("fieldname", fieldName);
 
         upload.setMetadata(metadata);
 
