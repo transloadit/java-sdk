@@ -1,7 +1,7 @@
 package com.transloadit.sdk.exceptions;
 
 /**
- * Exception thrown whenever something goes wrong while generating request signature.
+ * Exception thrown whenever something goes wrong while doing a local Transloadit related operation.
  */
 public class LocalOperationException extends Exception {
     public LocalOperationException(Exception e) {
