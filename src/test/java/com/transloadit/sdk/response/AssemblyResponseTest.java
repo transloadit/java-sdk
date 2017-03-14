@@ -11,6 +11,7 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -37,6 +38,21 @@ public class AssemblyResponseTest extends MockHttpService {
     @After
     public void tearDown() {
         mockServerClient.reset();
+    }
+
+    @Test
+    public void getId() {
+        assertEquals(response.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+    }
+
+    @Test
+    public void getUrl() {
+        assertEquals(response.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+    }
+
+    @Test
+    public void getSslUrl() {
+        assertEquals(response.getSslUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     @Test

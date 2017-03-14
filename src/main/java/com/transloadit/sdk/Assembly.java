@@ -81,7 +81,7 @@ public class Assembly extends OptionsBuilder {
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions), true);
             try {
-                processTusFiles(response.sslUrl);
+                processTusFiles(response.getSslUrl());
             } catch (IOException e) {
                 throw new LocalOperationException(e);
             } catch (ProtocolException e) {

@@ -1,7 +1,7 @@
 package com.transloadit.sdk.exceptions;
 
 /**
- * Exception thrown whenever something goes wrong while communication with Transloadit API.
+ * Exception thrown whenever something goes wrong while communicating with Transloadit API.
  */
 public class RequestException extends Exception {
     public RequestException(Exception e) {

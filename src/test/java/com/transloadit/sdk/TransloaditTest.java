@@ -46,8 +46,8 @@ public class TransloaditTest extends MockHttpService {
 
         AssemblyResponse assembly = transloadit.getAssembly("76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(assembly.id, "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(assembly.sslUrl, "https://api2.jane.transloadit.com/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     @Test
@@ -60,8 +60,8 @@ public class TransloaditTest extends MockHttpService {
         AssemblyResponse assembly = transloadit
                 .getAssemblyByUrl(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(assembly.id, "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(assembly.sslUrl, "https://api2.jane.transloadit.com/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     @Test

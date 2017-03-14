@@ -20,8 +20,8 @@ public class Main {
 
             AssemblyResponse ass = assembly.save(true);
 
-            System.out.println(ass.id);
-            System.out.println(ass.url);
+            System.out.println(ass.getId());
+            System.out.println(ass.getUrl());
             System.out.println(ass.json());
 
             ListResponse list = transloadit.listAssemblies();
