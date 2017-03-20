@@ -72,7 +72,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assemblies.json")));
 
         ListResponse assemblies = transloadit.listAssemblies();
-        assertEquals(assemblies.size, 0);
+        assertEquals(assemblies.size(), 0);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("templates.json")));
 
         ListResponse templates = transloadit.listTemplates();
-        assertEquals(templates.size, 0);
+        assertEquals(templates.size(), 0);
     }
 
     @Test

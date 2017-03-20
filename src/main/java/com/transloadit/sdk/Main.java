@@ -27,8 +27,8 @@ public class Main {
             ListResponse list = transloadit.listAssemblies();
 
             System.out.println(list.json());
-            System.out.println(list.items.get(0));
-            System.out.println(list.size);
+            System.out.println(list.getItems().get(0));
+            System.out.println(list.size());
 
         } catch (RequestException e) {
             e.printStackTrace();
