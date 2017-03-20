@@ -27,7 +27,7 @@ public class RequestTest extends MockHttpService {
 
 
     @Test
-    public void testGet() throws Exception {
+    public void get() throws Exception {
         request.get("/foo");
 
         mockServerClient.verify(HttpRequest.request()
@@ -36,7 +36,7 @@ public class RequestTest extends MockHttpService {
     }
 
     @Test
-    public void testPost() throws Exception {
+    public void post() throws Exception {
         request.post("/foo", new HashMap<String, Object>());
 
         mockServerClient.verify(HttpRequest.request()
@@ -45,7 +45,7 @@ public class RequestTest extends MockHttpService {
 
 
     @Test
-    public void testDelete() throws Exception {
+    public void delete() throws Exception {
         request.delete("/foo", new HashMap<String, Object>());
 
         mockServerClient.verify(HttpRequest.request()
@@ -53,7 +53,7 @@ public class RequestTest extends MockHttpService {
     }
 
     @Test
-    public void testPut() throws Exception {
+    public void put() throws Exception {
         request.put("/foo", new HashMap<String, Object>());
 
         mockServerClient.verify(HttpRequest.request()

@@ -20,14 +20,14 @@ public class OptionsBuilderTest {
 
 
     @Test
-    public void testAddStep() throws Exception {
+    public void addStep() throws Exception {
         optionsBuilder.addStep("encode", "/video/encode", new HashMap<String, Object>());
 
         assertEquals(optionsBuilder.steps.getStep("encode").robot , "/video/encode");
     }
 
     @Test
-    public void testAddOptions() throws Exception {
+    public void addOptions() throws Exception {
         Map<String, Object> options = new HashMap<String, Object>();
         options.put("foo", "bar");
         options.put("red", "color");
@@ -37,7 +37,7 @@ public class OptionsBuilderTest {
     }
 
     @Test
-    public void testAddOption() throws Exception {
+    public void addOption() throws Exception {
         optionsBuilder.addOption("foo", "bar");
         assertEquals(optionsBuilder.options.get("foo"), "bar");
     }

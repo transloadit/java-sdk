@@ -4,27 +4,17 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
+import com.transloadit.sdk.exceptions.RequestException;
 
 /**
  * An AssemblyApi tailored Http Response
  */
 public class AssemblyResponse extends Response {
-    public final String id;
-    public final String url;
-    public final String sslUrl;
+    protected boolean usesTus;
 
     public AssemblyResponse(HttpResponse<JsonNode> response, boolean usesTus) {
         super(response);
-
-        if (usesTus) {
-            id = this.json().getString("id");
-            sslUrl = url = this.json().getString("status_endpoint");
-        } else {
-            id = this.json().getString("assembly_id");
-            url = this.json().getString("assembly_url");
-            sslUrl = this.json().getString("assembly_ssl_url");
-        }
+        this.usesTus = usesTus;
     }
 
     public AssemblyResponse(HttpResponse<JsonNode> response) {
@@ -32,24 +22,48 @@ public class AssemblyResponse extends Response {
     }
 
     /**
+     *
+     * @return assembly id
+     */
+    public String getId() {
+        return this.json().getString( usesTus ? "id" : "assembly_id");
+    }
+
+    /**
+     *
+     * @return assembly url
+     */
+    public String getUrl() {
+        return this.json().getString(usesTus ? "status_endpoint" : "assembly_url");
+    }
+
+    /**
+     *
+     * @return assembly ssl url
+     */
+    public String getSslUrl() {
+        return this.json().getString(usesTus ? "status_endpoint" : "assembly_ssl_url");
+    }
+
+    /**
      * reloads the assemblyApi to get its updated status.
      */
-    public void reload() throws TransloaditRequestException {
+    public void reload() throws RequestException {
         try {
-            httpResponse = Unirest.get(url).asJson();
+            httpResponse = Unirest.get(getSslUrl()).asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 
     /**
      * cancels the execution of the assemblyApi.
      */
-    public void cancel() throws TransloaditRequestException{
+    public void cancel() throws RequestException {
         try {
-            httpResponse = Unirest.delete(url).asJson();
+            httpResponse = Unirest.delete(getSslUrl()).asJson();
         } catch (UnirestException e) {
-            throw new TransloaditRequestException(e);
+            throw new RequestException(e);
         }
     }
 

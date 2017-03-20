@@ -20,7 +20,22 @@ public class TemplateTest extends MockHttpService {
     private MockServerClient mockServerClient;
 
     @Test
-    public void testSave() throws Exception {
+    public void getName() throws Exception {
+        Template template = transloadit.newTemplate("foo");
+        assertEquals(template.getName(), "foo");
+    }
+
+    @Test
+    public void setName() throws Exception {
+        Template template = transloadit.newTemplate("foo");
+        assertEquals(template.getName(), "foo");
+
+        template.setName("bar");
+        assertEquals(template.getName(), "bar");
+    }
+
+    @Test
+    public void save() throws Exception {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("template.json")));
@@ -29,5 +44,7 @@ public class TemplateTest extends MockHttpService {
         Response newTemplate = template.save();
 
         assertEquals(newTemplate.json().get("ok"), "TEMPLATE_FOUND");
+
+        mockServerClient.reset();
     }
 }

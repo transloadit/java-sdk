@@ -1,26 +1,30 @@
 package com.transloadit.sdk.response;
 
-import org.junit.After;
-import org.junit.Before;
+import com.transloadit.sdk.Assembly;
+import com.transloadit.sdk.MockHttpService;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.junit.MockServerRule;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
-/**
- * Created by ifedapo on 06/02/2017.
- */
-public class ResponseTest {
-    @Before
-    public void setUp() throws Exception {
+import static org.junit.Assert.assertEquals;
 
-    }
+public class ResponseTest extends MockHttpService {
+    @Rule
+    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
 
-    @After
-    public void tearDown() throws Exception {
-
-    }
+    private MockServerClient mockServerClient;
 
     @Test
     public void json() throws Exception {
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
+        AssemblyResponse response = new Assembly(transloadit).save(false);
+        assertEquals(response.json().getString("ok"), "ASSEMBLY_COMPLETED");
     }
 
 }

@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.Response;
 
 import java.util.HashMap;
@@ -11,7 +11,7 @@ import java.util.Map;
  * This class represents a new template being created
  */
 public class Template extends OptionsBuilder {
-    public String name;
+    private String name;
 
     /**
      *
@@ -27,18 +27,39 @@ public class Template extends OptionsBuilder {
         this.options = options;
     }
 
+    /**
+     *
+     * @param transloadit {@link Transloadit} an instance of transloadit client class.
+     * @param name name of the template.
+     */
     public Template(Transloadit transloadit, String name) {
         this(transloadit, name, new Steps(), new HashMap<String, Object>());
+    }
+
+    /**
+     * Set the name of the template
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     *
+     * @return name of the template
+     */
+    public String getName() {
+        return name;
     }
 
     /**
      * Submits the configured template to Transloadit.
      *
      * @return {@link Response}
-     * @throws TransloaditRequestException
-     * @throws TransloaditSignatureException
+     * @throws RequestException
+     * @throws LocalOperationException
      */
-    public Response save() throws TransloaditRequestException, TransloaditSignatureException {
+    public Response save() throws RequestException, LocalOperationException {
         Map<String, Object> templateData = new HashMap<String, Object>();
         templateData.put("name", name);
 

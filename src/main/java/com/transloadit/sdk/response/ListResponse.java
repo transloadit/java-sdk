@@ -8,12 +8,23 @@ import org.json.JSONArray;
  * A List tailored Http Response
  */
 public class ListResponse extends Response {
-    public final JSONArray items;
-    public final int size;
-
     public ListResponse(HttpResponse<JsonNode> response) {
         super(response);
-        items = json().getJSONArray("items");
-        size = json().getInt("count");
+    }
+
+    /**
+     *
+     * @return {@link JSONArray} iterable of items on the list
+     */
+    public JSONArray getItems() {
+        return json().getJSONArray("items");
+    }
+
+    /**
+     *
+     * @return the number items on the list
+     */
+    public int size() {
+        return json().getInt("count");
     }
 }

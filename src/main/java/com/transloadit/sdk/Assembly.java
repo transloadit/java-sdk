@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.TransloaditRequestException;
-import com.transloadit.sdk.exceptions.TransloaditSignatureException;
+import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.*;
 
@@ -15,8 +15,8 @@ import java.util.Map;
  * This class represents a new assembly being created
  */
 public class Assembly extends OptionsBuilder {
-    Map<String, Object> files;
-    private TusClient tusClient;
+    protected Map<String, Object> files;
+    protected TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -66,12 +66,11 @@ public class Assembly extends OptionsBuilder {
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
      * @return {@link AssemblyResponse}
-     * @throws TransloaditRequestException
-     * @throws IOException when there's a failure with file retrieval.
-     * @throws ProtocolException when there's a failure with tus upload.
+     * @throws RequestException
+     * @throws LocalOperationException
      */
     public AssemblyResponse save(boolean isResumable)
-            throws TransloaditRequestException, TransloaditSignatureException, IOException, ProtocolException {
+            throws RequestException, LocalOperationException {
         Request request = new Request(transloadit);
         options.put("steps", steps.toMap());
 
@@ -81,17 +80,21 @@ public class Assembly extends OptionsBuilder {
 
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions), true);
-            processTusFiles(response.sslUrl);
+            try {
+                processTusFiles(response.getSslUrl());
+            } catch (IOException e) {
+                throw new LocalOperationException(e);
+            } catch (ProtocolException e) {
+                throw new RequestException(e);
+            }
             return response;
         } else {
             return new AssemblyResponse(request.post("/assemblies", options, files));
         }
     }
 
-    public  AssemblyResponse save()
-            throws ProtocolException, TransloaditSignatureException,
-            TransloaditRequestException, IOException {
-        return this.save(false);
+    public  AssemblyResponse save() throws LocalOperationException, RequestException {
+        return this.save(true);
     }
 
     /**
@@ -102,7 +105,7 @@ public class Assembly extends OptionsBuilder {
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
         tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(transloadit.hostUrl + "/resumable/files/"));
+        tusClient.setUploadCreationURL(new URL(transloadit.getHostUrl() + "/resumable/files/"));
         tusClient.enableResuming(new TusURLMemoryStore());
 
         for (Map.Entry<String, Object> entry :
@@ -114,20 +117,20 @@ public class Assembly extends OptionsBuilder {
     /**
      *
      * @param file to upload.
-     * @param name name of the file to be uploaded.
+     * @param fieldName name of the file to be uploaded.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFile(File file, String name, String assemblyUrl)
+    protected void processTusFile(File file, String fieldName, String assemblyUrl)
             throws IOException, ProtocolException {
 
         final TusUpload upload = new TusUpload(file);
 
         Map<String, String> metadata = new HashMap<String, String>();
-        metadata.put("filename", name);
+        metadata.put("filename", file.getName());
         metadata.put("assembly_url", assemblyUrl);
-        metadata.put("fieldname", name);
+        metadata.put("fieldname", fieldName);
 
         upload.setMetadata(metadata);
 
@@ -135,7 +138,7 @@ public class Assembly extends OptionsBuilder {
             @Override
             protected void makeAttempt() throws ProtocolException, IOException {
                 TusUploader uploader = tusClient.resumeOrCreateUpload(upload);
-                uploader.setChunkSize(1024);
+                uploader.setChunkSize(2 * 1024 * 1024); // 2MB
 
                 int uploadedChunk = 0;
                 while (uploadedChunk > -1) {
