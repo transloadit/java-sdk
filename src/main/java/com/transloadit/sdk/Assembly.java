@@ -15,8 +15,8 @@ import java.util.Map;
  * This class represents a new assembly being created
  */
 public class Assembly extends OptionsBuilder {
-    Map<String, Object> files;
-    TusClient tusClient;
+    protected Map<String, Object> files;
+    protected TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());

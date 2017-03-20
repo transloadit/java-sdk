@@ -24,7 +24,7 @@ import java.util.Map;
  * Transloadit tailored Http Request class
  */
 public class Request {
-    Transloadit transloadit;
+    private Transloadit transloadit;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
