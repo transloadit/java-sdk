@@ -5,10 +5,13 @@ Java client for Transloadit upload service http://transloadit.com
 
 
 ```java
+import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
-import com.transloadit.sdk.Transloadit;
 
+import java.io.File;
+import java.util.HashMap;
 
 Transloadit transloadit = new Transloadit("Auth_key", "Auth_secret");
 
