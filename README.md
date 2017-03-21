@@ -8,9 +8,9 @@ Java client for Transloadit upload service http://transloadit.com
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.Transloadit;
-...
 
-Transloadit transloadit = new Transloadit("Auth_key", "Auth_secret", 3600);
+
+Transloadit transloadit = new Transloadit("Auth_key", "Auth_secret");
 
 // create an assembly
 Assembly assembly = transloadit.newAssembly();
@@ -24,10 +24,10 @@ assembly.addOption("template_id", "3abcde3453ffccadb");
 try {
     AssemblyResponse assemblyResponse = assembly.save();
 
-    System.out.println(assemblyResponse.id);
-    System.out.println(assemblyResponse.url);
+    System.out.println(assemblyResponse.getId());
+    System.out.println(assemblyResponse.getUrl());
     System.out.println(assemblyResponse.json());
-} catch (TransloaditRequestException | TransloaditSignatureException e) {
+} catch (RequestException | LocalOperationException e) {
   // handle exception here
 }
 
@@ -36,12 +36,12 @@ try {
 ListResponse list = transloadit.listAssemblies();
 
 // iterable json array
-list.items;
+list.getItems();
 
 // first element in list
-list.items.get(0);
+list.getItems().get(0);
 
 // list size
-list.size;
+list.size();
 
 ```
