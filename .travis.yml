@@ -6,5 +6,6 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 matrix:
+  # https://github.com/square/okhttp/issues/528
   allow_failures:
   - jdk: openjdk6
