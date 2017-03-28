@@ -12,8 +12,7 @@ import org.mockserver.model.HttpResponse;
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.JsonBody.json;
 
 public class AssemblyTest extends MockHttpService {
     @Rule
@@ -50,7 +49,7 @@ public class AssemblyTest extends MockHttpService {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies")
                 .withMethod("POST")
-                .withBody(params(param("tus_num_expected_upload_files", "0"))))
+                .withBody(json("{tus_num_expected_upload_files: 0}")))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
@@ -58,5 +57,4 @@ public class AssemblyTest extends MockHttpService {
 
         mockServerClient.reset();
     }
-
 }

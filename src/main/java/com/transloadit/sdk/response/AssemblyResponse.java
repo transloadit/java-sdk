@@ -1,10 +1,6 @@
 package com.transloadit.sdk.response;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 
 /**
  * An AssemblyApi tailored Http Response
@@ -12,12 +8,12 @@ import com.transloadit.sdk.exceptions.RequestException;
 public class AssemblyResponse extends Response {
     protected boolean usesTus;
 
-    public AssemblyResponse(HttpResponse<JsonNode> response, boolean usesTus) {
+    public AssemblyResponse(okhttp3.Response response, boolean usesTus) throws LocalOperationException {
         super(response);
         this.usesTus = usesTus;
     }
 
-    public AssemblyResponse(HttpResponse<JsonNode> response) {
+    public AssemblyResponse(okhttp3.Response response) throws LocalOperationException {
         this(response, false);
     }
 
@@ -43,28 +39,6 @@ public class AssemblyResponse extends Response {
      */
     public String getSslUrl() {
         return this.json().getString(usesTus ? "status_endpoint" : "assembly_ssl_url");
-    }
-
-    /**
-     * reloads the assemblyApi to get its updated status.
-     */
-    public void reload() throws RequestException {
-        try {
-            httpResponse = Unirest.get(getSslUrl()).asJson();
-        } catch (UnirestException e) {
-            throw new RequestException(e);
-        }
-    }
-
-    /**
-     * cancels the execution of the assemblyApi.
-     */
-    public void cancel() throws RequestException {
-        try {
-            httpResponse = Unirest.delete(getSslUrl()).asJson();
-        } catch (UnirestException e) {
-            throw new RequestException(e);
-        }
     }
 
     /**

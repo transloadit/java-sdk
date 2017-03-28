@@ -18,11 +18,15 @@ public class Main {
             assembly.addStep("encode", "/video/encode", new HashMap<String, Object>());
             assembly.addFile(new File("LICENSE"));
 
+            transloadit.setRequestSigning(false);
+
             AssemblyResponse ass = assembly.save(true);
 
             System.out.println(ass.getId());
             System.out.println(ass.getUrl());
             System.out.println(ass.json());
+
+            transloadit.setRequestSigning(true);
 
             ListResponse list = transloadit.listAssemblies();
 

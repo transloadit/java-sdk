@@ -27,4 +27,14 @@ public class ResponseTest extends MockHttpService {
         assertEquals(response.json().getString("ok"), "ASSEMBLY_COMPLETED");
     }
 
+    @Test
+    public void status() throws Exception {
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("assembly.json")));
+
+        AssemblyResponse response = new Assembly(transloadit).save(false);
+        assertEquals(response.status(), 200);
+    }
+
 }
