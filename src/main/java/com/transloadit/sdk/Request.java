@@ -115,7 +115,7 @@ public class Request {
 
     private String buildUlr(String url, Map<String, Object> params) throws LocalOperationException {
         StringBuilder sb = new StringBuilder();
-        for(HashMap.Entry<String, Object> entry : params.entrySet()){
+        for(Map.Entry<String, Object> entry : params.entrySet()){
             if(sb.length() > 0){
                 sb.append('&');
             }
