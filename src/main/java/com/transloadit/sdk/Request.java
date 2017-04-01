@@ -32,7 +32,7 @@ import java.util.Map;
 public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private static final String USER_AGENT = "Transloadit Java SDK";
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
@@ -52,6 +52,7 @@ public class Request {
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
+                .addHeader("User-Agent", USER_AGENT)
                 .build();
 
         try {
@@ -86,6 +87,7 @@ public class Request {
 
         okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
                 .post(getBody(payload, files))
+                .addHeader("User-Agent", USER_AGENT)
                 .build();
 
         try {
@@ -113,6 +115,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
+                .addHeader("User-Agent", USER_AGENT)
                 .build();
 
         try {
@@ -136,6 +139,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
+                .addHeader("User-Agent", USER_AGENT)
                 .build();
 
         try {
