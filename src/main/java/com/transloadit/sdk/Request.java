@@ -3,16 +3,20 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import org.apache.commons.codec.binary.Hex;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -34,12 +38,20 @@ public class Request {
         this.transloadit = transloadit;
     }
 
-    okhttp3.Response get(String url, Map<String, Object> data)
+    /**
+     * Makes http GET request.
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response get(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
 
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(buildUlr(fullUrl, toPayload(data)))
+                .url(addUrlParams(fullUrl, toPayload(params)))
                 .build();
 
         try {
@@ -53,21 +65,27 @@ public class Request {
         return get(url, new HashMap<String, Object>());
     }
 
-    okhttp3.Response post(String url, Map<String, Object> data)
+    /**
+     * Makes http POST request
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @param extraData data to send along with request body, outside of params field.
+     * @param files files to be uploaded along with the request.
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response post(String url, Map<String, Object> params,
+                          @Nullable Map<String, String> extraData, @Nullable Map<String, File> files)
             throws RequestException, LocalOperationException {
-        return post(url, data, new HashMap<String, Object>());
-    }
 
-    okhttp3.Response post(String url, Map<String, Object> data, Map<String, Object> extraData)
-            throws RequestException, LocalOperationException {
-        Map<String, Object> payload = toPayload(data);
-        payload.putAll(extraData);
+        Map<String, String> payload = toPayload(params);
+        if (extraData != null) {
+            payload.putAll(extraData);
+        }
 
-        RequestBody body = RequestBody.create(JSON, jsonifyData(payload));
-
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(getFullUrl(url))
-                .post(body)
+        okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
+                .post(getBody(payload, files))
                 .build();
 
         try {
@@ -77,13 +95,24 @@ public class Request {
         }
     }
 
-    okhttp3.Response delete(String url, Map<String, Object> data)
+    okhttp3.Response post(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-        RequestBody body = RequestBody.create(JSON, jsonifyData(toPayload(data)));
+        return post(url, params, null, null);
+    }
 
+    /**
+     * Makes http DELETE request
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response delete(String url, Map<String, Object> params)
+            throws RequestException, LocalOperationException {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
-                .delete(body)
+                .delete(getBody(toPayload(params), null))
                 .build();
 
         try {
@@ -93,13 +122,20 @@ public class Request {
         }
     }
 
+    /**
+     * Makes http PUT request
+     * @param url
+     * @param data
+     * @return
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
     okhttp3.Response put(String url, Map<String, Object> data)
             throws RequestException, LocalOperationException {
-        RequestBody body = RequestBody.create(JSON, jsonifyData(toPayload(data)));
 
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
-                .put(body)
+                .put(getBody(toPayload(data), null))
                 .build();
 
         try {
@@ -109,13 +145,20 @@ public class Request {
         }
     }
 
+    /**
+     * Converts url path to the Transloadit full url.
+     * Returns the url passed if it is already full.
+     *
+     * @param url
+     * @return String
+     */
     private String getFullUrl(String url) {
         return url.startsWith("https://") || url.startsWith("http://") ? url : transloadit.getHostUrl() + url;
     }
 
-    private String buildUlr(String url, Map<String, Object> params) throws LocalOperationException {
+    private String addUrlParams(String url, Map<String, ? extends Object> params) throws LocalOperationException {
         StringBuilder sb = new StringBuilder();
-        for(Map.Entry<String, Object> entry : params.entrySet()){
+        for(Map.Entry<String, ? extends Object> entry : params.entrySet()){
             if(sb.length() > 0){
                 sb.append('&');
             }
@@ -131,11 +174,45 @@ public class Request {
         return url + "?" + sb.toString();
     }
 
-    private Map<String, Object> toPayload(Map<String, Object> data) throws LocalOperationException {
+    /**
+     * Builds okhttp3 compatible request body with the data passed.
+     *
+     * @param data data to add to request body
+     * @param files files to upload
+     * @return {@link RequestBody}
+     */
+    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files) {
+        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+
+        if (files != null) {
+            for (Map.Entry<String, File> entry : files.entrySet()) {
+                File file = entry.getValue();
+                String mimeType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(file);
+
+                builder.addFormDataPart(entry.getKey(), file.getName(),
+                        RequestBody.create(MediaType.parse(mimeType), file));
+            }
+        }
+
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            builder.addFormDataPart(entry.getKey(), entry.getValue());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Returns data tree structured as Transloadit expects it.
+     *
+     * @param data
+     * @return {@link Map}
+     * @throws LocalOperationException
+     */
+    private Map<String, String> toPayload(Map<String, Object> data) throws LocalOperationException {
         Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
 
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, String> payload = new HashMap<String, String>();
         payload.put("params", jsonifyData(dataClone));
 
         if (transloadit.shouldSignRequest) {
@@ -144,7 +221,13 @@ public class Request {
         return payload;
     }
 
-    private String jsonifyData(Map<String, Object> data) {
+    /**
+     * converts Map of data to json string
+     *
+     * @param data map data to converted to json
+     * @return {@link String}
+     */
+    private String jsonifyData(Map<String, ? extends Object> data) {
         JSONObject jsonData = new JSONObject(data);
 
         return jsonData.toString();

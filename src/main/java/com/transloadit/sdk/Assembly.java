@@ -15,7 +15,7 @@ import java.util.Map;
  * This class represents a new assembly being created
  */
 public class Assembly extends OptionsBuilder {
-    protected Map<String, Object> files;
+    protected Map<String, File> files;
     protected TusClient tusClient;
 
     public Assembly(Transloadit transloadit) {
@@ -31,8 +31,7 @@ public class Assembly extends OptionsBuilder {
     public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
         this.transloadit = transloadit;
         this.steps = steps;
-        this.files = new HashMap<String, Object>();
-        this.files.putAll(files);
+        this.files = files;
         this.options = options;
         tusClient = null;
     }
@@ -53,12 +52,21 @@ public class Assembly extends OptionsBuilder {
      * @param file {@link File} the file to be uploaded.
      */
     public void addFile(File file){
-        String name = "file_";
+        String name = "file";
 
         for (int i = files.size(); files.containsKey(name); i++) {
-            name += i;
+            name += "_" + i;
         }
         files.put(name, file);
+    }
+
+    /**
+     * Removes file from your assembly.
+     *
+     * @param name name of the file to remove.
+     */
+    public void removeFile(String name) {
+        files.remove(name);
     }
 
     /**
@@ -75,11 +83,13 @@ public class Assembly extends OptionsBuilder {
         options.put("steps", steps.toMap());
 
         if (isResumable) {
-            Map<String, Object> tusOptions = new HashMap<String, Object>();
-            tusOptions.put("tus_num_expected_upload_files", files.size());
+            Map<String, String> tusOptions = new HashMap<String, String>();
+            tusOptions.put("tus_num_expected_upload_files", Integer.toString(files.size()));
+
+            System.out.println(tusOptions);
 
             AssemblyResponse response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions), true);
+                    request.post("/assemblies", options, tusOptions, null), true);
             try {
                 processTusFiles(response.getSslUrl());
             } catch (IOException e) {
@@ -89,7 +99,7 @@ public class Assembly extends OptionsBuilder {
             }
             return response;
         } else {
-            return new AssemblyResponse(request.post("/assemblies", options, files));
+            return new AssemblyResponse(request.post("/assemblies", options, null, files));
         }
     }
 
@@ -108,9 +118,8 @@ public class Assembly extends OptionsBuilder {
         tusClient.setUploadCreationURL(new URL(transloadit.getHostUrl() + "/resumable/files/"));
         tusClient.enableResuming(new TusURLMemoryStore());
 
-        for (Map.Entry<String, Object> entry :
-                files.entrySet()) {
-            processTusFile((File) entry.getValue(), entry.getKey(), assemblyUrl);
+        for (Map.Entry<String, File> entry : files.entrySet()) {
+            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
     }
 

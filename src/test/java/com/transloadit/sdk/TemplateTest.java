@@ -9,6 +9,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.RegexBody.regex;
 
 /**
  * test for template class.
@@ -37,7 +38,8 @@ public class TemplateTest extends MockHttpService {
     @Test
     public void save() throws Exception {
         mockServerClient.when(HttpRequest.request()
-                .withPath("/templates").withMethod("POST"))
+                .withPath("/templates").withMethod("POST")
+                .withBody(regex("[\\w\\W]*\"name\":\"template_name\"[\\w\\W]*")))
                 .respond(HttpResponse.response().withBody(getJson("template.json")));
 
         Template template = new Template(transloadit, "template_name");
