@@ -13,12 +13,12 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
@@ -191,7 +191,11 @@ public class Request {
         if (files != null) {
             for (Map.Entry<String, File> entry : files.entrySet()) {
                 File file = entry.getValue();
-                String mimeType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(file);
+                String mimeType = URLConnection.guessContentTypeFromName(file.getName());
+
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
 
                 builder.addFormDataPart(entry.getKey(), file.getName(),
                         RequestBody.create(MediaType.parse(mimeType), file));

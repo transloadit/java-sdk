@@ -35,7 +35,7 @@ public class Transloadit {
         this.secret = secret;
         this.duration = duration;
         this.hostUrl = hostUrl;
-        shouldSignRequest = secret == null;
+        shouldSignRequest = secret != null;
     }
 
     /**

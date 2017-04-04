@@ -86,8 +86,6 @@ public class Assembly extends OptionsBuilder {
             Map<String, String> tusOptions = new HashMap<String, String>();
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(files.size()));
 
-            System.out.println(tusOptions);
-
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions, null), true);
             try {
