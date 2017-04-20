@@ -1,14 +1,13 @@
 package com.transloadit.sdk.response;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
+import com.transloadit.sdk.exceptions.LocalOperationException;
 import org.json.JSONArray;
 
 /**
  * A List tailored Http Response
  */
 public class ListResponse extends Response {
-    public ListResponse(HttpResponse<JsonNode> response) {
+    public ListResponse(okhttp3.Response response) throws LocalOperationException {
         super(response);
     }
 

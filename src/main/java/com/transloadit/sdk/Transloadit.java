@@ -5,6 +5,7 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class Transloadit {
     String secret;
     long duration;
     private String hostUrl;
+    boolean shouldSignRequest;
 
     /**
      * A new instance to transloadit client
@@ -28,11 +30,12 @@ public class Transloadit {
      * @param duration for how long (in seconds) the request should be valid.
      * @param hostUrl the host url to the transloadit service.
      */
-    public Transloadit(String key, String secret, long duration, String hostUrl) {
+    public Transloadit(String key, @Nullable String secret, long duration, String hostUrl) {
         this.key = key;
         this.secret = secret;
         this.duration = duration;
         this.hostUrl = hostUrl;
+        shouldSignRequest = secret != null;
     }
 
     /**
@@ -65,6 +68,19 @@ public class Transloadit {
      */
     public Transloadit(String key, String secret) {
         this(key, secret, 5 * 60, DEFAULT_HOST_URL);
+    }
+
+    /**
+     * Enable/Disable request signing.
+     * @param flag
+     * @throws LocalOperationException
+     */
+    public void setRequestSigning(boolean flag) throws LocalOperationException {
+        if (flag && secret == null) {
+            throw new LocalOperationException("Cannot enable request signing with null secret.");
+        } else {
+            shouldSignRequest = flag;
+        }
     }
 
     /**
@@ -109,6 +125,20 @@ public class Transloadit {
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get(url));
+    }
+
+    /**
+     * cancels a running assembly.
+     *
+     * @param url full url of the Assembly.
+     * @return {@link AssemblyResponse}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    public AssemblyResponse cancelAssembly(String url)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new AssemblyResponse(request.delete(url, new HashMap<String, Object>()));
     }
 
     /**

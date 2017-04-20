@@ -13,8 +13,10 @@ allprojects {
 dependencies {
     compile 'org.jetbrains:annotations:13.0'
     compile 'io.tus.java.client:tus-java-client:0.3.2-pre1'
-    compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'joda-time:joda-time:2.9.7'
+    compile 'com.squareup.okhttp3:okhttp:3.6.0'
+    compile 'org.json:json:20160212'
+    compile 'commons-codec:commons-codec:1.9'
     testCompile 'junit:junit:4.12'
     testCompile 'org.mock-server:mockserver-netty:3.9.17'
 }

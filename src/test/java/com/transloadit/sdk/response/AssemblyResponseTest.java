@@ -56,22 +56,6 @@ public class AssemblyResponseTest extends MockHttpService {
     }
 
     @Test
-    public void reload() throws Exception {
-        response.reload();
-
-        mockServerClient.verify(HttpRequest.request()
-                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"));
-    }
-
-    @Test
-    public void cancel() throws Exception {
-        response.cancel();
-
-        mockServerClient.verify(HttpRequest.request()
-                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("DELETE"));
-    }
-
-    @Test
     public void isCompleted() throws Exception {
         assertTrue(response.isCompleted());
     }
@@ -139,5 +123,4 @@ public class AssemblyResponseTest extends MockHttpService {
         assertFalse(executingResponse.isFinished());
         assertTrue(response.isFinished());
     }
-
 }

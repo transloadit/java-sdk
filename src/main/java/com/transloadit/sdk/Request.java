@@ -1,12 +1,13 @@
 package com.transloadit.sdk;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import org.apache.commons.codec.binary.Hex;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -14,6 +15,11 @@ import org.json.JSONObject;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -25,85 +31,211 @@ import java.util.Map;
  */
 public class Request {
     private Transloadit transloadit;
+    private OkHttpClient httpClient = new OkHttpClient();
+    private static final String USER_AGENT = "Transloadit Java SDK";
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-
-        Unirest.setDefaultHeader("User-Agent", "Transloadit Java SDK");
     }
 
-    HttpResponse<JsonNode> get(String url, Map<String, Object> data)
+    /**
+     * Makes http GET request.
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response get(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
+
+        String fullUrl = getFullUrl(url);
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(addUrlParams(fullUrl, toPayload(params)))
+                .addHeader("User-Agent", USER_AGENT)
+                .build();
+
         try {
-            return Unirest.get(getFullUrl(url))
-                    .queryString(toPayload(data))
-                    .asJson();
-        } catch (UnirestException e) {
+            return httpClient.newCall(request).execute();
+        } catch (IOException e) {
             throw new RequestException(e);
         }
     }
 
-    HttpResponse<JsonNode> get(String url) throws RequestException, LocalOperationException {
+    okhttp3.Response get(String url) throws RequestException, LocalOperationException {
         return get(url, new HashMap<String, Object>());
     }
 
-    HttpResponse<JsonNode> post(String url, Map<String, Object> data)
+    /**
+     * Makes http POST request
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @param extraData data to send along with request body, outside of params field.
+     * @param files files to be uploaded along with the request.
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response post(String url, Map<String, Object> params,
+                          @Nullable Map<String, String> extraData, @Nullable Map<String, File> files)
             throws RequestException, LocalOperationException {
-        return post(url, data, new HashMap<String, Object>());
-    }
 
-    HttpResponse<JsonNode> post(String url, Map<String, Object> data, Map<String, Object> extraData)
-            throws RequestException, LocalOperationException {
-        Map<String, Object> payload = toPayload(data);
-        payload.putAll(extraData);
+        Map<String, String> payload = toPayload(params);
+        if (extraData != null) {
+            payload.putAll(extraData);
+        }
+
+        okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
+                .post(getBody(payload, files))
+                .addHeader("User-Agent", USER_AGENT)
+                .build();
 
         try {
-            return Unirest.post(getFullUrl(url))
-                    .fields(payload)
-                    .asJson();
-        } catch (UnirestException e) {
+            return httpClient.newCall(request).execute();
+        } catch (IOException e) {
             throw new RequestException(e);
         }
     }
 
-    HttpResponse<JsonNode> delete(String url, Map<String, Object> data)
+    okhttp3.Response post(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
+        return post(url, params, null, null);
+    }
+
+    /**
+     * Makes http DELETE request
+     * @param url url to makes request to
+     * @param params data to add to params field
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response delete(String url, Map<String, Object> params)
+            throws RequestException, LocalOperationException {
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(getFullUrl(url))
+                .delete(getBody(toPayload(params), null))
+                .addHeader("User-Agent", USER_AGENT)
+                .build();
+
         try {
-            return Unirest.delete(getFullUrl(url))
-                    .fields(toPayload(data))
-                    .asJson();
-        } catch (UnirestException e) {
+            return httpClient.newCall(request).execute();
+        } catch (IOException e) {
             throw new RequestException(e);
         }
     }
 
-    HttpResponse<JsonNode> put(String url, Map<String, Object> data)
+    /**
+     * Makes http PUT request
+     * @param url
+     * @param data
+     * @return
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
+    okhttp3.Response put(String url, Map<String, Object> data)
             throws RequestException, LocalOperationException {
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(getFullUrl(url))
+                .put(getBody(toPayload(data), null))
+                .addHeader("User-Agent", USER_AGENT)
+                .build();
+
         try {
-            return Unirest.put(getFullUrl(url))
-                    .fields(toPayload(data))
-                    .asJson();
-        } catch (UnirestException e) {
+            return httpClient.newCall(request).execute();
+        } catch (IOException e) {
             throw new RequestException(e);
         }
     }
 
+    /**
+     * Converts url path to the Transloadit full url.
+     * Returns the url passed if it is already full.
+     *
+     * @param url
+     * @return String
+     */
     private String getFullUrl(String url) {
         return url.startsWith("https://") || url.startsWith("http://") ? url : transloadit.getHostUrl() + url;
     }
 
-    private Map<String, Object> toPayload(Map<String, Object> data) throws LocalOperationException {
+    private String addUrlParams(String url, Map<String, ? extends Object> params) throws LocalOperationException {
+        StringBuilder sb = new StringBuilder();
+        for(Map.Entry<String, ? extends Object> entry : params.entrySet()){
+            if(sb.length() > 0){
+                sb.append('&');
+            }
+
+            try {
+                sb.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
+                        .append(URLEncoder.encode((String) entry.getValue(), "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                throw new LocalOperationException(e);
+            }
+        }
+
+        return url + "?" + sb.toString();
+    }
+
+    /**
+     * Builds okhttp3 compatible request body with the data passed.
+     *
+     * @param data data to add to request body
+     * @param files files to upload
+     * @return {@link RequestBody}
+     */
+    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files) {
+        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+
+        if (files != null) {
+            for (Map.Entry<String, File> entry : files.entrySet()) {
+                File file = entry.getValue();
+                String mimeType = URLConnection.guessContentTypeFromName(file.getName());
+
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+
+                builder.addFormDataPart(entry.getKey(), file.getName(),
+                        RequestBody.create(MediaType.parse(mimeType), file));
+            }
+        }
+
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            builder.addFormDataPart(entry.getKey(), entry.getValue());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Returns data tree structured as Transloadit expects it.
+     *
+     * @param data
+     * @return {@link Map}
+     * @throws LocalOperationException
+     */
+    private Map<String, String> toPayload(Map<String, Object> data) throws LocalOperationException {
         Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
 
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, String> payload = new HashMap<String, String>();
         payload.put("params", jsonifyData(dataClone));
-        payload.put("signature", getSignature(jsonifyData(dataClone)));
 
+        if (transloadit.shouldSignRequest) {
+            payload.put("signature", getSignature(jsonifyData(dataClone)));
+        }
         return payload;
     }
 
-    private String jsonifyData(Map<String, Object> data) {
+    /**
+     * converts Map of data to json string
+     *
+     * @param data map data to converted to json
+     * @return {@link String}
+     */
+    private String jsonifyData(Map<String, ? extends Object> data) {
         JSONObject jsonData = new JSONObject(data);
 
         return jsonData.toString();

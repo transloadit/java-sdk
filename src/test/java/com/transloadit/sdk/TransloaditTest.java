@@ -65,6 +65,18 @@ public class TransloaditTest extends MockHttpService {
     }
 
     @Test
+    public void cancelAssembly() throws LocalOperationException, RequestException, IOException {
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("DELETE"))
+                .respond(HttpResponse.response().withBody(getJson("cancel_assembly.json")));
+
+        AssemblyResponse assembly = transloadit
+                .cancelAssembly(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+
+        assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
+    }
+
+    @Test
     public void listAssemblies() throws RequestException, LocalOperationException, IOException {
 
         mockServerClient.when(HttpRequest.request()
