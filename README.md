@@ -1,7 +1,36 @@
-# transloadit-java-sdk
-Java client for Transloadit upload service http://transloadit.com
+[![Build Status](https://travis-ci.org/transloadit/java-sdk.png?branch=master)](https://travis-ci.org/transloadit/java-sdk)
 
-## Getting started
+## java-sdk
+A **Java** Integration for [Transloadit](https://transloadit.com)'s file uploading and encoding service
+
+
+## Intro
+
+[Transloadit](https://transloadit.com) is a service that helps you handle file uploads, resize, crop and watermark your images, make GIFs, transcode your videos, extract thumbnails, generate audio waveforms, and so much more. In short, [Transloadit](https://transloadit.com) is the Swiss Army Knife for your files.
+
+This is a **Java** SDK to make it easy to talk to the [Transloadit](https://transloadit.com) REST API.
+
+## Install
+
+The JARs can be downloaded manually from our [Bintray project](https://bintray.com/transloadit/maven/transloadit/view#files).
+
+**Gradle:**
+
+```groovy
+compile 'com.transloadit.sdk:transloadit:0.0.1'
+```
+
+**Maven:**
+
+```xml
+<dependency>
+  <groupId>com.transloadit.sdk</groupId>
+  <artifactId>transloadit</artifactId>
+  <version>0.0.1</version>
+</dependency>
+```
+
+## Usage
 
 
 ```java
@@ -13,38 +42,30 @@ import com.transloadit.sdk.response.ListResponse;
 import java.io.File;
 import java.util.HashMap;
 
-Transloadit transloadit = new Transloadit("Auth_key", "Auth_secret");
-
 // create an assembly
-Assembly assembly = transloadit.newAssembly();
+public class Main {
 
-assembly.addStep("encode", "/video/encode", new HashMap());
-assembly.addFile(new File("LICENSE"));
+    public static void main(String[] args) {
+        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
-// or add template id
-assembly.addOption("template_id", "3abcde3453ffccadb");
+        Assembly assembly = transloadit.newAssembly();
+        assembly.addStep("encode", "/video/encode", new HashMap<String, Object>());
+        assembly.addFile(new File("PATH/TO/FILE.mp4"));
+        
+        try {
+            AssemblyResponse ass = assembly.save(true);
 
-try {
-    AssemblyResponse assemblyResponse = assembly.save();
+            System.out.println(ass.getId());
+            System.out.println(ass.getUrl());
+            System.out.println(ass.json());
 
-    System.out.println(assemblyResponse.getId());
-    System.out.println(assemblyResponse.getUrl());
-    System.out.println(assemblyResponse.json());
-} catch (RequestException | LocalOperationException e) {
-  // handle exception here
+        } catch (RequestException | LocalOperationException e) {
+            // handle exception here
+        }
+    }
 }
-
-
-// list all assemblies assemblies
-ListResponse list = transloadit.listAssemblies();
-
-// iterable json array
-list.getItems();
-
-// first element in list
-list.getItems().get(0);
-
-// list size
-list.size();
-
 ```
+
+## License
+
+[The MIT License](LICENSE).

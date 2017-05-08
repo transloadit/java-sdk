@@ -67,7 +67,7 @@ public class Steps {
     /**
      *
      * @param name The name of the step to return.
-     * @return an instance of ({@link Step ) with the specified name.
+     * @return an instance of ({@link} Step) with the specified name.
      */
     public Step getStep(String name) {
         return all.get(name);

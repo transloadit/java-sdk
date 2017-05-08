@@ -38,7 +38,7 @@ public class Template extends OptionsBuilder {
 
     /**
      * Set the name of the template
-     * @param name
+     * @param name name of the template
      */
     public void setName(String name) {
         this.name = name;
@@ -56,8 +56,8 @@ public class Template extends OptionsBuilder {
      * Submits the configured template to Transloadit.
      *
      * @return {@link Response}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public Response save() throws RequestException, LocalOperationException {
         Map<String, Object> templateData = new HashMap<String, Object>();

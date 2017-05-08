@@ -72,8 +72,8 @@ public class Transloadit {
 
     /**
      * Enable/Disable request signing.
-     * @param flag
-     * @throws LocalOperationException
+     * @param flag the boolean value to set it to.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public void setRequestSigning(boolean flag) throws LocalOperationException {
         if (flag && secret == null) {
@@ -105,8 +105,8 @@ public class Transloadit {
      *
      * @param id id of the Assebly to retrieve.
      * @return {@link AssemblyResponse}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse getAssembly(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
@@ -118,8 +118,8 @@ public class Transloadit {
      *
      * @param url full url of the Assembly.
      * @return {@link AssemblyResponse}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse getAssemblyByUrl(String url)
             throws RequestException, LocalOperationException {
@@ -132,8 +132,8 @@ public class Transloadit {
      *
      * @param url full url of the Assembly.
      * @return {@link AssemblyResponse}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse cancelAssembly(String url)
             throws RequestException, LocalOperationException {
@@ -146,8 +146,8 @@ public class Transloadit {
      *
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public ListResponse listAssemblies(Map<String, Object> options)
             throws RequestException, LocalOperationException {
@@ -175,8 +175,8 @@ public class Transloadit {
      * @param id id of the template to retrieve.
      * @return {@link Response}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public Response getTemplate(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
@@ -190,8 +190,8 @@ public class Transloadit {
      * @param options a Map of options to update/add.
      * @return {@link Response}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public Response updateTemplate(String id, Map<String, Object> options)
             throws RequestException, LocalOperationException {
@@ -205,8 +205,8 @@ public class Transloadit {
      * @param id id of the template to delete.
      * @return {@link Response}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public Response deleteTemplate(String id)
             throws RequestException, LocalOperationException {
@@ -220,8 +220,8 @@ public class Transloadit {
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public ListResponse listTemplates(Map<String, Object> options)
             throws RequestException, LocalOperationException {
@@ -234,8 +234,8 @@ public class Transloadit {
      *
      * @return {@link ListResponse}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public ListResponse listTemplates()
             throws RequestException, LocalOperationException {
@@ -249,8 +249,8 @@ public class Transloadit {
      * @param year for which bill to retrieve.
      * @return {@link Response}
      *
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public Response getBill(int month, int year)
             throws RequestException, LocalOperationException {

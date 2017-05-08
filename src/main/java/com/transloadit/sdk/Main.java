@@ -13,11 +13,11 @@ public class Main {
     public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("KEY", "SECRET");
 
-        try {
-            Assembly assembly = transloadit.newAssembly();
-            assembly.addStep("encode", "/video/encode", new HashMap<String, Object>());
-            assembly.addFile(new File("LICENSE"));
+        Assembly assembly = transloadit.newAssembly();
+        assembly.addStep("encode", "/video/encode", new HashMap<String, Object>());
+        assembly.addFile(new File("LICENSE"));
 
+        try {
             transloadit.setRequestSigning(false);
 
             AssemblyResponse ass = assembly.save(true);

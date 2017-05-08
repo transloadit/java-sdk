@@ -24,6 +24,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      *
+     * @param transloadit {@link Transloadit} the transloadit client.
      * @param steps {@link Steps} the steps to add to the assembly.
      * @param files is a map of file names and files that are meant to be uploaded.
      * @param options map of extra options to be sent along with the request.
@@ -74,8 +75,8 @@ public class Assembly extends OptionsBuilder {
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
      * @return {@link AssemblyResponse}
-     * @throws RequestException
-     * @throws LocalOperationException
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
