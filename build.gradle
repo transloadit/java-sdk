@@ -1,7 +1,13 @@
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 group 'com.transloadit.sdk'
+version = '0.0.1'
 
 allprojects {
     repositories {
@@ -9,6 +15,7 @@ allprojects {
         jcenter()
     }
 }
+
 
 dependencies {
     compile 'org.jetbrains:annotations:13.0'
@@ -19,4 +26,53 @@ dependencies {
     compile 'commons-codec:commons-codec:1.9'
     testCompile 'junit:junit:4.12'
     testCompile 'org.mock-server:mockserver-netty:3.9.17'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId 'com.transloadit.sdk'
+            artifactId 'transloadit'
+            version '0.0.1'
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['mavenJava']
+    dryRun = false
+    pkg {
+        repo = 'maven'
+        name = 'transloadit'
+        userOrg = 'transloadit'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/transloadit/java-sdk.git'
+        websiteUrl = 'https://github.com/transloadit/java-sdk'
+        issueTrackerUrl = 'https://github.com/transloadit/java-sdk/issues'
+        publicDownloadNumbers = true
+        version {
+            name = '0.0.1'
+            desc = 'Java Client for Transloadit(https://transloadit.com) API services.'
+            vcsTag = '0.0.1'
+        }
+    }
 }
