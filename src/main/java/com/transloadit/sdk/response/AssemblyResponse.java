@@ -1,6 +1,7 @@
 package com.transloadit.sdk.response;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
+import org.json.JSONArray;
 
 /**
  * An AssemblyApi tailored Http Response
@@ -39,6 +40,16 @@ public class AssemblyResponse extends Response {
      */
     public String getSslUrl() {
         return this.json().getString(usesTus ? "status_endpoint" : "assembly_ssl_url");
+    }
+
+    /**
+     * returns the assembly result of a particular step.
+     *
+     * @param stepName the name of the step.
+     * @return {@link JSONArray} the assembly result of the specified step.
+     */
+    public JSONArray getStepResult(String stepName) {
+        return json().getJSONObject("results").getJSONArray(stepName);
     }
 
     /**

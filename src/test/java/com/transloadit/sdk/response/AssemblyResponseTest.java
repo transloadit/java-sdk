@@ -56,6 +56,12 @@ public class AssemblyResponseTest extends MockHttpService {
     }
 
     @Test
+    public void getStepResult() {
+        assertEquals(response.getStepResult("resize").getJSONObject(0).getString("url"),
+                "http://tmp.jane.transloadit.com/result_url.png");
+    }
+
+    @Test
     public void isCompleted() throws Exception {
         assertTrue(response.isCompleted());
     }
