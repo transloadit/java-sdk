@@ -12,12 +12,13 @@ This is a **Java** SDK to make it easy to talk to the [Transloadit](https://tran
 
 ## Install
 
-The JARs can be downloaded manually from our [Bintray project](https://bintray.com/transloadit/maven/transloadit/view#files).
+The JARs can be downloaded manually from our [Bintray project](https://bintray.com/transloadit/maven/transloadit/view#files),
+or can be installed from the Jcenter repository.
 
 **Gradle:**
 
 ```groovy
-compile 'com.transloadit.sdk:transloadit:0.0.1'
+compile 'com.transloadit.sdk:transloadit:0.0.2'
 ```
 
 **Maven:**
@@ -26,7 +27,7 @@ compile 'com.transloadit.sdk:transloadit:0.0.1'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
 </dependency>
 ```
 
@@ -53,11 +54,15 @@ public class Main {
         assembly.addFile(new File("PATH/TO/FILE.mp4"));
         
         try {
-            AssemblyResponse ass = assembly.save(true);
+            AssemblyResponse response = assembly.save(true);
+            // wait for assembly to finish executing.
+            while (!response.isFinished()) {
+                response = transloadit.getAssemblyByUrl(response.getSslUrl());
+            }
 
-            System.out.println(ass.getId());
-            System.out.println(ass.getUrl());
-            System.out.println(ass.json());
+            System.out.println(response.getId());
+            System.out.println(response.getUrl());
+            System.out.println(response.json());
 
         } catch (RequestException | LocalOperationException e) {
             // handle exception here
@@ -65,6 +70,10 @@ public class Main {
     }
 }
 ```
+
+## Example
+
+For fully working examples take a look at [examples/](https://github.com/transloadit/java-sdk/tree/master/examples).
 
 ## License
 
