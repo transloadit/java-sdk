@@ -24,7 +24,7 @@ public class TemplateExample {
 
         try {
             System.out.println("Uploading ...");
-            AssemblyResponse response = assembly.save(true);
+            AssemblyResponse response = assembly.save();
 
             // wait for assembly to finish executing.
             System.out.println("waiting for assembly to finish ...");

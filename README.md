@@ -62,7 +62,7 @@ public class Main {
 
         assembly.addFile(new File("PATH/TO/FILE.jpg"));
         try {
-            AssemblyResponse response = assembly.save(true);
+            AssemblyResponse response = assembly.save();
 
             // wait for assembly to finish executing.
             while (!response.isFinished()) {
@@ -300,7 +300,7 @@ public class Main {
 ```
 
 
-### Get template
+### Get a template
 
 To get a particular template, you use the `getTemplate` method, passing the template id as a parameter.
 
