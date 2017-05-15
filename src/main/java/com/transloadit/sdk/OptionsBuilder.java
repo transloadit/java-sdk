@@ -22,6 +22,15 @@ public class OptionsBuilder {
     }
 
     /**
+     * Removes step with the given name from the set of steps.
+     *
+     * @param name Name of the step to remove.
+     */
+    public void removeStep(String name) {
+        steps.removeStep(name);
+    }
+
+    /**
      * Adds extra options(e.g "template_id") to be sent along with the request.
      *
      * @param options {@link Map} set of options to add

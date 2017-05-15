@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class OptionsBuilderTest {
     public OptionsBuilder optionsBuilder;
@@ -24,6 +26,15 @@ public class OptionsBuilderTest {
         optionsBuilder.addStep("encode", "/video/encode", new HashMap<String, Object>());
 
         assertEquals(optionsBuilder.steps.getStep("encode").robot , "/video/encode");
+    }
+
+    @Test
+    public void removeStep() throws Exception {
+        optionsBuilder.addStep("encode", "/video/encode", new HashMap<String, Object>());
+        assertTrue(optionsBuilder.steps.all.containsKey("encode"));
+
+        optionsBuilder.removeStep("encode");
+        assertFalse(optionsBuilder.steps.all.containsKey("encode"));
     }
 
     @Test
