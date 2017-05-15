@@ -8,5 +8,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.transloadit.sdk:transloadit:0.0.2'
+    compile 'com.transloadit.sdk:transloadit:0.0.3'
 }

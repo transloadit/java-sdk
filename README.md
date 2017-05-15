@@ -18,7 +18,7 @@ or can be installed from the Maven and Jcenter repositories.
 **Gradle:**
 
 ```groovy
-compile 'com.transloadit.sdk:transloadit:0.0.2'
+compile 'com.transloadit.sdk:transloadit:0.0.3'
 ```
 
 **Maven:**
@@ -27,7 +27,7 @@ compile 'com.transloadit.sdk:transloadit:0.0.2'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
 </dependency>
 ```
 
@@ -356,7 +356,7 @@ For fully working examples take a look at [examples/](https://github.com/translo
 
 ## Documentation
 
-See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.0.2) for full API documentation.
+See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.0.3) for full API documentation.
 
 
 ## License
