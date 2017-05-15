@@ -11,6 +11,7 @@ targetCompatibility = 1.6
 
 group 'com.transloadit.sdk'
 version = '0.0.2'
+description = "A Java Integration of the Transloadit's(https://transloadit.com) file uploading and encoding service."
 
 allprojects {
     repositories {
@@ -45,15 +46,46 @@ artifacts {
     archives sourcesJar, javadocJar
 }
 
+def pomConfig = {
+    name 'transloadit'
+    url 'https://github.com/transloadit/java-sdk'
+    licenses {
+        license {
+            name 'The MIT License (MIT)'
+            url 'http://opensource.org/licenses/MIT'
+        }
+    }
+
+    developers {
+        developer {
+            id 'ifedapoolarewaju'
+            name 'Ifedapo Olarewaju'
+            email 'ifedapoolarewaju@gmail.com'
+        }
+    }
+
+    scm {
+        url 'https://github.com/transloadit/java-sdk'
+        connection 'https://github.com/transloadit/java-sdk'
+        developerConnection 'https://github.com/transloadit/java-sdk'
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            groupId 'com.transloadit.sdk'
+            groupId project.getGroup()
             artifactId 'transloadit'
-            version '0.0.2'
+            version project.getVersion()
             artifact sourcesJar
             artifact javadocJar
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', project.getDescription())
+                root.children().last() + pomConfig
+            }
         }
     }
 }
@@ -62,7 +94,7 @@ bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
     publications = ['mavenJava']
-    dryRun = false
+    dryRun = true
     pkg {
         repo = 'maven'
         name = 'transloadit'
@@ -73,9 +105,9 @@ bintray {
         issueTrackerUrl = 'https://github.com/transloadit/java-sdk/issues'
         publicDownloadNumbers = true
         version {
-            name = '0.0.2'
-            desc = 'Java Client for Transloadit(https://transloadit.com) API services.'
-            vcsTag = '0.0.2'
+            name = project.getVersion()
+            desc = project.getDescription()
+            vcsTag = project.getVersion()
         }
     }
 }

@@ -1,1 +1,2 @@
 include ':examples'
+rootProject.name = 'transloadit'
