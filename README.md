@@ -83,7 +83,7 @@ public class Main {
 
 ### Get an Assembly
 
-To get an assembly, you use the `getAssembly` method, passing the assembly id as a parameter.
+The method, `getAssembly`,  retrieves the JSON status of an assembly identified by the given `assembly_Id`.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -144,7 +144,9 @@ public class Main {
 
 ### List Assemblies
 
-To get a list of all assemblies under your account, you use the `listAssemblies` method.
+The method, `listAssemblies`, retrieves an array of assemblies according to the given `options`. Valid `options` can be `page`,
+`pagesize`, `type`, `fromdate` and `todate`. Please consult the [Transloadit API docs](https://transloadit.com/docs/api-docs/#retrieve-assembly-list)
+for details.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -152,12 +154,16 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.ListResponse;
 
+import java.util.HashMap;
+
 public class Main {
     public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
         try {
-            ListResponse response = transloadit.listAssemblies();
+            Map<String, Object> options = new HashMap<>();
+            options.put("pagesize", 10);
+            ListResponse response = transloadit.listAssemblies(options);
 
             System.out.println(response.size());  // number of assemblies on the list.
             System.out.println(response.getItems());  // returns an iterable json array
@@ -188,13 +194,18 @@ public class Main {
 
         Template template = transloadit.newTemplate("MY_TEMPLATE_NAME");
 
-        Map<String, Object> stepOptions = new HashMap<>();
-        stepOptions.put("width", 75);
-        stepOptions.put("height", 75);
-        template.addStep("resize", "/image/resize", stepOptions);
+        Map<String, Object> resizeOptions = new HashMap<>();
+        resizeOptions.put("width", 75);
+        resizeOptions.put("height", 75);
+
+        Map<String, Object> optimizeOptions = new HashMap<>();
+        optimizeOptions.put("use", ":original");
+
+        template.addStep("resize", "/image/resize", resizeOptions);
+        template.addStep("resize", "/image/optimize", optimizeOptions);
 
         try {
-            Response response = template.save(true);
+            Response response = template.save();
 
             System.out.println(response.json());
             System.out.println(response.json().getString("id")); // gets the template id.
