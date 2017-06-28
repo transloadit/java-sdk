@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.org/transloadit/java-sdk.png?branch=master)](https://travis-ci.org/transloadit/java-sdk)
 
 ## java-sdk
-A **Java** Integration for [Transloadit](https://transloadit.com)'s file uploading and encoding service
 
+A **Java** Integration for [Transloadit](https://transloadit.com)'s file uploading and encoding service
 
 ## Intro
 
@@ -34,7 +34,6 @@ compile 'com.transloadit.sdk:transloadit:0.0.3'
 ## Usage
 
 All interactions with the SDK begin with the `com.transloadit.sdk.Transloadit` class.
-
 
 ### Create an Assembly
 
@@ -80,7 +79,6 @@ public class Main {
 }
 ```
 
-
 ### Get an Assembly
 
 The method, `getAssembly`,  retrieves the JSON status of an assembly identified by the given `assembly_Id`.
@@ -115,7 +113,6 @@ You may also get an assembly by url with the `getAssemblyByUrl` method.
     AssemblyResponse response = transloadit.getAssemblyByUrl("ASSEMBLY_URL");
 ```
 
-
 ### Cancel an Assembly
 
 To cancel an executing assembly, you use the `cancelAssembly` method, passing the assembly id as a parameter.
@@ -140,7 +137,6 @@ public class Main {
     }
 }
 ```
-
 
 ### List Assemblies
 
@@ -174,7 +170,6 @@ public class Main {
     }
 }
 ```
-
 
 ### Create a Template
 
@@ -216,7 +211,6 @@ public class Main {
 }
 ```
 
-
 ### Update a Template
 
 To update a template, you use the `updateTemplate` method, passing the template id and options to update as a parameters.
@@ -255,7 +249,6 @@ public class Main {
 }
 ```
 
-
 ### Delete a Template
 
 To delete a template, you use the `deleteTemplate` method, passing the template id as a parameter.
@@ -281,7 +274,6 @@ public class Main {
     }
 }
 ```
-
 
 ### List Templates
 
@@ -310,7 +302,6 @@ public class Main {
 }
 ```
 
-
 ### Get a template
 
 To get a particular template, you use the `getTemplate` method, passing the template id as a parameter.
@@ -334,7 +325,6 @@ public class Main {
     }
 }
 ```
-
 
 ### Get bill
 
@@ -368,7 +358,6 @@ For fully working examples take a look at [examples/](https://github.com/translo
 ## Documentation
 
 See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.0.3) for full API documentation.
-
 
 ## License
 
