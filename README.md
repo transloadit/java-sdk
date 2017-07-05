@@ -50,7 +50,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Assembly assembly = transloadit.newAssembly();
 
@@ -91,7 +91,7 @@ import com.transloadit.sdk.response.AssemblyResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.getAssembly("ASSEMBLY_ID");
@@ -125,7 +125,7 @@ import com.transloadit.sdk.response.AssemblyResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.cancelAssembly("ASSEMBLY_ID");
@@ -154,7 +154,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             Map<String, Object> options = new HashMap<>();
@@ -185,7 +185,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Template template = transloadit.newTemplate("MY_TEMPLATE_NAME");
 
@@ -226,7 +226,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Steps steps = new Steps();
 
@@ -263,7 +263,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             Response response = transloadit.deleteTemplate("TEMPLATE_ID");
@@ -287,7 +287,7 @@ import com.transloadit.sdk.response.ListResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             ListResponse response = transloadit.listTemplates();
@@ -314,7 +314,7 @@ import com.transloadit.sdk.response.Response;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.getTemplate("TEMPLATE_ID");
@@ -338,7 +338,7 @@ import com.transloadit.sdk.response.Response;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_AUTH_KEY", "YOUR_TRANSLOADIT_AUTH_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             ListResponse response = transloadit.getBill(3, 2017);
