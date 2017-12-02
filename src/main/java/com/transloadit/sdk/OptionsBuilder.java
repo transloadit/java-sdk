@@ -48,4 +48,12 @@ public class OptionsBuilder {
     public void addOption(String key, Object value) {
         this.options.put(key, value);
     }
+
+    /**
+     *
+     * @return Transloadit client instance attached to the options builder
+     */
+    public Transloadit getClient() {
+        return transloadit;
+    }
 }

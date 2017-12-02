@@ -71,6 +71,14 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     *
+     * @return the number of files that have been added for upload
+     */
+    public int getFilesCount() {
+        return files.size();
+    }
+
+    /**
      * Submits the configured assembly to Transloadit for processing.
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
@@ -80,13 +88,13 @@ public class Assembly extends OptionsBuilder {
      */
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
-        Request request = new Request(transloadit);
+        Request request = new Request(getClient());
         options.put("steps", steps.toMap());
 
         // only do tus uploads if files will be uploaded
         if (isResumable && files.size() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
-            tusOptions.put("tus_num_expected_upload_files", Integer.toString(files.size()));
+            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions, null), true);
@@ -121,7 +129,7 @@ public class Assembly extends OptionsBuilder {
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
         tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(transloadit.getHostUrl() + "/resumable/files/"));
+        tusClient.setUploadCreationURL(new URL(getClient().getHostUrl() + "/resumable/files/"));
         tusClient.enableResuming(new TusURLMemoryStore());
 
         for (Map.Entry<String, File> entry : files.entrySet()) {
