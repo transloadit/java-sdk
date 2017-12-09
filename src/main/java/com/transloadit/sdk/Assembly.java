@@ -71,6 +71,7 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Returns the number of files that have been added for upload
      *
      * @return the number of files that have been added for upload
      */

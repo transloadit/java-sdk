@@ -50,6 +50,7 @@ public class OptionsBuilder {
     }
 
     /**
+     * Returns the Transloadit client instance attached to the options builder.
      *
      * @return Transloadit client instance attached to the options builder
      */
