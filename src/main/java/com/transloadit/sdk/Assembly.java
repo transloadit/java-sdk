@@ -1,7 +1,7 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.*;
 
@@ -129,13 +129,22 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
-        tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(getClient().getHostUrl() + "/resumable/files/"));
-        tusClient.enableResuming(new TusURLMemoryStore());
+        setUpTusClient();
 
         for (Map.Entry<String, File> entry : files.entrySet()) {
             processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
+    }
+
+    /**
+     * Instantiates and sets up the required properites for tus client
+     *
+     * @throws IOException
+     */
+    protected void setUpTusClient() throws IOException {
+        tusClient = new TusClient();
+        tusClient.setUploadCreationURL(new URL(getClient().getHostUrl() + "/resumable/files/"));
+        tusClient.enableResuming(new TusURLMemoryStore());
     }
 
     /**
