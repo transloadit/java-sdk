@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.org/transloadit/java-sdk.png?branch=master)](https://travis-ci.org/transloadit/java-sdk)
 
 ## java-sdk
-A **Java** Integration for [Transloadit](https://transloadit.com)'s file uploading and encoding service
 
+A **Java** Integration for [Transloadit](https://transloadit.com)'s file uploading and encoding service
 
 ## Intro
 
@@ -35,7 +35,6 @@ compile 'com.transloadit.sdk:transloadit:0.0.3'
 
 All interactions with the SDK begin with the `com.transloadit.sdk.Transloadit` class.
 
-
 ### Create an Assembly
 
 To create an assembly, you use the `newAssembly` method.
@@ -51,7 +50,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Assembly assembly = transloadit.newAssembly();
 
@@ -80,7 +79,6 @@ public class Main {
 }
 ```
 
-
 ### Get an Assembly
 
 The method, `getAssembly`,  retrieves the JSON status of an assembly identified by the given `assembly_Id`.
@@ -93,7 +91,7 @@ import com.transloadit.sdk.response.AssemblyResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.getAssembly("ASSEMBLY_ID");
@@ -115,7 +113,6 @@ You may also get an assembly by url with the `getAssemblyByUrl` method.
     AssemblyResponse response = transloadit.getAssemblyByUrl("ASSEMBLY_URL");
 ```
 
-
 ### Cancel an Assembly
 
 To cancel an executing assembly, you use the `cancelAssembly` method, passing the assembly id as a parameter.
@@ -128,7 +125,7 @@ import com.transloadit.sdk.response.AssemblyResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.cancelAssembly("ASSEMBLY_ID");
@@ -140,7 +137,6 @@ public class Main {
     }
 }
 ```
-
 
 ### List Assemblies
 
@@ -158,7 +154,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             Map<String, Object> options = new HashMap<>();
@@ -175,7 +171,6 @@ public class Main {
 }
 ```
 
-
 ### Create a Template
 
 To create a new template, you use the `newTemplate` method, passing the template name as a parameter.
@@ -190,7 +185,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Template template = transloadit.newTemplate("MY_TEMPLATE_NAME");
 
@@ -216,7 +211,6 @@ public class Main {
 }
 ```
 
-
 ### Update a Template
 
 To update a template, you use the `updateTemplate` method, passing the template id and options to update as a parameters.
@@ -232,7 +226,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Steps steps = new Steps();
 
@@ -255,7 +249,6 @@ public class Main {
 }
 ```
 
-
 ### Delete a Template
 
 To delete a template, you use the `deleteTemplate` method, passing the template id as a parameter.
@@ -270,7 +263,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             Response response = transloadit.deleteTemplate("TEMPLATE_ID");
@@ -281,7 +274,6 @@ public class Main {
     }
 }
 ```
-
 
 ### List Templates
 
@@ -295,7 +287,7 @@ import com.transloadit.sdk.response.ListResponse;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             ListResponse response = transloadit.listTemplates();
@@ -310,7 +302,6 @@ public class Main {
 }
 ```
 
-
 ### Get a template
 
 To get a particular template, you use the `getTemplate` method, passing the template id as a parameter.
@@ -323,7 +314,7 @@ import com.transloadit.sdk.response.Response;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             AssemblyResponse response = transloadit.getTemplate("TEMPLATE_ID");
@@ -334,7 +325,6 @@ public class Main {
     }
 }
 ```
-
 
 ### Get bill
 
@@ -348,7 +338,7 @@ import com.transloadit.sdk.response.Response;
 
 public class Main {
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         try {
             ListResponse response = transloadit.getBill(3, 2017);
@@ -368,7 +358,6 @@ For fully working examples take a look at [examples/](https://github.com/translo
 ## Documentation
 
 See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.0.3) for full API documentation.
-
 
 ## License
 
