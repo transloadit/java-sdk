@@ -1,3 +1,7 @@
+### 0.0.4 / 2018-01-08 ###
+
+* Remove tus upload chunksize
+
 ### 0.0.3 / 2017-05-15 ###
 
 * `Steps.removeStep` method

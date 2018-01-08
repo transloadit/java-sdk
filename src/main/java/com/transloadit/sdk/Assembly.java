@@ -146,7 +146,6 @@ public class Assembly extends OptionsBuilder {
             @Override
             protected void makeAttempt() throws ProtocolException, IOException {
                 TusUploader uploader = tusClient.resumeOrCreateUpload(upload);
-                uploader.setChunkSize(2 * 1024 * 1024); // 2MB
 
                 int uploadedChunk = 0;
                 while (uploadedChunk > -1) {
