@@ -94,6 +94,14 @@ public class AssemblyResponse extends Response {
 
     /**
      *
+     * @return {@link Boolean} indicating if the assembly returned an error
+     */
+    public Boolean hasError() {
+        return json().has("error");
+    }
+
+    /**
+     *
      * @return {@link Boolean} indicating the assembly has stopped executing.
      */
     public Boolean isFinished() {

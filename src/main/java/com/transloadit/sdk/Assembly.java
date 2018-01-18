@@ -89,6 +89,12 @@ public class Assembly extends OptionsBuilder {
 
             AssemblyResponse response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions, null), true);
+
+            // check if the assembly returned an error
+            if (response.hasError()) {
+                throw new RequestException("Request to Assembly failed: " + response.json().getString("error"));
+            }
+
             try {
                 processTusFiles(response.getSslUrl());
             } catch (IOException e) {
