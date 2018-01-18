@@ -4,9 +4,9 @@ version '0.0.1'
 apply plugin: 'java'
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
-    compile 'com.transloadit.sdk:transloadit:0.0.4'
+    compile 'com.transloadit.sdk:transloadit:0.0.5'
 }

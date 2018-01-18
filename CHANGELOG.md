@@ -1,3 +1,7 @@
+### 0.0.5 / 2018-01-18 ###
+
+* Check for assembly error before proceeding with tus upload
+
 ### 0.0.4 / 2018-01-08 ###
 
 * Remove tus upload chunksize
