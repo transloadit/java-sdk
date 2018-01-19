@@ -83,7 +83,8 @@ public class Assembly extends OptionsBuilder {
         Request request = new Request(transloadit);
         options.put("steps", steps.toMap());
 
-        if (isResumable) {
+        // only do tus uploads if files will be uploaded
+        if (isResumable && files.size() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(files.size()));
 
