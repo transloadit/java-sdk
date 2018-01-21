@@ -62,13 +62,18 @@ public class AssemblyTest extends MockHttpService {
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
 
         mockServerClient.reset();
-        assembly.removeFile("file_name");
+    }
+
+    @Test
+    public void saveWithTus() throws Exception {
+        MockTusAssembly assembly = new MockTusAssembly(transloadit);
+        assembly.addFile(new File("LICENSE"), "file_name");
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies")
                 .withMethod("POST")
                 .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1" +
-                        "\\r\\n\\r\\n0[\\w\\W]*")))
+                        "\\r\\n\\r\\n1[\\w\\W]*")))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
