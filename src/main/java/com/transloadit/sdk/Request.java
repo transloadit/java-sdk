@@ -17,6 +17,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -77,7 +78,8 @@ public class Request {
      * @throws LocalOperationException
      */
     okhttp3.Response post(String url, Map<String, Object> params,
-                          @Nullable Map<String, String> extraData, @Nullable Map<String, File> files)
+                          @Nullable Map<String, String> extraData,
+                          @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
             throws RequestException, LocalOperationException {
 
         Map<String, String> payload = toPayload(params);
@@ -86,7 +88,7 @@ public class Request {
         }
 
         okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
-                .post(getBody(payload, files))
+                .post(getBody(payload, files, fileStreams))
                 .addHeader("User-Agent", USER_AGENT)
                 .build();
 
@@ -99,7 +101,7 @@ public class Request {
 
     okhttp3.Response post(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-        return post(url, params, null, null);
+        return post(url, params, null, null, null);
     }
 
     /**
@@ -185,7 +187,8 @@ public class Request {
      * @param files files to upload
      * @return {@link RequestBody}
      */
-    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files) {
+    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files, @Nullable Map<String,
+            InputStream> fileStreams) throws LocalOperationException {
         MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
 
         if (files != null) {
@@ -202,11 +205,31 @@ public class Request {
             }
         }
 
+        if (fileStreams != null) {
+            for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+                byte[] bytes;
+                InputStream stream = entry.getValue();
+                try {
+                    bytes = new byte[stream.available()];
+                    stream.read(bytes);
+
+                } catch (IOException e) {
+                    throw new LocalOperationException(e);
+                }
+                builder.addFormDataPart(entry.getKey(), null,
+                        RequestBody.create(MediaType.parse("application/octet-stream"), bytes));
+            }
+        }
+
         for (Map.Entry<String, String> entry : data.entrySet()) {
             builder.addFormDataPart(entry.getKey(), entry.getValue());
         }
 
         return builder.build();
+    }
+
+    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files) throws LocalOperationException {
+        return getBody(data, files, null);
     }
 
     /**

@@ -8,6 +8,7 @@ import io.tus.java.client.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,15 +22,12 @@ public class Assembly extends OptionsBuilder {
     private TusURLStore tusURLStore;
 
     protected Map<String, File> files;
+    protected Map<String, InputStream> fileStreams;
     protected TusClient tusClient;
     protected List<TusUpload> uploads;
 
     public Assembly(Transloadit transloadit) {
-        this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>(), null);
-    }
-
-    public Assembly(Transloadit transloadit, AssemblyProgressListener listener) {
-        this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>(), listener);
+        this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
 
     /**
@@ -38,7 +36,7 @@ public class Assembly extends OptionsBuilder {
      * @param files       is a map of file names and files that are meant to be uploaded.
      * @param options     map of extra options to be sent along with the request.
      */
-    public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options, AssemblyProgressListener listener) {
+    public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
         this.transloadit = transloadit;
         this.steps = steps;
         this.files = files;
@@ -46,6 +44,7 @@ public class Assembly extends OptionsBuilder {
         tusClient = new TusClient();
         tusURLStore = new TusURLMemoryStore();
         uploads = new ArrayList<TusUpload>();
+        fileStreams = new HashMap<String, InputStream>();
     }
 
     /**
@@ -56,6 +55,11 @@ public class Assembly extends OptionsBuilder {
      */
     public void addFile(File file, String name) {
         files.put(name, file);
+
+        // remove duplicate key
+        if (fileStreams.containsKey(name)) {
+            fileStreams.remove(name);
+        }
     }
 
     /**
@@ -65,11 +69,32 @@ public class Assembly extends OptionsBuilder {
      */
     public void addFile(File file) {
         String name = "file";
+        files.put(normalizeDuplicateName(name), file);
+    }
 
-        for (int i = files.size(); files.containsKey(name); i++) {
-            name += "_" + i;
+    /**
+     * Adds a file to your assembly but automatically genarates the name of the file.
+     *
+     * @param fileStream {@link InputStream} the file to be uploaded.
+     */
+    public void addFile(InputStream fileStream) {
+        String name = "file";
+        fileStreams.put(normalizeDuplicateName(name), fileStream);
+    }
+
+    /**
+     * Adds a file to your assembly.
+     *
+     * @param inputStream {@link InputStream} the file to be uploaded.
+     * @param name {@link String} the name you the file to be given in transloadit
+     */
+    public void addFile(InputStream inputStream, String name) {
+        fileStreams.put(normalizeDuplicateName(name), inputStream);
+
+        // remove duplicate key
+        if (files.containsKey(name)) {
+            files.remove(name);
         }
-        files.put(name, file);
     }
 
     /**
@@ -78,7 +103,25 @@ public class Assembly extends OptionsBuilder {
      * @param name name of the file to remove.
      */
     public void removeFile(String name) {
-        files.remove(name);
+        if(files.containsKey(name)) {
+            files.remove(name);
+        }
+
+        if(fileStreams.containsKey(name)) {
+            fileStreams.remove(name);
+        }
+    }
+
+    private String normalizeDuplicateName(String name) {
+        for (int i = files.size(); files.containsKey(name); i++) {
+            name += "_" + i;
+        }
+
+        for (int i = fileStreams.size(); fileStreams.containsKey(name); i++) {
+            name += "_" + i;
+        }
+
+        return name;
     }
 
     /**
@@ -87,7 +130,7 @@ public class Assembly extends OptionsBuilder {
      * @return the number of files that have been added for upload
      */
     public int getFilesCount() {
-        return files.size();
+        return files.size() + fileStreams.size();
     }
 
     public void setTusURLStore(TusURLStore store) {
@@ -113,7 +156,7 @@ public class Assembly extends OptionsBuilder {
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
             AssemblyResponse response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions, null), true);
+                    request.post("/assemblies", options, tusOptions, null, null), true);
 
             // check if the assembly returned an error
             if (response.hasError()) {
@@ -129,7 +172,7 @@ public class Assembly extends OptionsBuilder {
             }
             return response;
         } else {
-            return new AssemblyResponse(request.post("/assemblies", options, null, files));
+            return new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
         }
     }
 
@@ -154,7 +197,25 @@ public class Assembly extends OptionsBuilder {
         for (Map.Entry<String, File> entry : files.entrySet()) {
             processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
+
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+        }
     }
+
+    protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload upload = getTusUploadInstance(inptStream, fieldName);
+
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("filename", fieldName);
+        metadata.put("assembly_url", assemblyUrl);
+        metadata.put("fieldname", fieldName);
+
+        upload.setMetadata(metadata);
+
+        uploads.add(upload);
+    }
+
 
     protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(file);
@@ -167,6 +228,14 @@ public class Assembly extends OptionsBuilder {
         upload.setMetadata(metadata);
 
         uploads.add(upload);
+    }
+
+    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName) {
+        TusUpload tusUpload = new TusUpload();
+        tusUpload.setInputStream(inputStream);
+        tusUpload.setFingerprint(fieldName);
+
+        return tusUpload;
     }
 
     protected TusUpload getTusUploadInstance(File file) throws FileNotFoundException {
