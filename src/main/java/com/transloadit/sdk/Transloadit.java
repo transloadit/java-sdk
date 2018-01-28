@@ -101,6 +101,15 @@ public class Transloadit {
     }
 
     /**
+     * Returns an AsyncAssembly instance that can be used to create a new assembly.
+     *
+     * @return {@link AsyncAssembly}
+     */
+    public AsyncAssembly newAssembly(AssemblyProgressListener listener) {
+        return new AsyncAssembly(this, listener);
+    }
+
+    /**
      * Returns a single assembly.
      *
      * @param id id of the Assebly to retrieve.

@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AssemblyExecutor {
+public class AsyncAssemblyExecutor {
     private final ExecutorService service;
-    private Assembly assembly;
+    private AsyncAssembly assembly;
 
-    public AssemblyExecutor(Assembly assembly) {
+    public AsyncAssemblyExecutor(AsyncAssembly assembly) {
         this.assembly =  assembly;
         service = Executors.newSingleThreadExecutor();
     }
@@ -31,8 +31,7 @@ public class AssemblyExecutor {
         @Override
         public void run() {
             try {
-                assembly.uploadFiles();
-                assembly.getListener().onUploadFinished();
+                assembly.uploadTusFiles();
             } catch (ProtocolException e) {
                 assembly.getListener().onUploadFailed(e);
                 close();
@@ -43,16 +42,19 @@ public class AssemblyExecutor {
                 return;
             }
 
-            try {
-                assembly.getListener().onAssemblyFinished(assembly.watchStatus());
-            } catch (LocalOperationException e) {
-                assembly.getListener().onAssemblyStatusUpdateFailed(e);
-            } catch (RequestException e) {
-                assembly.getListener().onAssemblyStatusUpdateFailed(e);
-            } catch (InterruptedException e) {
-                assembly.getListener().onAssemblyStatusUpdateFailed(e);
-            } finally {
-                close();
+            if (assembly.state == AsyncAssembly.State.UPLOAD_COMPLETE) {
+                assembly.getListener().onUploadFinished();
+                try {
+                    assembly.getListener().onAssemblyFinished(assembly.watchStatus());
+                } catch (LocalOperationException e) {
+                    assembly.getListener().onAssemblyStatusUpdateFailed(e);
+                } catch (RequestException e) {
+                    assembly.getListener().onAssemblyStatusUpdateFailed(e);
+                } catch (InterruptedException e) {
+                    assembly.getListener().onAssemblyStatusUpdateFailed(e);
+                } finally {
+                    close();
+                }
             }
         }
     }
