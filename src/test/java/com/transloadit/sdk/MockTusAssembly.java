@@ -1,7 +1,5 @@
 package com.transloadit.sdk;
 
-import io.tus.java.client.ProtocolException;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -14,7 +12,7 @@ public class MockTusAssembly extends Assembly {
         super(transloadit);
     }
 
-    protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException, ProtocolException {
+    protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         // do nothing
     }
 }

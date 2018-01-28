@@ -105,6 +105,6 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly has stopped executing.
      */
     public Boolean isFinished() {
-        return isAborted() || isCanceled() || isCompleted();
+        return isAborted() || isCanceled() || isCompleted() || hasError();
     }
 }
