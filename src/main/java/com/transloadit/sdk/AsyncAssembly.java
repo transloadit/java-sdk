@@ -10,12 +10,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 public class AsyncAssembly extends Assembly {
     private AssemblyProgressListener listener;
     private AsyncAssemblyExecutor executor;
     private long uploadedBytes;
+    private long totalUploadSize;
     private TusUploader lastTusUploader;
     @Nullable private String url;
     enum State {
@@ -32,6 +34,7 @@ public class AsyncAssembly extends Assembly {
         this.listener = listener;
         state = State.INIT;
         uploadedBytes = 0;
+        totalUploadSize = 0;
         lastTusUploader = null;
         url = null;
     }
@@ -75,8 +78,6 @@ public class AsyncAssembly extends Assembly {
     @Override
     void uploadTusFiles() throws IOException, ProtocolException {
         state = State.UPLOADING;
-        final long uploadSize = getTotalUploadSize();
-
         while (uploads.size() > 0) {
             final TusUploader tusUploader;
             // don't recreate uploader if it already exists.
@@ -93,7 +94,7 @@ public class AsyncAssembly extends Assembly {
                 protected void makeAttempt() throws ProtocolException, IOException {
                     while (state == State.UPLOADING && tusUploader.uploadChunk() > 0) {
                         uploadedBytes += tusUploader.getOffset();
-                        listener.onUploadPogress(uploadedBytes, uploadSize);
+                        listener.onUploadPogress(uploadedBytes, totalUploadSize);
                     }
                 }
             };
@@ -116,6 +117,7 @@ public class AsyncAssembly extends Assembly {
     @Override
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
         url = response.getSslUrl();
+        totalUploadSize = getTotalUploadSize();
         processTusFiles(url);
         startExecutor();
     }
@@ -125,10 +127,14 @@ public class AsyncAssembly extends Assembly {
         executor.execute();
     }
 
-    private long getTotalUploadSize() {
+    private long getTotalUploadSize() throws IOException {
         long size = 0;
         for (Map.Entry<String, File> entry : files.entrySet()) {
             size += entry.getValue().length();
+        }
+
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+            size += entry.getValue().available();
         }
         return size;
     }

@@ -230,10 +230,11 @@ public class Assembly extends OptionsBuilder {
         uploads.add(upload);
     }
 
-    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName) {
+    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName) throws IOException {
         TusUpload tusUpload = new TusUpload();
         tusUpload.setInputStream(inputStream);
-        tusUpload.setFingerprint(fieldName);
+        tusUpload.setFingerprint(String.format("%s-%d", fieldName, inputStream.available()));
+        tusUpload.setSize(inputStream.available());
 
         return tusUpload;
     }
