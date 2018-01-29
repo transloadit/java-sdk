@@ -243,7 +243,7 @@ public class Assembly extends OptionsBuilder {
         return new TusUpload(file);
     }
 
-    void uploadTusFiles() throws IOException, ProtocolException {
+    protected void uploadTusFiles() throws IOException, ProtocolException {
         while (uploads.size() > 0) {
             final TusUploader tusUploader = tusClient.resumeOrCreateUpload(uploads.get(0));
 

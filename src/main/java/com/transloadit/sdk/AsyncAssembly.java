@@ -50,7 +50,7 @@ public class AsyncAssembly extends Assembly {
     public void pauseUpload() throws LocalOperationException {
         if (state == State.UPLOADING) {
             setState(State.PAUSED);
-            executor.close();
+            executor.blockingClose();
         } else {
             throw new LocalOperationException("Attempt to pause upload while assembly is not uploading");
         }
@@ -68,7 +68,7 @@ public class AsyncAssembly extends Assembly {
         this.state = state;
     }
 
-    AssemblyResponse watchStatus() throws LocalOperationException, RequestException, InterruptedException {
+    protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException, InterruptedException {
         AssemblyResponse response;
         do {
             response = getClient().getAssemblyByUrl(url);
@@ -80,7 +80,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     @Override
-    void uploadTusFiles() throws IOException, ProtocolException {
+    protected void uploadTusFiles() throws IOException, ProtocolException {
         setState(State.UPLOADING);
         while (uploads.size() > 0) {
             final TusUploader tusUploader;
@@ -127,8 +127,46 @@ public class AsyncAssembly extends Assembly {
     }
 
     protected void startExecutor() {
-        executor = new AsyncAssemblyExecutor(this);
+        executor = new AsyncAssemblyExecutor(new AssemblyRunnable());
         executor.execute();
+    }
+
+    class AssemblyRunnable implements Runnable {
+        private AsyncAssemblyExecutor executor;
+
+        void setExecutor(AsyncAssemblyExecutor executor) {
+            this.executor = executor;
+        }
+
+        @Override
+        public void run() {
+            try {
+                uploadTusFiles();
+            } catch (ProtocolException e) {
+                getListener().onUploadFailed(e);
+                executor.close();
+                return;
+            } catch (IOException e) {
+                getListener().onUploadFailed(e);
+                executor.close();
+                return;
+            }
+
+            if (state == State.UPLOAD_COMPLETE) {
+                getListener().onUploadFinished();
+                try {
+                    getListener().onAssemblyFinished(watchStatus());
+                } catch (LocalOperationException e) {
+                    getListener().onAssemblyStatusUpdateFailed(e);
+                } catch (RequestException e) {
+                    getListener().onAssemblyStatusUpdateFailed(e);
+                } catch (InterruptedException e) {
+                    getListener().onAssemblyStatusUpdateFailed(e);
+                } finally {
+                    executor.close();
+                }
+            }
+        }
     }
 
     private long getTotalUploadSize() throws IOException {
