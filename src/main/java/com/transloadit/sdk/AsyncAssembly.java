@@ -49,7 +49,7 @@ public class AsyncAssembly extends Assembly {
      */
     public void pauseUpload() throws LocalOperationException {
         if (state == State.UPLOADING) {
-            state = State.PAUSED;
+            setState(State.PAUSED);
             executor.close();
         } else {
             throw new LocalOperationException("Attempt to pause upload while assembly is not uploading");
@@ -64,6 +64,10 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
+    synchronized private void setState(State state) {
+        this.state = state;
+    }
+
     AssemblyResponse watchStatus() throws LocalOperationException, RequestException, InterruptedException {
         AssemblyResponse response;
         do {
@@ -71,13 +75,13 @@ public class AsyncAssembly extends Assembly {
             Thread.sleep(1000);
         } while (!response.isFinished());
 
-        state = State.FINISHED;
+        setState(State.FINISHED);
         return response;
     }
 
     @Override
     void uploadTusFiles() throws IOException, ProtocolException {
-        state = State.UPLOADING;
+        setState(State.UPLOADING);
         while (uploads.size() > 0) {
             final TusUploader tusUploader;
             // don't recreate uploader if it already exists.
@@ -111,7 +115,7 @@ public class AsyncAssembly extends Assembly {
             tusUploader.finish();
         }
 
-        state = State.UPLOAD_COMPLETE;
+        setState(State.UPLOAD_COMPLETE);
     }
 
     @Override
@@ -122,7 +126,7 @@ public class AsyncAssembly extends Assembly {
         startExecutor();
     }
 
-    private void startExecutor() {
+    protected void startExecutor() {
         executor = new AsyncAssemblyExecutor(this);
         executor.execute();
     }

@@ -8,6 +8,7 @@ import io.tus.java.client.ProtocolException;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncAssemblyExecutor {
     private final ExecutorService service;
@@ -25,6 +26,15 @@ public class AsyncAssemblyExecutor {
     void close() {
         // todo investigate how this functions
         service.shutdown();
+        boolean terminated = false;
+        // wait till shutdown is done
+        while (!terminated) {
+            try {
+                terminated = service.awaitTermination(800, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private class AssemblyRunnable implements Runnable {
