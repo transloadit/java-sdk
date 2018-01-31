@@ -50,7 +50,7 @@ public class AsyncAssembly extends Assembly {
     public void pauseUpload() throws LocalOperationException {
         if (state == State.UPLOADING) {
             setState(State.PAUSED);
-            executor.blockingClose();
+            executor.hardStop();
         } else {
             throw new LocalOperationException("Attempt to pause upload while assembly is not uploading");
         }
@@ -64,8 +64,12 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
-    synchronized private void setState(State state) {
+    synchronized protected void setState(State state) {
         this.state = state;
+    }
+
+    protected State getState() {
+        return this.state;
     }
 
     protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException, InterruptedException {
@@ -127,14 +131,14 @@ public class AsyncAssembly extends Assembly {
     }
 
     protected void startExecutor() {
-        executor = new AsyncAssemblyExecutor(new AssemblyRunnable());
+        executor = new AsyncAsyncAssemblyExecutorImpl(new AssemblyRunnable());
         executor.execute();
     }
 
     class AssemblyRunnable implements Runnable {
-        private AsyncAssemblyExecutor executor;
+        private AsyncAsyncAssemblyExecutorImpl executor;
 
-        void setExecutor(AsyncAssemblyExecutor executor) {
+        void setExecutor(AsyncAsyncAssemblyExecutorImpl executor) {
             this.executor = executor;
         }
 
@@ -144,11 +148,11 @@ public class AsyncAssembly extends Assembly {
                 uploadTusFiles();
             } catch (ProtocolException e) {
                 getListener().onUploadFailed(e);
-                executor.close();
+                executor.stop();
                 return;
             } catch (IOException e) {
                 getListener().onUploadFailed(e);
-                executor.close();
+                executor.stop();
                 return;
             }
 
@@ -163,7 +167,7 @@ public class AsyncAssembly extends Assembly {
                 } catch (InterruptedException e) {
                     getListener().onAssemblyStatusUpdateFailed(e);
                 } finally {
-                    executor.close();
+                    executor.stop();
                 }
             }
         }
