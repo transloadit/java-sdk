@@ -1,4 +1,4 @@
-package com.transloadit.sdk;
+package com.transloadit.sdk.async;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 
@@ -23,7 +23,7 @@ public interface AssemblyProgressListener {
      * This encompasses any kind of termination of the assembly.
      * Including when the assembly aborts due to failure.
      *
-     * @param {@link AssemblyResponse} response with the updated status of the assembly.
+     * @param response {@link AssemblyResponse} response with the updated status of the assembly.
      */
     void onAssemblyFinished(AssemblyResponse response);
 

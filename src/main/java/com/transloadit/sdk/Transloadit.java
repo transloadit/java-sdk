@@ -1,5 +1,7 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.async.AssemblyProgressListener;
+import com.transloadit.sdk.async.AsyncAssembly;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;

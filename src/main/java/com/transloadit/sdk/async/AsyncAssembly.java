@@ -1,5 +1,7 @@
-package com.transloadit.sdk;
+package com.transloadit.sdk.async;
 
+import com.transloadit.sdk.Assembly;
+import com.transloadit.sdk.Transloadit;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -44,8 +46,10 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Pauses the file upload
-     * @throws LocalOperationException
+     * Pauses the file upload. This is a blocking function that would wait till the assembly file uploads
+     * have actually been paused.
+     *
+     * @throws LocalOperationException if the method is called while no upload is going on.
      */
     public void pauseUpload() throws LocalOperationException {
         if (state == State.UPLOADING) {
@@ -56,6 +60,11 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
+    /**
+     * Resumes the paused upload.
+     *
+     * @throws LocalOperationException if the upload hasn't been paused.
+     */
     public void resumeUpload() throws LocalOperationException {
         if (state == State.PAUSED) {
             startExecutor();
@@ -64,25 +73,39 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
-    synchronized protected void setState(State state) {
+    synchronized private void setState(State state) {
         this.state = state;
     }
 
-    protected State getState() {
-        return this.state;
-    }
-
-    protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException, InterruptedException {
+    /**
+     * Runs intermediate check on the Assembly status until it is finished executing,
+     * then returns it as a response.
+     *
+     * @return {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws RequestException if request to transloadit server fails.
+     */
+    protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException {
         AssemblyResponse response;
         do {
             response = getClient().getAssemblyByUrl(url);
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new LocalOperationException(e);
+            }
         } while (!response.isFinished());
 
         setState(State.FINISHED);
         return response;
     }
 
+    /**
+     * Does the actual uploading of files (when tus is enabled)
+     *
+     * @throws IOException when there's a failure with file retrieval
+     * @throws ProtocolException when there's a failure with tus upload
+     */
     @Override
     protected void uploadTusFiles() throws IOException, ProtocolException {
         setState(State.UPLOADING);
@@ -122,6 +145,13 @@ public class AsyncAssembly extends Assembly {
         setState(State.UPLOAD_COMPLETE);
     }
 
+    /**
+     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads
+     *
+     * @param response {@link AssemblyResponse}
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
     @Override
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
         url = response.getSslUrl();
@@ -130,15 +160,18 @@ public class AsyncAssembly extends Assembly {
         startExecutor();
     }
 
+    /**
+     * Starts the executor that would manage the asynchronous submission of the assembly.
+     */
     protected void startExecutor() {
-        executor = new AsyncAsyncAssemblyExecutorImpl(new AssemblyRunnable());
+        executor = new AsyncAssemblyExecutorImpl(new AssemblyRunnable());
         executor.execute();
     }
 
     class AssemblyRunnable implements Runnable {
-        private AsyncAsyncAssemblyExecutorImpl executor;
+        private AsyncAssemblyExecutorImpl executor;
 
-        void setExecutor(AsyncAsyncAssemblyExecutorImpl executor) {
+        void setExecutor(AsyncAssemblyExecutorImpl executor) {
             this.executor = executor;
         }
 
@@ -164,8 +197,6 @@ public class AsyncAssembly extends Assembly {
                     getListener().onAssemblyStatusUpdateFailed(e);
                 } catch (RequestException e) {
                     getListener().onAssemblyStatusUpdateFailed(e);
-                } catch (InterruptedException e) {
-                    getListener().onAssemblyStatusUpdateFailed(e);
                 } finally {
                     executor.stop();
                 }
@@ -173,6 +204,7 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
+    // used for upload progress
     private long getTotalUploadSize() throws IOException {
         long size = 0;
         for (Map.Entry<String, File> entry : files.entrySet()) {

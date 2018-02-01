@@ -51,7 +51,7 @@ public class Assembly extends OptionsBuilder {
      * Adds a file to your assembly.
      *
      * @param file {@link File} the file to be uploaded.
-     * @param name {@link String} the name you the file to be given in transloadit
+     * @param name {@link String} the name you the file to be given in transloadit.
      */
     public void addFile(File file, String name) {
         files.put(name, file);
@@ -73,6 +73,21 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Adds a file to your assembly.
+     *
+     * @param inputStream {@link InputStream} the file to be uploaded.
+     * @param name {@link String} the name you the file to be given in transloadit.
+     */
+    public void addFile(InputStream inputStream, String name) {
+        fileStreams.put(name, inputStream);
+
+        // remove duplicate key
+        if (files.containsKey(name)) {
+            files.remove(name);
+        }
+    }
+
+    /**
      * Adds a file to your assembly but automatically genarates the name of the file.
      *
      * @param fileStream {@link InputStream} the file to be uploaded.
@@ -80,21 +95,6 @@ public class Assembly extends OptionsBuilder {
     public void addFile(InputStream fileStream) {
         String name = "file";
         fileStreams.put(normalizeDuplicateName(name), fileStream);
-    }
-
-    /**
-     * Adds a file to your assembly.
-     *
-     * @param inputStream {@link InputStream} the file to be uploaded.
-     * @param name {@link String} the name you the file to be given in transloadit
-     */
-    public void addFile(InputStream inputStream, String name) {
-        fileStreams.put(normalizeDuplicateName(name), inputStream);
-
-        // remove duplicate key
-        if (files.containsKey(name)) {
-            files.remove(name);
-        }
     }
 
     /**
@@ -125,14 +125,19 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the number of files that have been added for upload
+     * Returns the number of files that have been added for upload.
      *
-     * @return the number of files that have been added for upload
+     * @return the number of files that have been added for upload.
      */
     public int getFilesCount() {
         return files.size() + fileStreams.size();
     }
 
+    /**
+     * Set custom Url Storage. This should be an implementation of {@link TusURLStore}.
+     *
+     * @param store {@link TusURLStore} the storage instance.
+     */
     public void setTusURLStore(TusURLStore store) {
         tusURLStore = store;
     }
@@ -180,13 +185,22 @@ public class Assembly extends OptionsBuilder {
         return this.save(true);
     }
 
+    /**
+     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads.
+     *
+     * @param response {@link AssemblyResponse}
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
         processTusFiles(response.getSslUrl());
         uploadTusFiles();
     }
 
     /**
-     * @param assemblyUrl the assembly url affiliated with the tus upload
+     * Prepares all files added for tus uploads.
+     *
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
@@ -203,6 +217,14 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
+    /**
+     * Prepares a file for tus upload.
+     *
+     * @param inptStream {@link InputStream}
+     * @param fieldName the form field name assigned to the file.
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException when there's a failure with file retrieval.
+     */
     protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(inptStream, fieldName);
 
@@ -216,7 +238,14 @@ public class Assembly extends OptionsBuilder {
         uploads.add(upload);
     }
 
-
+    /**
+     * Prepares a file for tus upload.
+     *
+     * @param file {@link File}
+     * @param fieldName the form field name assigned to the file.
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException when there's a failure with file retrieval.
+     */
     protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(file);
 
@@ -230,6 +259,13 @@ public class Assembly extends OptionsBuilder {
         uploads.add(upload);
     }
 
+    /**
+     * Returns the {@link TusUpload} instance that would be used to upload a file.
+     *
+     * @param inputStream {@link InputStream}
+     * @return {@link TusUpload}
+     * @throws FileNotFoundException when there's a failure with file retrieval.
+     */
     protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName) throws IOException {
         TusUpload tusUpload = new TusUpload();
         tusUpload.setInputStream(inputStream);
@@ -239,10 +275,23 @@ public class Assembly extends OptionsBuilder {
         return tusUpload;
     }
 
+    /**
+     * Returns the {@link TusUpload} instance that would be used to upload a file.
+     *
+     * @param file {@link File}
+     * @return {@link TusUpload}
+     * @throws FileNotFoundException when there's a failure with file retrieval.
+     */
     protected TusUpload getTusUploadInstance(File file) throws FileNotFoundException {
         return new TusUpload(file);
     }
 
+    /**
+     * Does the actual uploading of files (when tus is enabled).
+     *
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
     protected void uploadTusFiles() throws IOException, ProtocolException {
         while (uploads.size() > 0) {
             final TusUploader tusUploader = tusClient.resumeOrCreateUpload(uploads.get(0));

@@ -1,15 +1,15 @@
-package com.transloadit.sdk;
+package com.transloadit.sdk.async;
 
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AsyncAsyncAssemblyExecutorImpl implements AsyncAssemblyExecutor {
+class AsyncAssemblyExecutorImpl implements AsyncAssemblyExecutor {
     private final ExecutorService service;
     private Runnable runnable;
 
-    AsyncAsyncAssemblyExecutorImpl(AsyncAssembly.AssemblyRunnable runnable) {
+    AsyncAssemblyExecutorImpl(AsyncAssembly.AssemblyRunnable runnable) {
         this.runnable = runnable;
         runnable.setExecutor(this);
         service = Executors.newSingleThreadExecutor();
