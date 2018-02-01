@@ -17,7 +17,6 @@ import java.util.Map;
 
 public class AsyncAssembly extends Assembly {
     private AssemblyProgressListener listener;
-    private AsyncAssemblyExecutor executor;
     private long uploadedBytes;
     private long totalUploadSize;
     private TusUploader lastTusUploader;
@@ -30,6 +29,8 @@ public class AsyncAssembly extends Assembly {
         FINISHED  // this state is never really used, but it makes the flow more definite.
     }
     State state;
+
+    protected AsyncAssemblyExecutor executor;
 
     public AsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
         super(transloadit);
