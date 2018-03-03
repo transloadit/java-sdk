@@ -45,6 +45,11 @@ public class AsyncAssembly extends Assembly {
         url = null;
     }
 
+    /**
+     * Return the AssemblyProgresssListener that has been previously set
+     *
+     * @return {@link AssemblyProgressListener}
+     */
     public AssemblyProgressListener getListener() {
         return listener;
     }
@@ -127,7 +132,7 @@ public class AsyncAssembly extends Assembly {
             TusExecutor tusExecutor = new TusExecutor() {
                 @Override
                 protected void makeAttempt() throws ProtocolException, IOException {
-                    while (state == State.UPLOADING && tusUploader.uploadChunk() > 0) {
+                    while (state == State.UPLOADING) {
                         int chunkUploaded = tusUploader.uploadChunk();
                         if (chunkUploaded > 0) {
                             uploadedBytes += chunkUploaded;
