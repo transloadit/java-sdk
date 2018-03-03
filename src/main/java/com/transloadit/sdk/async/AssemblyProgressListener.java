@@ -15,6 +15,9 @@ public interface AssemblyProgressListener {
 
     /**
      * Callback to be executed as an upload progress receiver
+     *
+     * @param uploadedBytes the number of bytes uploaded so far.
+     * @param totalBytes the total number of bytes to uploaded (i.e the size of all the files all together).
      */
     void onUploadPogress(long uploadedBytes, long totalBytes);
 
@@ -29,12 +32,14 @@ public interface AssemblyProgressListener {
 
     /**
      * Callback to be executed if the Assembly upload fails.
+     *
      * @param exception the error that causes the failure.
      */
     void onUploadFailed(Exception exception);
 
     /**
-     * Callback to be executed if the Assembly status update retrieve fails
+     * Callback to be executed if the Assembly status update retrieve fails.
+     *
      * @param exception the error that causes the failure.
      */
     void onAssemblyStatusUpdateFailed(Exception exception);

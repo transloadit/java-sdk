@@ -14,6 +14,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncAssembly extends Assembly {
     private AssemblyProgressListener listener;
@@ -47,8 +50,8 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Pauses the file upload. This is a blocking function that would wait till the assembly file uploads
-     * have actually been paused.
+     * Pauses the file upload. This is a blocking function that would try to wait till the assembly file uploads
+     * have actually been paused if possible.
      *
      * @throws LocalOperationException if the method is called while no upload is going on.
      */
@@ -84,7 +87,7 @@ public class AsyncAssembly extends Assembly {
      *
      * @return {@link AssemblyResponse}
      * @throws LocalOperationException if something goes wrong while running non-http operations.
-     * @throws RequestException if request to transloadit server fails.
+     * @throws RequestException if request to Transloadit server fails.
      */
     protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException {
         AssemblyResponse response;
@@ -125,8 +128,14 @@ public class AsyncAssembly extends Assembly {
                 @Override
                 protected void makeAttempt() throws ProtocolException, IOException {
                     while (state == State.UPLOADING && tusUploader.uploadChunk() > 0) {
-                        uploadedBytes += tusUploader.getOffset();
-                        listener.onUploadPogress(uploadedBytes, totalUploadSize);
+                        int chunkUploaded = tusUploader.uploadChunk();
+                        if (chunkUploaded > 0) {
+                            uploadedBytes += chunkUploaded;
+                            listener.onUploadPogress(uploadedBytes, totalUploadSize);
+                        } else {
+                            // upload is complete
+                            break;
+                        }
                     }
                 }
             };
@@ -216,5 +225,59 @@ public class AsyncAssembly extends Assembly {
             size += entry.getValue().available();
         }
         return size;
+    }
+
+    protected interface AsyncAssemblyExecutor {
+        /**
+         * starts the execution of the assembly on a separate thread.
+         */
+        void execute();
+
+        /**
+         * A blocking method that stops the execution of the assembly.
+         * This method should wait till the execution is stopped if possible.
+         */
+        void hardStop();
+
+        /**
+         * A non-blocking method that stops the execution of the assembly.
+         */
+        void stop();
+    }
+
+    private class AsyncAssemblyExecutorImpl implements AsyncAssemblyExecutor {
+        private final ExecutorService service;
+        private Runnable runnable;
+
+        AsyncAssemblyExecutorImpl(AsyncAssembly.AssemblyRunnable runnable) {
+            this.runnable = runnable;
+            runnable.setExecutor(this);
+            service = Executors.newSingleThreadExecutor();
+        }
+
+        @Override
+        public void execute() {
+            service.execute(runnable);
+        }
+
+        @Override
+        public void hardStop() {
+            // todo investigate how this functions
+            service.shutdown();
+            boolean terminated = false;
+            // wait till shutdown is done
+            while (!terminated) {
+                try {
+                    terminated = service.awaitTermination(800, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        public void stop() {
+            service.shutdown();
+        }
     }
 }

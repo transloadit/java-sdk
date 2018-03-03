@@ -51,7 +51,7 @@ public class Assembly extends OptionsBuilder {
      * Adds a file to your assembly.
      *
      * @param file {@link File} the file to be uploaded.
-     * @param name {@link String} the name you the file to be given in transloadit.
+     * @param name {@link String} the field name of the file when submitted Transloadit.
      */
     public void addFile(File file, String name) {
         files.put(name, file);
@@ -63,7 +63,7 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly but automatically genarates the name of the file.
+     * Adds a file to your assembly but automatically generates the field name of the file.
      *
      * @param file {@link File} the file to be uploaded.
      */
@@ -76,7 +76,7 @@ public class Assembly extends OptionsBuilder {
      * Adds a file to your assembly.
      *
      * @param inputStream {@link InputStream} the file to be uploaded.
-     * @param name {@link String} the name you the file to be given in transloadit.
+     * @param name {@link String} the field name of the file when submitted Transloadit.
      */
     public void addFile(InputStream inputStream, String name) {
         fileStreams.put(name, inputStream);
@@ -90,17 +90,17 @@ public class Assembly extends OptionsBuilder {
     /**
      * Adds a file to your assembly but automatically genarates the name of the file.
      *
-     * @param fileStream {@link InputStream} the file to be uploaded.
+     * @param inputStream {@link InputStream} the file to be uploaded.
      */
-    public void addFile(InputStream fileStream) {
+    public void addFile(InputStream inputStream) {
         String name = "file";
-        fileStreams.put(normalizeDuplicateName(name), fileStream);
+        fileStreams.put(normalizeDuplicateName(name), inputStream);
     }
 
     /**
      * Removes file from your assembly.
      *
-     * @param name name of the file to remove.
+     * @param name field name of the file to remove.
      */
     public void removeFile(String name) {
         if(files.containsKey(name)) {
@@ -146,8 +146,8 @@ public class Assembly extends OptionsBuilder {
      * Submits the configured assembly to Transloadit for processing.
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
-     * @return {@link AssemblyResponse}
-     * @throws RequestException        if request to transloadit server fails.
+     * @return {@link AssemblyResponse} the response received from the Transloadit server.
+     * @throws RequestException        if request to Transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse save(boolean isResumable)
@@ -223,10 +223,10 @@ public class Assembly extends OptionsBuilder {
      * @param inptStream {@link InputStream}
      * @param fieldName the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
-     * @throws IOException when there's a failure with file retrieval.
+     * @throws IOException when there's a failure with reading the input stream.
      */
     protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
-        TusUpload upload = getTusUploadInstance(inptStream, fieldName);
+        TusUpload upload = getTusUploadInstance(inptStream, fieldName, assemblyUrl);
 
         Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("filename", fieldName);
@@ -264,12 +264,12 @@ public class Assembly extends OptionsBuilder {
      *
      * @param inputStream {@link InputStream}
      * @return {@link TusUpload}
-     * @throws FileNotFoundException when there's a failure with file retrieval.
+     * @throws IOException when there's a failure with reading the input stream.
      */
-    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName) throws IOException {
+    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
         TusUpload tusUpload = new TusUpload();
         tusUpload.setInputStream(inputStream);
-        tusUpload.setFingerprint(String.format("%s-%d", fieldName, inputStream.available()));
+        tusUpload.setFingerprint(String.format("%s-%d-%s", fieldName, inputStream.available(), assemblyUrl));
         tusUpload.setSize(inputStream.available());
 
         return tusUpload;

@@ -1,10 +1,11 @@
 package com.transloadit.examples.async;
 
-import com.transloadit.examples.ImageResizer;
 import com.transloadit.sdk.Transloadit;
+import com.transloadit.sdk.async.AssemblyProgressListener;
 import com.transloadit.sdk.async.AsyncAssembly;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
+import com.transloadit.sdk.response.AssemblyResponse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,8 +24,8 @@ public class AsyncExample {
         AsyncAssembly assembly = transloadit.newAssembly(new ProgressListener());
         assembly.addStep("resize", "/image/resize", stepOptions);
 
-        assembly.addFile(new File(ImageResizer.class.getResource("/lol_cat.jpg").getFile()));
-        assembly.addFile(new File(ImageResizer.class.getResource("/mona_lisa.jpg").getFile()));
+        assembly.addFile(new File(AsyncExample.class.getResource("/lol_cat.jpg").getFile()));
+        assembly.addFile(new File(AsyncExample.class.getResource("/mona_lisa.jpg").getFile()));
 
         try {
             assembly.save();
@@ -44,6 +45,35 @@ public class AsyncExample {
 
         } catch (RequestException | LocalOperationException | InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+     static class ProgressListener implements AssemblyProgressListener {
+        @Override
+        public void onUploadFinished() {
+            System.out.println("upload finished!!! waiting for execution ...");
+        }
+
+        @Override
+        public void onUploadPogress(long uploadedBytes, long totalBytes) {
+            System.out.println("uploaded: " + uploadedBytes + " of: " + totalBytes);
+        }
+
+        @Override
+        public void onAssemblyFinished(AssemblyResponse response) {
+            System.out.println("Assembly finished with status: " + response.json().getString("ok"));
+        }
+
+        @Override
+        public void onUploadFailed(Exception exception) {
+            System.out.println("upload failed :(");
+            exception.printStackTrace();
+        }
+
+        @Override
+        public void onAssemblyStatusUpdateFailed(Exception exception) {
+            System.out.println("unable to fetch status update :(");
+            exception.printStackTrace();
         }
     }
 }
