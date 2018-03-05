@@ -82,7 +82,7 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
-    synchronized private void setState(State state) {
+    synchronized void setState(State state) {
         this.state = state;
     }
 

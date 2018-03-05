@@ -17,6 +17,16 @@ public class MockAsyncAssembly extends AsyncAssembly {
         tusClient = new MockTusClient();
     }
 
+    @Override
+    synchronized void setState(State state) {
+        super.setState(state);
+        if (this.state == State.UPLOADING) {
+            synchronized (this) {
+                this.notifyAll();
+            }
+        }
+    }
+
     static class MockTusClient extends TusClient {
         @Override
         public TusUploader resumeOrCreateUpload(@NotNull TusUpload upload) throws ProtocolException, IOException {
