@@ -24,8 +24,8 @@ public class AsyncExample {
         AsyncAssembly assembly = transloadit.newAssembly(new ProgressListener());
         assembly.addStep("resize", "/image/resize", stepOptions);
 
-        assembly.addFile(new File(AsyncExample.class.getResource("/lol_cat.jpg").getFile()));
-        assembly.addFile(new File(AsyncExample.class.getResource("/mona_lisa.jpg").getFile()));
+        File image = new File(AsyncExample.class.getResource("/lol_cat.jpg").getFile());
+        assembly.addFile(image);
 
         try {
             assembly.save();

@@ -48,7 +48,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly.
+     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * existing name.
      *
      * @param file {@link File} the file to be uploaded.
      * @param name {@link String} the field name of the file when submitted Transloadit.
@@ -73,7 +74,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly.
+     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * existing name.
      *
      * @param inputStream {@link InputStream} the file to be uploaded.
      * @param name {@link String} the field name of the file when submitted Transloadit.

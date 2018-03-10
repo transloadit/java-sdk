@@ -267,7 +267,6 @@ public class AsyncAssembly extends Assembly {
 
         @Override
         public void hardStop() {
-            // todo investigate how this functions
             service.shutdown();
             boolean terminated = false;
             // wait till shutdown is done
