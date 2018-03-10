@@ -12,7 +12,7 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AsyncExample {
+public class AsyncPausePlayExample {
     public static void main(String[] args) throws FileNotFoundException {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
@@ -25,17 +25,27 @@ public class AsyncExample {
         AsyncAssembly assembly = transloadit.newAssembly(listener);
         assembly.addStep("resize", "/image/resize", stepOptions);
 
-        File image = new File(AsyncExample.class.getResource("/lol_cat.jpg").getFile());
+        File image = new File(AsyncPausePlayExample.class.getResource("/lol_cat.jpg").getFile());
         assembly.addFile(image);
 
         try {
             assembly.save();
-        } catch (RequestException | LocalOperationException e) {
+            // wait the till we are sure that the upload has started
+            synchronized (listener) {
+                listener.wait(10000);
+            }
+            System.out.println("about to pause ...");
+            assembly.pauseUpload();
+            System.out.println("upload just got paused ...");
+            Thread.sleep(1000);
+            assembly.resumeUpload();
+            System.out.println("upload just got resumed ..");
+        } catch (RequestException | LocalOperationException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-     static class ProgressListener implements AssemblyProgressListener {
+    static class ProgressListener implements AssemblyProgressListener {
         @Override
         public void onUploadFinished() {
             System.out.println("upload finished!!! waiting for execution ...");
@@ -43,7 +53,15 @@ public class AsyncExample {
 
         @Override
         public void onUploadPogress(long uploadedBytes, long totalBytes) {
+            double percentage = ((double)uploadedBytes / (double)totalBytes) * 100.0;
             System.out.println("uploaded: " + uploadedBytes + " of: " + totalBytes);
+
+            // notify the main class to pause the upload
+            if (percentage > 0 && percentage < 20) {
+                synchronized (this) {
+                    this.notifyAll();
+                }
+            }
         }
 
         @Override
