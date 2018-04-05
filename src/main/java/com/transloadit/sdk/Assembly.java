@@ -265,6 +265,8 @@ public class Assembly extends OptionsBuilder {
      * Returns the {@link TusUpload} instance that would be used to upload a file.
      *
      * @param inputStream {@link InputStream}
+     * @param fieldName {@link String} the field name assigned to the file
+     * @param assemblyUrl {@link String} the assembly url
      * @return {@link TusUpload}
      * @throws IOException when there's a failure with reading the input stream.
      */
