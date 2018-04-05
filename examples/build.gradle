@@ -5,8 +5,9 @@ apply plugin: 'java'
 
 repositories {
     jcenter()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    compile 'com.transloadit.sdk:transloadit:0.0.5'
+    compile 'com.github.transloadit:java-sdk:5899f03a73b6a88a314e1219a7e04863b47ab830'
 }

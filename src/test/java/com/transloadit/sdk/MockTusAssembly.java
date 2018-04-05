@@ -1,9 +1,8 @@
 package com.transloadit.sdk;
 
-import io.tus.java.client.ProtocolException;
-
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This class serves as a Mock to {@link Assembly}, which can be used to test
@@ -14,7 +13,13 @@ public class MockTusAssembly extends Assembly {
         super(transloadit);
     }
 
-    protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException, ProtocolException {
+    @Override
+    protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
+        // do nothing
+    }
+
+    @Override
+    protected void processTusFile(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
         // do nothing
     }
 }

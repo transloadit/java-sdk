@@ -1,95 +1,169 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.*;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * This class represents a new assembly being created
  */
 public class Assembly extends OptionsBuilder {
+    private TusURLStore tusURLStore;
+
     protected Map<String, File> files;
+    protected Map<String, InputStream> fileStreams;
     protected TusClient tusClient;
+    protected List<TusUpload> uploads;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
 
     /**
-     *
      * @param transloadit {@link Transloadit} the transloadit client.
-     * @param steps {@link Steps} the steps to add to the assembly.
-     * @param files is a map of file names and files that are meant to be uploaded.
-     * @param options map of extra options to be sent along with the request.
+     * @param steps       {@link Steps} the steps to add to the assembly.
+     * @param files       is a map of file names and files that are meant to be uploaded.
+     * @param options     map of extra options to be sent along with the request.
      */
     public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
         this.transloadit = transloadit;
         this.steps = steps;
         this.files = files;
         this.options = options;
-        tusClient = null;
+        tusClient = new TusClient();
+        tusURLStore = new TusURLMemoryStore();
+        uploads = new ArrayList<TusUpload>();
+        fileStreams = new HashMap<String, InputStream>();
     }
 
     /**
-     * Adds a file to your assembly.
+     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * existing name.
      *
      * @param file {@link File} the file to be uploaded.
-     * @param name {@link String} the name you the file to be given in transloadit
+     * @param name {@link String} the field name of the file when submitted Transloadit.
      */
-    public void addFile(File file, String name){
+    public void addFile(File file, String name) {
         files.put(name, file);
+
+        // remove duplicate key
+        if (fileStreams.containsKey(name)) {
+            fileStreams.remove(name);
+        }
+    }
+
+    /**
+     * Adds a file to your assembly but automatically generates the field name of the file.
+     *
+     * @param file {@link File} the file to be uploaded.
+     */
+    public void addFile(File file) {
+        String name = "file";
+        files.put(normalizeDuplicateName(name), file);
+    }
+
+    /**
+     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * existing name.
+     *
+     * @param inputStream {@link InputStream} the file to be uploaded.
+     * @param name {@link String} the field name of the file when submitted Transloadit.
+     */
+    public void addFile(InputStream inputStream, String name) {
+        fileStreams.put(name, inputStream);
+
+        // remove duplicate key
+        if (files.containsKey(name)) {
+            files.remove(name);
+        }
     }
 
     /**
      * Adds a file to your assembly but automatically genarates the name of the file.
      *
-     * @param file {@link File} the file to be uploaded.
+     * @param inputStream {@link InputStream} the file to be uploaded.
      */
-    public void addFile(File file){
+    public void addFile(InputStream inputStream) {
         String name = "file";
-
-        for (int i = files.size(); files.containsKey(name); i++) {
-            name += "_" + i;
-        }
-        files.put(name, file);
+        fileStreams.put(normalizeDuplicateName(name), inputStream);
     }
 
     /**
      * Removes file from your assembly.
      *
-     * @param name name of the file to remove.
+     * @param name field name of the file to remove.
      */
     public void removeFile(String name) {
-        files.remove(name);
+        if(files.containsKey(name)) {
+            files.remove(name);
+        }
+
+        if(fileStreams.containsKey(name)) {
+            fileStreams.remove(name);
+        }
+    }
+
+    private String normalizeDuplicateName(String name) {
+        for (int i = files.size(); files.containsKey(name); i++) {
+            name += "_" + i;
+        }
+
+        for (int i = fileStreams.size(); fileStreams.containsKey(name); i++) {
+            name += "_" + i;
+        }
+
+        return name;
+    }
+
+    /**
+     * Returns the number of files that have been added for upload.
+     *
+     * @return the number of files that have been added for upload.
+     */
+    public int getFilesCount() {
+        return files.size() + fileStreams.size();
+    }
+
+    /**
+     * Set custom Url Storage. This should be an implementation of {@link TusURLStore}.
+     *
+     * @param store {@link TusURLStore} the storage instance.
+     */
+    public void setTusURLStore(TusURLStore store) {
+        tusURLStore = store;
     }
 
     /**
      * Submits the configured assembly to Transloadit for processing.
      *
      * @param isResumable boolean value that tells the assembly whether or not to use tus.
-     * @return {@link AssemblyResponse}
-     * @throws RequestException if request to transloadit server fails.
+     * @return {@link AssemblyResponse} the response received from the Transloadit server.
+     * @throws RequestException        if request to Transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
-        Request request = new Request(transloadit);
+        Request request = new Request(getClient());
         options.put("steps", steps.toMap());
 
         // only do tus uploads if files will be uploaded
-        if (isResumable && files.size() > 0) {
+        if (isResumable && getFilesCount() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
-            tusOptions.put("tus_num_expected_upload_files", Integer.toString(files.size()));
+            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
             AssemblyResponse response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions, null), true);
+                    request.post("/assemblies", options, tusOptions, null, null), true);
 
             // check if the assembly returned an error
             if (response.hasError()) {
@@ -97,7 +171,7 @@ public class Assembly extends OptionsBuilder {
             }
 
             try {
-                processTusFiles(response.getSslUrl());
+                handleTusUpload(response);
             } catch (IOException e) {
                 throw new LocalOperationException(e);
             } catch (ProtocolException e) {
@@ -105,42 +179,77 @@ public class Assembly extends OptionsBuilder {
             }
             return response;
         } else {
-            return new AssemblyResponse(request.post("/assemblies", options, null, files));
+            return new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
         }
     }
 
-    public  AssemblyResponse save() throws LocalOperationException, RequestException {
+    public AssemblyResponse save() throws LocalOperationException, RequestException {
         return this.save(true);
     }
 
     /**
+     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads.
      *
-     * @param assemblyUrl the assembly url affiliated with the tus upload
+     * @param response {@link AssemblyResponse}
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
+    protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
+        processTusFiles(response.getSslUrl());
+        uploadTusFiles();
+    }
+
+    /**
+     * Prepares all files added for tus uploads.
+     *
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException       when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
-        tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(transloadit.getHostUrl() + "/resumable/files/"));
-        tusClient.enableResuming(new TusURLMemoryStore());
+        tusClient.setUploadCreationURL(new URL(getClient().getHostUrl() + "/resumable/files/"));
+        tusClient.enableResuming(tusURLStore);
 
         for (Map.Entry<String, File> entry : files.entrySet()) {
+            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+        }
+
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
             processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
     }
 
     /**
+     * Prepares a file for tus upload.
      *
-     * @param file to upload.
-     * @param fieldName name of the file to be uploaded.
+     * @param inptStream {@link InputStream}
+     * @param fieldName the form field name assigned to the file.
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException when there's a failure with reading the input stream.
+     */
+    protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload upload = getTusUploadInstance(inptStream, fieldName, assemblyUrl);
+
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("filename", fieldName);
+        metadata.put("assembly_url", assemblyUrl);
+        metadata.put("fieldname", fieldName);
+
+        upload.setMetadata(metadata);
+
+        uploads.add(upload);
+    }
+
+    /**
+     * Prepares a file for tus upload.
+     *
+     * @param file {@link File}
+     * @param fieldName the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
-     * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFile(File file, String fieldName, String assemblyUrl)
-            throws IOException, ProtocolException {
-
-        final TusUpload upload = new TusUpload(file);
+    protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload upload = getTusUploadInstance(file);
 
         Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("filename", file.getName());
@@ -149,19 +258,60 @@ public class Assembly extends OptionsBuilder {
 
         upload.setMetadata(metadata);
 
-        TusExecutor executor = new TusExecutor() {
-            @Override
-            protected void makeAttempt() throws ProtocolException, IOException {
-                TusUploader uploader = tusClient.resumeOrCreateUpload(upload);
+        uploads.add(upload);
+    }
 
-                int uploadedChunk = 0;
-                while (uploadedChunk > -1) {
-                    uploadedChunk = uploader.uploadChunk();
+    /**
+     * Returns the {@link TusUpload} instance that would be used to upload a file.
+     *
+     * @param inputStream {@link InputStream}
+     * @return {@link TusUpload}
+     * @throws IOException when there's a failure with reading the input stream.
+     */
+    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload tusUpload = new TusUpload();
+        tusUpload.setInputStream(inputStream);
+        tusUpload.setFingerprint(String.format("%s-%d-%s", fieldName, inputStream.available(), assemblyUrl));
+        tusUpload.setSize(inputStream.available());
+
+        return tusUpload;
+    }
+
+    /**
+     * Returns the {@link TusUpload} instance that would be used to upload a file.
+     *
+     * @param file {@link File}
+     * @return {@link TusUpload}
+     * @throws FileNotFoundException when there's a failure with file retrieval.
+     */
+    protected TusUpload getTusUploadInstance(File file) throws FileNotFoundException {
+        return new TusUpload(file);
+    }
+
+    /**
+     * Does the actual uploading of files (when tus is enabled).
+     *
+     * @throws IOException when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
+    protected void uploadTusFiles() throws IOException, ProtocolException {
+        while (uploads.size() > 0) {
+            final TusUploader tusUploader = tusClient.resumeOrCreateUpload(uploads.get(0));
+
+            TusExecutor tusExecutor = new TusExecutor() {
+                @Override
+                protected void makeAttempt() throws ProtocolException, IOException {
+                    int uploadedChunk = 0;
+                    while (uploadedChunk > -1) {
+                        uploadedChunk = tusUploader.uploadChunk();
+                    }
+                    tusUploader.finish();
                 }
-                uploader.finish();
-            }
-        };
+            };
 
-        executor.makeAttempts();
+            tusExecutor.makeAttempts();
+            // remove upload instance from list
+            uploads.remove(0);
+        }
     }
 }

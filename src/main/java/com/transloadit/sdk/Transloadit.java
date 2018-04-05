@@ -1,5 +1,7 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.async.AssemblyProgressListener;
+import com.transloadit.sdk.async.AsyncAssembly;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -101,9 +103,21 @@ public class Transloadit {
     }
 
     /**
+     * Returns an AsyncAssembly instance that can be used to create a new assembly asynchronously.
+     * This method is good for running assemblies in the background
+     *
+     * @param listener an implementation of {@link AssemblyProgressListener} to serve as a callback
+     *                 for the asynchronous assembly.
+     * @return {@link AsyncAssembly}
+     */
+    public AsyncAssembly newAssembly(AssemblyProgressListener listener) {
+        return new AsyncAssembly(this, listener);
+    }
+
+    /**
      * Returns a single assembly.
      *
-     * @param id id of the Assebly to retrieve.
+     * @param id id of the Assembly to retrieve.
      * @return {@link AssemblyResponse}
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
