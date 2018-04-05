@@ -18,6 +18,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class represents a new assembly being created.
+ * It is similar to {@link Assembly} but provides Asynchronous functionality.
+ */
 public class AsyncAssembly extends Assembly {
     private AssemblyProgressListener listener;
     private long uploadedBytes;

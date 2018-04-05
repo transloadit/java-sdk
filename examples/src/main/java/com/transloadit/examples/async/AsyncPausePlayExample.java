@@ -8,12 +8,11 @@ import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AsyncPausePlayExample {
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
         Map<String, Object> stepOptions = new HashMap<String, Object>();

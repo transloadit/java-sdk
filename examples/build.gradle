@@ -9,5 +9,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.transloadit:java-sdk:5899f03a73b6a88a314e1219a7e04863b47ab830'
+    compile 'com.github.transloadit:java-sdk:42ffa7e0868c1a9d121860457bd429d9db3e58c8'
 }
