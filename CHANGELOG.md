@@ -1,3 +1,8 @@
+### 0.1.0 / 2018-04-05 ###
+
+* Support for Pausable/Resumable Asynchronous assemblies
+* Add assembly files as Inputstream
+
 ### 0.0.6 / 2018-01-19 ###
 
 * Do tus uploads only when there are files to upload.
