@@ -1,3 +1,7 @@
+### 0.1.1 / 2018-04-23 ###
+
+* Allow configurable upload chunk size [#21](https://github.com/transloadit/java-sdk/issues/21)
+
 ### 0.1.0 / 2018-04-05 ###
 
 * Support for Pausable/Resumable Asynchronous assemblies
