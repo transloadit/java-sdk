@@ -26,6 +26,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Transloadit tailored Http Request class
@@ -33,10 +34,20 @@ import java.util.Map;
 public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
-    private static final String USER_AGENT = "Transloadit Java SDK";
+    private String version;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
+
+        Properties prop = new Properties();
+        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
+        try {
+            prop.load(in);
+            version = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
+            in.close();
+        } catch (IOException e) {
+           throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -53,7 +64,7 @@ public class Request {
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Transloadit-Client", version)
                 .build();
 
         try {
@@ -89,7 +100,7 @@ public class Request {
 
         okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
                 .post(getBody(payload, files, fileStreams))
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Transloadit-Client", version)
                 .build();
 
         try {
@@ -117,7 +128,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Transloadit-Client", version)
                 .build();
 
         try {
@@ -141,7 +152,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Transloadit-Client", version)
                 .build();
 
         try {
