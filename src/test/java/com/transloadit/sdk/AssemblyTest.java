@@ -116,7 +116,7 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
-        assertEquals(resumableAssembly.json().get("id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
     }
 
     @Test
@@ -132,6 +132,6 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
-        assertEquals(resumableAssembly.json().get("id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
     }
 }

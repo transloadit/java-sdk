@@ -62,7 +62,7 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
         assertTrue(uploadFinished);
         assertTrue(assemblyFinished);
         assertEquals(1077, totalUploaded);
@@ -79,7 +79,7 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
         assertFalse(uploadFinished);
         assertFalse(assemblyFinished);
         assertNotEquals(1077, totalUploaded);
@@ -98,7 +98,7 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
         assertTrue(uploadFinished);
         assertEquals(1077, totalUploaded);
         assertNull(uploadError);
@@ -125,7 +125,7 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
         assertEquals(MockAsyncAssembly.State.PAUSED, assembly.state);
 
         // expect the states to not have updated after 5 seconds of wait
