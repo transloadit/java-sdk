@@ -1,4 +1,9 @@
 {
-  "id": "76fe5df1c93a0a530f3e583805cf98b4",
-  "status_endpoint": "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4"
+  "ok": "ASSEMBLY_UPLOADING",
+  "http_code": 200,
+  "message": "The assembly is still in the process of being uploaded.",
+  "assembly_id": "76fe5df1c93a0a530f3e583805cf98b4",
+  "instance": "dara.transloadit.com",
+  "assembly_url": "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4",
+  "assembly_ssl_url": "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4"
 }

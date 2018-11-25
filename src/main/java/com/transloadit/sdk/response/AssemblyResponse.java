@@ -7,11 +7,8 @@ import org.json.JSONArray;
  * An AssemblyApi tailored Http Response
  */
 public class AssemblyResponse extends Response {
-    protected boolean usesTus;
-
     public AssemblyResponse(okhttp3.Response response, boolean usesTus) throws LocalOperationException {
         super(response);
-        this.usesTus = usesTus;
     }
 
     public AssemblyResponse(okhttp3.Response response) throws LocalOperationException {
@@ -23,7 +20,7 @@ public class AssemblyResponse extends Response {
      * @return assembly id
      */
     public String getId() {
-        return this.json().getString( usesTus ? "id" : "assembly_id");
+        return this.json().getString("assembly_id");
     }
 
     /**
@@ -31,7 +28,7 @@ public class AssemblyResponse extends Response {
      * @return assembly url
      */
     public String getUrl() {
-        return this.json().getString(usesTus ? "status_endpoint" : "assembly_url");
+        return this.json().getString( "assembly_url");
     }
 
     /**
@@ -39,7 +36,7 @@ public class AssemblyResponse extends Response {
      * @return assembly ssl url
      */
     public String getSslUrl() {
-        return this.json().getString(usesTus ? "status_endpoint" : "assembly_ssl_url");
+        return this.json().getString("assembly_ssl_url");
     }
 
     /**
