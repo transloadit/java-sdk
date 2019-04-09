@@ -1,3 +1,9 @@
+### 0.1.2 / 2019-04-09 ###
+
+* send client version via "Transloadit-Client" header
+* Do not use deprecated status_endpoint property
+* update tus-java-client version
+
 ### 0.1.1 / 2018-04-23 ###
 
 * Allow configurable upload chunk size [#21](https://github.com/transloadit/java-sdk/issues/21)

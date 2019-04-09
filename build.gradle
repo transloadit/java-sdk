@@ -25,7 +25,7 @@ allprojects {
 
 dependencies {
     compile 'org.jetbrains:annotations:13.0'
-    compile 'io.tus.java.client:tus-java-client:0.3.2'
+    compile 'io.tus.java.client:tus-java-client:0.4.1'
     compile 'joda-time:joda-time:2.9.7'
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
     compile 'org.json:json:20160212'
