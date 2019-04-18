@@ -1,3 +1,7 @@
+### 0.1.3 / 2019-04-18 ###
+
+* load sdk version via ResourceBundle
+
 ### 0.1.2 / 2019-04-09 ###
 
 * send client version via "Transloadit-Client" header

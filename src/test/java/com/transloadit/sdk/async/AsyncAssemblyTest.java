@@ -2,6 +2,7 @@ package com.transloadit.sdk.async;
 
 import com.transloadit.sdk.MockHttpService;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,6 +53,11 @@ public class AsyncAssemblyTest extends MockHttpService {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
+    }
+
+    @After
+    public void tearDown() {
+        mockServerClient.reset();
     }
 
     @Test
