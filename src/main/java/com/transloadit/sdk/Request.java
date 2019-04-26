@@ -26,7 +26,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.Properties;
 
 /**
  * Transloadit tailored Http Request class
@@ -38,9 +38,19 @@ public class Request {
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-        version = "java-sdk:" + ResourceBundle.getBundle("version")
-                .getString("versionNumber")
-                .replace("'", "");
+        Properties prop = new Properties();
+        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
+        try {
+            prop.load(in);
+            version = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
+            in.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NullPointerException npe) {
+            version = "unknown";
+        }
+
+
     }
 
     /**
