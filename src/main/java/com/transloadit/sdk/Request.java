@@ -47,10 +47,8 @@ public class Request {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (NullPointerException npe) {
-            version = "unknown";
+            version = "java-sdk:unknown";
         }
-
-
     }
 
     /**

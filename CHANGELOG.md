@@ -1,3 +1,7 @@
+### 0.1.4 / 2019-04-27 ###
+
+* Use a fallback version
+
 ### 0.1.3 / 2019-04-18 ###
 
 * load sdk version via ResourceBundle
