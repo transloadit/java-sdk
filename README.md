@@ -65,6 +65,8 @@ public class Main {
 
             // wait for assembly to finish executing.
             while (!response.isFinished()) {
+                // you can set your custom wait time
+                Thread.sleep(1000);
                 response = transloadit.getAssemblyByUrl(response.getSslUrl());
             }
 
@@ -72,7 +74,7 @@ public class Main {
             System.out.println(response.getUrl());
             System.out.println(response.json());
 
-        } catch (RequestException | LocalOperationException e) {
+        } catch (RequestException | LocalOperationException e | InterruptedException e) {
             // handle exception here
         }
     }
