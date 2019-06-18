@@ -60,21 +60,17 @@ public class Main {
         assembly.addStep("resize", "/image/resize", stepOptions);
 
         assembly.addFile(new File("PATH/TO/FILE.jpg"));
+        // you can skip this part if you don't want to wait till the
+        // assembly is complete
+        assembly.setShouldWaitForCompletion(true);
         try {
             AssemblyResponse response = assembly.save();
-
-            // wait for assembly to finish executing.
-            while (!response.isFinished()) {
-                // you can set your custom wait time
-                Thread.sleep(1000);
-                response = transloadit.getAssemblyByUrl(response.getSslUrl());
-            }
 
             System.out.println(response.getId());
             System.out.println(response.getUrl());
             System.out.println(response.json());
 
-        } catch (RequestException | LocalOperationException e | InterruptedException e) {
+        } catch (RequestException | LocalOperationException e) {
             // handle exception here
         }
     }

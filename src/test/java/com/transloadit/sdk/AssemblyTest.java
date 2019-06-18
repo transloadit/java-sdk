@@ -77,12 +77,12 @@ public class AssemblyTest extends MockHttpService {
                 .withPath("/assemblies").withMethod("POST")
                 // content from the file uploaded is present
                 .withBody(regex("[\\w\\W]*Permission is hereby granted, free of charge[\\w\\W]*")))
-                .respond(HttpResponse.response().withBody(getJson("assembly.json")));
+                .respond(HttpResponse.response().withBody(getJson("assembly_executing.json")));
 
         assembly.addFile(new File("LICENSE"), "file_name");
 
         AssemblyResponse savedAssembly = assembly.save(false);
-        assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
+        assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
 
         mockServerClient.reset();
     }
@@ -104,6 +104,27 @@ public class AssemblyTest extends MockHttpService {
     }
 
     @Test
+    public void saveTillComplete() throws Exception {
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST")
+                // content from the file uploaded is present
+                .withBody(regex("[\\w\\W]*Permission is hereby granted, free of charge[\\w\\W]*")))
+                .respond(HttpResponse.response().withBody(getJson("assembly_executing.json")));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
+
+        assembly.addFile(new File("LICENSE"), "file_name");
+        assembly.setShouldWaitForCompletion(true);
+
+        AssemblyResponse savedAssembly = assembly.save(false);
+        assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
+
+        mockServerClient.reset();
+    }
+
+    @Test
     public void saveWithTus() throws Exception {
         MockTusAssembly assembly = new MockTusAssembly(transloadit);
         assembly.addFile(new File("LICENSE"), "file_name");
@@ -117,6 +138,29 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_UPLOADING");
+    }
+
+    @Test
+    public void saveWithTusTillComplete() throws Exception {
+        MockTusAssembly assembly = new MockTusAssembly(transloadit);
+        assembly.addFile(new File("LICENSE"), "file_name");
+        assembly.setShouldWaitForCompletion(true);
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies")
+                .withMethod("POST")
+                .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1" +
+                        "\\r\\n\\r\\n1[\\w\\W]*")))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
+
+        AssemblyResponse resumableAssembly = assembly.save(true);
+        assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
     }
 
     @Test

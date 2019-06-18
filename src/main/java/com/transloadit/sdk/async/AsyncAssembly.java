@@ -42,6 +42,8 @@ public class AsyncAssembly extends Assembly {
 
     public AsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
         super(transloadit);
+        // make true by default to avoid breaking change
+        shouldWaitForCompletion = true;
         this.listener = listener;
         state = State.INIT;
         uploadedBytes = 0;
@@ -132,6 +134,20 @@ public class AsyncAssembly extends Assembly {
         } while (!response.isFinished());
 
         setState(State.FINISHED);
+        return response;
+    }
+
+
+    /**
+     * Overrides method from parent and avoid waiting synchronously so it can be handled somewhere else in async manner
+     *
+     * @param response {@link AssemblyResponse}
+     * @return {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws RequestException if request to Transloadit server fails.
+     */
+    @Override
+    protected AssemblyResponse waitTillComplete(AssemblyResponse response) throws LocalOperationException, RequestException {
         return response;
     }
 
@@ -236,7 +252,9 @@ public class AsyncAssembly extends Assembly {
             if (state == State.UPLOAD_COMPLETE) {
                 getListener().onUploadFinished();
                 try {
-                    getListener().onAssemblyFinished(watchStatus());
+                    if (shouldWaitForCompletion) {
+                        getListener().onAssemblyFinished(watchStatus());
+                    }
                 } catch (LocalOperationException e) {
                     getListener().onAssemblyStatusUpdateFailed(e);
                 } catch (RequestException e) {
