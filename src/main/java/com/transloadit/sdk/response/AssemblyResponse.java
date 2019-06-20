@@ -54,7 +54,7 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly has completed.
      */
     public Boolean isCompleted() {
-        return json().getString("ok").equals("ASSEMBLY_COMPLETED");
+        return json().has("ok") && json().getString("ok").equals("ASSEMBLY_COMPLETED");
     }
 
     /**
@@ -62,7 +62,7 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly has aborted.
      */
     public Boolean isAborted() {
-        return json().getString("ok").equals("REQUEST_ABORTED");
+        return json().has("ok") && json().getString("ok").equals("REQUEST_ABORTED");
     }
 
     /**
@@ -70,7 +70,7 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly has canceled.
      */
     public Boolean isCanceled() {
-        return json().getString("ok").equals("ASSEMBLY_CANCELED");
+        return json().has("ok") && json().getString("ok").equals("ASSEMBLY_CANCELED");
     }
 
     /**
@@ -78,7 +78,7 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly is still executing.
      */
     public Boolean isExecuting() {
-        return json().getString("ok").equals("ASSEMBLY_EXECUTING");
+        return json().has("ok") && json().getString("ok").equals("ASSEMBLY_EXECUTING");
     }
 
     /**
@@ -86,7 +86,7 @@ public class AssemblyResponse extends Response {
      * @return {@link Boolean} indicating the assembly is uploading.
      */
     public Boolean isUploading() {
-        return json().getString("ok").equals("ASSEMBLY_UPLOADING");
+        return json().has("ok") && json().getString("ok").equals("ASSEMBLY_UPLOADING");
     }
 
     /**
