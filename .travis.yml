@@ -1,5 +1,5 @@
 language: java
-dist: xenia
+dist: xenial
 jdk:
 - openjdk6
 - openjdk7
