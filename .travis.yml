@@ -4,7 +4,7 @@ jdk:
 #- openjdk6
 #- openjdk10
 #- openjdk9
-- oraclejdk9
+- openjdk9
 - openjdk8
 
 matrix:
