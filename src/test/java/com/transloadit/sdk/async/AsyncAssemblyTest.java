@@ -77,6 +77,25 @@ public class AsyncAssemblyTest extends MockHttpService {
     }
 
     @Test
+    public void saveWithoutWaitForCompletion() throws Exception {
+        assembly.addFile(new File("LICENSE"), "file_name");
+        assembly.setShouldWaitForCompletion(false);
+        AssemblyResponse resumableAssembly = assembly.save();
+
+        synchronized (listener) {
+            listener.wait(3000);
+        }
+        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        assertTrue(uploadFinished);
+        assertFalse(assemblyFinished);
+        assertEquals(1077, totalUploaded);
+        assertNull(statusUpdateError);
+        assertNull(uploadError);
+
+        mockServerClient.reset();
+    }
+
+    @Test
     public void saveWithUploadError() throws Exception {
         assembly = new MockUploadErrorAsyncAssembly(transloadit, listener);
         assembly.addFile(new File("LICENSE"), "file_name");

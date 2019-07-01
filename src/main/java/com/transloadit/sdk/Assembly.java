@@ -25,6 +25,7 @@ public class Assembly extends OptionsBuilder {
     protected Map<String, InputStream> fileStreams;
     protected TusClient tusClient;
     protected List<TusUpload> uploads;
+    protected boolean shouldWaitForCompletion;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -45,6 +46,7 @@ public class Assembly extends OptionsBuilder {
         tusURLStore = new TusURLMemoryStore();
         uploads = new ArrayList<TusUpload>();
         fileStreams = new HashMap<String, InputStream>();
+        shouldWaitForCompletion = false;
     }
 
     /**
@@ -114,6 +116,15 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
+    /**
+     * Determine whether or not to wait till the assembly is complete after it is saved.
+     *
+     * @param shouldWaitForCompletion boolean value to determine whether or not to wait till the assembly is complete.
+     */
+    public void setShouldWaitForCompletion(boolean shouldWaitForCompletion) {
+        this.shouldWaitForCompletion = shouldWaitForCompletion;
+    }
+
     private String normalizeDuplicateName(String name) {
         for (int i = files.size(); files.containsKey(name); i++) {
             name += "_" + i;
@@ -157,12 +168,13 @@ public class Assembly extends OptionsBuilder {
         Request request = new Request(getClient());
         options.put("steps", steps.toMap());
 
+        AssemblyResponse response;
         // only do tus uploads if files will be uploaded
         if (isResumable && getFilesCount() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
-            AssemblyResponse response = new AssemblyResponse(
+            response = new AssemblyResponse(
                     request.post("/assemblies", options, tusOptions, null, null), true);
 
             // check if the assembly returned an error
@@ -177,10 +189,11 @@ public class Assembly extends OptionsBuilder {
             } catch (ProtocolException e) {
                 throw new RequestException(e);
             }
-            return response;
         } else {
-            return new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
+            response = new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
         }
+
+        return shouldWaitForCompletion ? waitTillComplete(response) : response;
     }
 
     public AssemblyResponse save() throws LocalOperationException, RequestException {
@@ -315,5 +328,27 @@ public class Assembly extends OptionsBuilder {
             // remove upload instance from list
             uploads.remove(0);
         }
+    }
+
+    /**
+     * Wait till the assembly is finished and then return the response of the complete state.
+     *
+     * @param response {@link AssemblyResponse}
+     * @return {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws RequestException if request to Transloadit server fails.
+     */
+    protected AssemblyResponse waitTillComplete(AssemblyResponse response) throws LocalOperationException, RequestException {
+        try {
+            // wait for assembly to finish executing.
+            while (!response.isFinished()) {
+                Thread.sleep(1000);
+                response = transloadit.getAssemblyByUrl(response.getSslUrl());
+            }
+        } catch (InterruptedException e) {
+            throw new LocalOperationException(e);
+        }
+
+        return response;
     }
 }
