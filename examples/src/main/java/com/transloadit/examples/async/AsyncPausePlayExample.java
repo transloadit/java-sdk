@@ -1,11 +1,10 @@
 package com.transloadit.examples.async;
 
 import com.transloadit.sdk.Transloadit;
-import com.transloadit.sdk.async.AssemblyProgressListener;
 import com.transloadit.sdk.async.AsyncAssembly;
+import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-import com.transloadit.sdk.response.AssemblyResponse;
 
 import java.io.File;
 import java.util.HashMap;
@@ -26,6 +25,7 @@ public class AsyncPausePlayExample {
 
         File image = new File(AsyncPausePlayExample.class.getResource("/lol_cat.jpg").getFile());
         assembly.addFile(image);
+        assembly.setUploadChunkSize(200);
 
         try {
             assembly.save();
@@ -36,7 +36,7 @@ public class AsyncPausePlayExample {
             System.out.println("about to pause ...");
             assembly.pauseUpload();
             System.out.println("upload just got paused ...");
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             assembly.resumeUpload();
             System.out.println("upload just got resumed ..");
         } catch (RequestException | LocalOperationException | InterruptedException e) {
@@ -44,14 +44,14 @@ public class AsyncPausePlayExample {
         }
     }
 
-    static class ProgressListener implements AssemblyProgressListener {
+    static class ProgressListener implements UploadProgressListener {
         @Override
         public void onUploadFinished() {
             System.out.println("upload finished!!! waiting for execution ...");
         }
 
         @Override
-        public void onUploadPogress(long uploadedBytes, long totalBytes) {
+        public void onUploadProgress(long uploadedBytes, long totalBytes) {
             double percentage = ((double)uploadedBytes / (double)totalBytes) * 100.0;
             System.out.println("uploaded: " + uploadedBytes + " of: " + totalBytes);
 
@@ -64,19 +64,8 @@ public class AsyncPausePlayExample {
         }
 
         @Override
-        public void onAssemblyFinished(AssemblyResponse response) {
-            System.out.println("Assembly finished with status: " + response.json().getString("ok"));
-        }
-
-        @Override
         public void onUploadFailed(Exception exception) {
             System.out.println("upload failed :(");
-            exception.printStackTrace();
-        }
-
-        @Override
-        public void onAssemblyStatusUpdateFailed(Exception exception) {
-            System.out.println("unable to fetch status update :(");
             exception.printStackTrace();
         }
     }

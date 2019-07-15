@@ -23,7 +23,7 @@ public class AsyncAssemblyTest extends MockHttpService {
     private MockServerClient mockServerClient;
 
     private AsyncAssembly assembly;
-    private AssemblyProgressListener listener;
+    private UploadProgressListener listener;
     private boolean uploadFinished;
     private boolean assemblyFinished;
     private long totalUploaded;
@@ -175,14 +175,14 @@ public class AsyncAssemblyTest extends MockHttpService {
         assertNull(uploadError);
     }
 
-    class Listener implements AssemblyProgressListener {
+    class Listener implements UploadProgressListener {
         @Override
         public void onUploadFinished() {
             uploadFinished = true;
         }
 
         @Override
-        public void onUploadPogress(long uploadedBytes, long totalBytes) {
+        public void onUploadProgress(long uploadedBytes, long totalBytes) {
             totalUploaded = uploadedBytes;
         }
 
