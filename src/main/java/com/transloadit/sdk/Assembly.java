@@ -239,6 +239,7 @@ public class Assembly extends OptionsBuilder {
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
+     * @deprecated ideally this method should make uploads to the tus url assigned to an assembly, but it doesn't
      */
     @Deprecated
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
