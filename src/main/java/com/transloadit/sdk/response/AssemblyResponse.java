@@ -27,6 +27,15 @@ public class AssemblyResponse extends Response {
      *
      * @return assembly url
      */
+    public String getTusUrl() {
+        return this.json().getString( "tus_url");
+    }
+
+
+    /**
+     *
+     * @return assembly url
+     */
     public String getUrl() {
         return this.json().getString( "assembly_url");
     }

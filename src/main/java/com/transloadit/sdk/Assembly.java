@@ -208,7 +208,7 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
-        processTusFiles(response.getSslUrl());
+        processTusFiles(response.getSslUrl(), response.getTusUrl());
         uploadTusFiles();
     }
 
@@ -216,11 +216,12 @@ public class Assembly extends OptionsBuilder {
      * Prepares all files added for tus uploads.
      *
      * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @param tusUrl the tus url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
-    protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
-        tusClient.setUploadCreationURL(new URL(getClient().getHostUrl() + "/resumable/files/"));
+    protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException, ProtocolException {
+        tusClient.setUploadCreationURL(new URL(tusUrl));
         tusClient.enableResuming(tusURLStore);
 
         for (Map.Entry<String, File> entry : files.entrySet()) {
@@ -230,6 +231,18 @@ public class Assembly extends OptionsBuilder {
         for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
             processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
+    }
+
+    /**
+     * Prepares all files added for tus uploads.
+     *
+     * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @throws IOException       when there's a failure with file retrieval.
+     * @throws ProtocolException when there's a failure with tus upload.
+     */
+    @Deprecated
+    protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
+        processTusFiles(assemblyUrl, getClient().getHostUrl() + "/resumable/files/");
     }
 
     /**

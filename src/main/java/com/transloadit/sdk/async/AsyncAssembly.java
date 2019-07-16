@@ -216,7 +216,7 @@ public class AsyncAssembly extends Assembly {
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
         url = response.getSslUrl();
         totalUploadSize = getTotalUploadSize();
-        processTusFiles(url);
+        processTusFiles(url, response.getTusUrl());
         startExecutor();
     }
 
