@@ -216,6 +216,7 @@ public class Assembly extends OptionsBuilder {
      * Prepares all files added for tus uploads.
      *
      * @param assemblyUrl the assembly url affiliated with the tus upload.
+     * @param tusUrl the tus url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
