@@ -1,3 +1,8 @@
+### 0.1.5 / 2019-07-16 ###
+
+* Make tus uploads to assembly's tus url
+* Make assembly wait till completion
+
 ### 0.1.4 / 2019-04-27 ###
 
 * Use a fallback version
