@@ -135,6 +135,17 @@ public class Assembly extends OptionsBuilder {
         return assemblyListener;
     }
 
+    /**
+     * Determine whether or not to wait till the assembly is complete after it is saved.
+     *
+     * @deprecated use {@link #setAssemblyListener(AssemblyListener)} instead
+     * @param shouldWaitForCompletion boolean value to determine whether or not to wait till the assembly is complete
+     */
+    @Deprecated
+    public void setShouldWaitForCompletion(boolean shouldWaitForCompletion) {
+        this.shouldWaitForCompletion = shouldWaitForCompletion;
+    }
+
     private String normalizeDuplicateName(String name) {
         for (int i = files.size(); files.containsKey(name); i++) {
             name += "_" + i;
@@ -192,7 +203,7 @@ public class Assembly extends OptionsBuilder {
                 throw new RequestException("Request to Assembly failed: " + response.json().getString("error"));
             }
 
-            if (shouldWaitForCompletion) {
+            if (shouldWaitWithSocket()) {
                 listenToSocket(response);
             }
 
@@ -205,12 +216,12 @@ public class Assembly extends OptionsBuilder {
             }
         } else {
             response = new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
-            if (shouldWaitForCompletion && !response.isFinished()) {
+            if (shouldWaitWithSocket() && !response.isFinished()) {
                 listenToSocket(response);
             }
         }
 
-        return response;
+        return shouldWaitWithoutSocket() ? waitTillComplete(response) : response;
     }
 
     public AssemblyResponse save() throws LocalOperationException, RequestException {
@@ -360,30 +371,40 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
+    protected boolean shouldWaitWithoutSocket() {
+        return this.shouldWaitForCompletion && this.assemblyListener == null;
+    }
+
+    protected boolean shouldWaitWithSocket() {
+        return this.shouldWaitForCompletion && this.assemblyListener != null;
+    }
+
+    Socket getSocket(String socketUrl) throws LocalOperationException {
+        IO.Options options = new IO.Options();
+        options.transports = new String[] { WebSocket.NAME };
+        try {
+            URL url =  new URL(socketUrl);
+            options.path = url.getPath();
+            String host = url.getProtocol() + "://" + url.getHost();
+            return IO.socket(host, options);
+        } catch (URISyntaxException e) {
+            throw new LocalOperationException(e);
+        } catch (MalformedURLException e) {
+            throw new LocalOperationException(e);
+        }
+    }
+
     /**
      * Wait till the assembly is finished and then return the response of the complete state.
      *
      * @param response {@link AssemblyResponse}
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
-    protected Socket listenToSocket(AssemblyResponse response) throws LocalOperationException {
+    private void listenToSocket(AssemblyResponse response) throws LocalOperationException {
         final String assemblyUrl = response.getSslUrl();
         final String assemblyId = response.getId();
 
-        IO.Options options = new IO.Options();
-        options.transports = new String[] { WebSocket.NAME };
-        final Socket socket;
-        try {
-            URL url =  new URL(response.getWebsocketUrl());
-            options.path = url.getPath();
-            String host = url.getProtocol() + "://" + url.getHost();
-            socket = IO.socket(host, options);
-        } catch (URISyntaxException e) {
-            throw new LocalOperationException(e);
-        } catch (MalformedURLException e) {
-            throw new LocalOperationException(e);
-        }
-
+        final Socket socket = getSocket(response.getWebsocketUrl());
         Emitter.Listener onFinished = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -421,6 +442,27 @@ public class Assembly extends OptionsBuilder {
                 .on("assembly_error", onFinished)
                 .on(Socket.EVENT_ERROR, onError);
         socket.connect();
-        return socket;
+    }
+
+    /**
+     * Wait till the assembly is finished and then return the response of the complete state.
+     *
+     * @param response {@link AssemblyResponse}
+     * @return {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws RequestException if request to Transloadit server fails.
+     */
+    protected AssemblyResponse waitTillComplete(AssemblyResponse response) throws LocalOperationException, RequestException {
+        try {
+            // wait for assembly to finish executing.
+            while (!response.isFinished()) {
+                Thread.sleep(1000);
+                response = transloadit.getAssemblyByUrl(response.getSslUrl());
+            }
+        } catch (InterruptedException e) {
+            throw new LocalOperationException(e);
+        }
+
+        return response;
     }
 }

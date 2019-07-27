@@ -10,6 +10,11 @@ public class MockStatusErrorAsyncAssembly extends AsyncAssembly {
         tusClient = new MockAsyncAssembly.MockTusClient();
     }
 
+    public MockStatusErrorAsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
+        super(transloadit, listener);
+        tusClient = new MockAsyncAssembly.MockTusClient();
+    }
+
     @Override
     protected AssemblyResponse watchStatus() throws RequestException {
         throw new RequestException("some request exception");

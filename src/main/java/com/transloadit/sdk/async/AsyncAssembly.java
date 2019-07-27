@@ -3,6 +3,7 @@ package com.transloadit.sdk.async;
 import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.Transloadit;
 import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusExecutor;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  * It is similar to {@link Assembly} but provides Asynchronous functionality.
  */
 public class AsyncAssembly extends Assembly {
+    private AssemblyProgressListener progressListener;
     private UploadProgressListener uploadListener;
     private long uploadedBytes;
     private long totalUploadSize;
@@ -32,7 +34,7 @@ public class AsyncAssembly extends Assembly {
         INIT,
         UPLOADING,
         PAUSED,
-        UPLOAD_COMPLETE,
+        UPLOAD_COMPLETE
     }
     State state;
 
@@ -40,12 +42,47 @@ public class AsyncAssembly extends Assembly {
 
     public AsyncAssembly(Transloadit transloadit, UploadProgressListener uploadListener) {
         super(transloadit);
+        // make true by default to avoid breaking change
+        shouldWaitForCompletion = true;
         this.uploadListener = uploadListener;
         state = State.INIT;
         uploadedBytes = 0;
         totalUploadSize = 0;
         lastTusUploader = null;
         url = null;
+    }
+
+    public AsyncAssembly(Transloadit transloadit, final AssemblyProgressListener listener) {
+        this(transloadit, toUploadProgressListener(listener));
+        progressListener = listener;
+    }
+
+    private static UploadProgressListener toUploadProgressListener(final AssemblyProgressListener listener) {
+       return new UploadProgressListener() {
+            @Override
+            public void onUploadFinished() {
+                listener.onUploadFinished();
+            }
+
+            @Override
+            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                listener.onUploadPogress(uploadedBytes, totalBytes);
+            }
+
+            @Override
+            public void onUploadFailed(Exception exception) {
+                listener.onUploadFailed(exception);
+            }
+        };
+    }
+
+    /**
+     * Return the AssemblyProgresssListener that has been previously set
+     *
+     * @return {@link AssemblyProgressListener}
+     */
+    public AssemblyProgressListener getListener() {
+        return progressListener;
     }
 
     /**
@@ -108,6 +145,22 @@ public class AsyncAssembly extends Assembly {
      */
     public void setUploadChunkSize(int uploadChunkSize) {
         this.uploadChunkSize = uploadChunkSize;
+    }
+
+    protected boolean shouldWaitWithoutSocket() {
+        return false;
+    }
+
+    /**
+     * Runs intermediate check on the Assembly status until it is finished executing,
+     * then returns it as a response.
+     *
+     * @return {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws RequestException if request to Transloadit server fails.
+     */
+    protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException {
+        return waitTillComplete(getClient().getAssemblyByUrl(url));
     }
 
     /**
@@ -210,7 +263,19 @@ public class AsyncAssembly extends Assembly {
 
             if (state == State.UPLOAD_COMPLETE) {
                 getUploadListener().onUploadFinished();
-                executor.stop();
+                if (!shouldWaitWithSocket() && shouldWaitForCompletion) {
+                    try {
+                        getListener().onAssemblyFinished(watchStatus());
+                    } catch (LocalOperationException e) {
+                        getListener().onAssemblyStatusUpdateFailed(e);
+                    } catch (RequestException e) {
+                        getListener().onAssemblyStatusUpdateFailed(e);
+                    } finally {
+                        executor.stop();
+                    }
+                } else {
+                    executor.stop();
+                }
             }
         }
     }

@@ -16,6 +16,11 @@ public class MockUploadErrorAsyncAssembly extends AsyncAssembly {
         tusClient = new MockTusClient();
     }
 
+    public MockUploadErrorAsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
+        super(transloadit, listener);
+        tusClient = new MockTusClient();
+    }
+
     class MockTusClient extends TusClient {
         @Override
         public TusUploader resumeOrCreateUpload(@NotNull TusUpload upload) throws ProtocolException, IOException {
