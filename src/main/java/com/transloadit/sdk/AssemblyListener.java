@@ -12,5 +12,11 @@ public interface AssemblyListener {
      */
     void onAssemblyFinished(AssemblyResponse response);
 
+    /**
+     * Callback to be executed if the socket connection throws an Error.
+     * This encompasses any kind of termination of the assembly.
+     *
+     * @param error {@link Exception} the error thrown during the socket connection.
+     */
     void onError(Exception error);
 }
