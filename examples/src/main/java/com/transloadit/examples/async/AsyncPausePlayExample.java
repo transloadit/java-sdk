@@ -25,6 +25,9 @@ public class AsyncPausePlayExample {
 
         File image = new File(AsyncPausePlayExample.class.getResource("/lol_cat.jpg").getFile());
         assembly.addFile(image);
+        // setting a small chunk size here in order to demo the pause and resume feature
+        // No need to use this method in your implementation unless you truly want to upload in a specified
+        // amount (small or large) of chunks.
         assembly.setUploadChunkSize(200);
 
         try {

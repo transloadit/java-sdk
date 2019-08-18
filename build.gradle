@@ -11,7 +11,7 @@ targetCompatibility = 1.6
 
 group 'com.transloadit.sdk'
 
-def config = new ConfigSlurper().parse(new File("src/main/resources/version.properties").toURI().toURL())
+def config = new ConfigSlurper().parse(new File("${projectDir}/src/main/resources/version.properties").toURI().toURL())
 version = config.versionNumber
 description = "A Java Integration of the Transloadit's(https://transloadit.com) file uploading and encoding service."
 
