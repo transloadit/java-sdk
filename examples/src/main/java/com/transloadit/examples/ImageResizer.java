@@ -1,6 +1,7 @@
 package com.transloadit.examples;
 
 import com.transloadit.sdk.Assembly;
+import com.transloadit.sdk.AssemblyListener;
 import com.transloadit.sdk.Transloadit;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
@@ -29,25 +30,27 @@ public class ImageResizer {
 
         assembly.addFile(new File(ImageResizer.class.getResource("/lol_cat.jpg").getFile()));
         assembly.addFile(new File(ImageResizer.class.getResource("/mona_lisa.jpg").getFile()));
+        assembly.setAssemblyListener(new AssemblyListener() {
+            @Override
+            public void onAssemblyFinished(AssemblyResponse response) {
+                JSONArray result = response.getStepResult("resize");
+                System.out.println("Resize result:");
+                for (int i = 0; i < result.length(); i++) {
+                    JSONObject item = result.getJSONObject(i);
+                    System.out.println(String.format("%s.%s: %s",
+                            item.getString("basename"), item.getString("ext"), item.getString("url")));
+                }
+            }
+
+            @Override
+            public void onError(Exception error) {
+                error.printStackTrace();
+            }
+        });
 
         try {
             System.out.println("Uploading ...");
-            AssemblyResponse response = assembly.save();
-
-            // wait for assembly to finish executing.
-            System.out.println("waiting for assembly to finish ...");
-            while (!response.isFinished()) {
-                response = transloadit.getAssemblyByUrl(response.getSslUrl());
-            }
-
-            JSONArray result = response.getStepResult("resize");
-
-            System.out.println("Resize result:");
-            for (int i = 0; i < result.length(); i++) {
-                JSONObject item = result.getJSONObject(i);
-                System.out.println(String.format("%s.%s: %s",
-                        item.getString("basename"), item.getString("ext"), item.getString("url")));
-            }
+            assembly.save();
         } catch (RequestException | LocalOperationException e) {
             e.printStackTrace();
         }

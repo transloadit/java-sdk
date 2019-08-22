@@ -11,6 +11,11 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 public class MockUploadErrorAsyncAssembly extends AsyncAssembly {
+    public MockUploadErrorAsyncAssembly(Transloadit transloadit, UploadProgressListener listener) {
+        super(transloadit, listener);
+        tusClient = new MockTusClient();
+    }
+
     public MockUploadErrorAsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
         super(transloadit, listener);
         tusClient = new MockTusClient();

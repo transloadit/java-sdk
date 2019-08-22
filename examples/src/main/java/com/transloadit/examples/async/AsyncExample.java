@@ -1,11 +1,10 @@
 package com.transloadit.examples.async;
 
 import com.transloadit.sdk.Transloadit;
-import com.transloadit.sdk.async.AssemblyProgressListener;
 import com.transloadit.sdk.async.AsyncAssembly;
+import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-import com.transloadit.sdk.response.AssemblyResponse;
 
 import java.io.File;
 import java.util.HashMap;
@@ -34,31 +33,20 @@ public class AsyncExample {
         }
     }
 
-     static class ProgressListener implements AssemblyProgressListener {
+     static class ProgressListener implements UploadProgressListener {
         @Override
         public void onUploadFinished() {
             System.out.println("upload finished!!! waiting for execution ...");
         }
 
         @Override
-        public void onUploadPogress(long uploadedBytes, long totalBytes) {
+        public void onUploadProgress(long uploadedBytes, long totalBytes) {
             System.out.println("uploaded: " + uploadedBytes + " of: " + totalBytes);
-        }
-
-        @Override
-        public void onAssemblyFinished(AssemblyResponse response) {
-            System.out.println("Assembly finished with status: " + response.json().getString("ok"));
         }
 
         @Override
         public void onUploadFailed(Exception exception) {
             System.out.println("upload failed :(");
-            exception.printStackTrace();
-        }
-
-        @Override
-        public void onAssemblyStatusUpdateFailed(Exception exception) {
-            System.out.println("unable to fetch status update :(");
             exception.printStackTrace();
         }
     }

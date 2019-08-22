@@ -49,6 +49,14 @@ public class AssemblyResponse extends Response {
     }
 
     /**
+     *
+     * @return assembly websocket url
+     */
+    public String getWebsocketUrl() {
+        return this.json().getString("websocket_url");
+    }
+
+    /**
      * returns the assembly result of a particular step.
      *
      * @param stepName the name of the step.

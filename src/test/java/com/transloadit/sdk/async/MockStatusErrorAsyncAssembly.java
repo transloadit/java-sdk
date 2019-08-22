@@ -5,6 +5,11 @@ import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 
 public class MockStatusErrorAsyncAssembly extends AsyncAssembly {
+    public MockStatusErrorAsyncAssembly(Transloadit transloadit, UploadProgressListener listener) {
+        super(transloadit, listener);
+        tusClient = new MockAsyncAssembly.MockTusClient();
+    }
+
     public MockStatusErrorAsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
         super(transloadit, listener);
         tusClient = new MockAsyncAssembly.MockTusClient();

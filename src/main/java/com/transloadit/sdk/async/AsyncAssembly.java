@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit;
  * It is similar to {@link Assembly} but provides Asynchronous functionality.
  */
 public class AsyncAssembly extends Assembly {
-    private AssemblyProgressListener listener;
+    private AssemblyProgressListener progressListener;
+    private UploadProgressListener uploadListener;
     private long uploadedBytes;
     private long totalUploadSize;
     private TusUploader lastTusUploader;
@@ -33,23 +34,46 @@ public class AsyncAssembly extends Assembly {
         INIT,
         UPLOADING,
         PAUSED,
-        UPLOAD_COMPLETE,
-        FINISHED  // this state is never really used, but it makes the flow more definite.
+        UPLOAD_COMPLETE
     }
     State state;
 
     protected AsyncAssemblyExecutor executor;
 
-    public AsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
+    public AsyncAssembly(Transloadit transloadit, UploadProgressListener uploadListener) {
         super(transloadit);
         // make true by default to avoid breaking change
         shouldWaitForCompletion = true;
-        this.listener = listener;
+        this.uploadListener = uploadListener;
         state = State.INIT;
         uploadedBytes = 0;
         totalUploadSize = 0;
         lastTusUploader = null;
         url = null;
+    }
+
+    public AsyncAssembly(Transloadit transloadit, final AssemblyProgressListener listener) {
+        this(transloadit, toUploadProgressListener(listener));
+        progressListener = listener;
+    }
+
+    private static UploadProgressListener toUploadProgressListener(final AssemblyProgressListener listener) {
+       return new UploadProgressListener() {
+            @Override
+            public void onUploadFinished() {
+                listener.onUploadFinished();
+            }
+
+            @Override
+            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                listener.onUploadPogress(uploadedBytes, totalBytes);
+            }
+
+            @Override
+            public void onUploadFailed(Exception exception) {
+                listener.onUploadFailed(exception);
+            }
+        };
     }
 
     /**
@@ -58,7 +82,16 @@ public class AsyncAssembly extends Assembly {
      * @return {@link AssemblyProgressListener}
      */
     public AssemblyProgressListener getListener() {
-        return listener;
+        return progressListener;
+    }
+
+    /**
+     * Return the AssemblyProgresssListener that has been previously set
+     *
+     * @return {@link UploadProgressListener}
+     */
+    public UploadProgressListener getUploadListener() {
+        return uploadListener;
     }
 
     /**
@@ -95,7 +128,7 @@ public class AsyncAssembly extends Assembly {
 
     /**
      * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link AssemblyProgressListener#onUploadPogress(long, long)} callback be triggered.
+     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered.
      *
      * @return uploadChunkSize
      */
@@ -105,13 +138,17 @@ public class AsyncAssembly extends Assembly {
 
     /**
      * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link AssemblyProgressListener#onUploadPogress(long, long)} callback be triggered. If not set,
+     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered. If not set,
      * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
      *
      * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
      */
     public void setUploadChunkSize(int uploadChunkSize) {
         this.uploadChunkSize = uploadChunkSize;
+    }
+
+    protected boolean shouldWaitWithoutSocket() {
+        return false;
     }
 
     /**
@@ -123,32 +160,7 @@ public class AsyncAssembly extends Assembly {
      * @throws RequestException if request to Transloadit server fails.
      */
     protected AssemblyResponse watchStatus() throws LocalOperationException, RequestException {
-        AssemblyResponse response;
-        do {
-            response = getClient().getAssemblyByUrl(url);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new LocalOperationException(e);
-            }
-        } while (!response.isFinished());
-
-        setState(State.FINISHED);
-        return response;
-    }
-
-
-    /**
-     * Overrides method from parent and avoid waiting synchronously so it can be handled somewhere else in async manner
-     *
-     * @param response {@link AssemblyResponse}
-     * @return {@link AssemblyResponse}
-     * @throws LocalOperationException if something goes wrong while running non-http operations.
-     * @throws RequestException if request to Transloadit server fails.
-     */
-    @Override
-    protected AssemblyResponse waitTillComplete(AssemblyResponse response) throws LocalOperationException, RequestException {
-        return response;
+        return waitTillComplete(getClient().getAssemblyByUrl(url));
     }
 
     /**
@@ -181,7 +193,7 @@ public class AsyncAssembly extends Assembly {
                         int chunkUploaded = tusUploader.uploadChunk();
                         if (chunkUploaded > 0) {
                             uploadedBytes += chunkUploaded;
-                            listener.onUploadPogress(uploadedBytes, totalUploadSize);
+                            uploadListener.onUploadProgress(uploadedBytes, totalUploadSize);
                         } else {
                             // upload is complete
                             break;
@@ -240,26 +252,28 @@ public class AsyncAssembly extends Assembly {
             try {
                 uploadTusFiles();
             } catch (ProtocolException e) {
-                getListener().onUploadFailed(e);
+                getUploadListener().onUploadFailed(e);
                 executor.stop();
                 return;
             } catch (IOException e) {
-                getListener().onUploadFailed(e);
+                getUploadListener().onUploadFailed(e);
                 executor.stop();
                 return;
             }
 
             if (state == State.UPLOAD_COMPLETE) {
-                getListener().onUploadFinished();
-                try {
-                    if (shouldWaitForCompletion) {
+                getUploadListener().onUploadFinished();
+                if (!shouldWaitWithSocket() && shouldWaitForCompletion) {
+                    try {
                         getListener().onAssemblyFinished(watchStatus());
+                    } catch (LocalOperationException e) {
+                        getListener().onAssemblyStatusUpdateFailed(e);
+                    } catch (RequestException e) {
+                        getListener().onAssemblyStatusUpdateFailed(e);
+                    } finally {
+                        executor.stop();
                     }
-                } catch (LocalOperationException e) {
-                    getListener().onAssemblyStatusUpdateFailed(e);
-                } catch (RequestException e) {
-                    getListener().onAssemblyStatusUpdateFailed(e);
-                } finally {
+                } else {
                     executor.stop();
                 }
             }

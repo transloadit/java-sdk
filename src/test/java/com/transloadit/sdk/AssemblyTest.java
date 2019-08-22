@@ -25,10 +25,12 @@ public class AssemblyTest extends MockHttpService {
     private MockServerClient mockServerClient;
 
     public Assembly assembly;
+    private boolean assemblyFinished;
 
     @Before
     public void setUp() throws Exception {
         assembly = new Assembly(transloadit);
+        assemblyFinished = false;
     }
 
     @Test
@@ -139,6 +141,45 @@ public class AssemblyTest extends MockHttpService {
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
         assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_UPLOADING");
+    }
+
+    @Test
+    public void saveWithTusTillSocketComplete() throws Exception {
+        MockTusAssembly assembly = new MockTusAssembly(transloadit);
+        assembly.addFile(new File("LICENSE"), "file_name");
+        assembly.setAssemblyListener(new AssemblyListener() {
+            @Override
+            public void onAssemblyFinished(AssemblyResponse response) {
+                assemblyFinished = true;
+                assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+                assertEquals(response.json().get("ok"), "ASSEMBLY_COMPLETED");
+            }
+
+            @Override
+            public void onError(Exception error) {
+
+            }
+        });
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies")
+                .withMethod("POST")
+                .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1" +
+                        "\\r\\n\\r\\n1[\\w\\W]*")))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
+
+        AssemblyResponse response = assembly.save(true);
+
+        assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+        assertFalse(assemblyFinished);
+        assertTrue(assembly.emitted.containsKey("assembly_connect"));
+        // emit that assembly is complete
+        assembly.getSocket("").emit("assembly_finished");
+        assertTrue(assemblyFinished);
     }
 
     @Test

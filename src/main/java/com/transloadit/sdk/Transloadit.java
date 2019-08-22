@@ -1,6 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.async.AssemblyProgressListener;
+import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.async.AsyncAssembly;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
@@ -106,8 +107,21 @@ public class Transloadit {
      * Returns an AsyncAssembly instance that can be used to create a new assembly asynchronously.
      * This method is good for running assemblies in the background
      *
+     * @param listener an implementation of {@link UploadProgressListener} to serve as a callback
+     *                 for the asynchronous assembly.
+     * @return {@link AsyncAssembly}
+     */
+    public AsyncAssembly newAssembly(UploadProgressListener listener) {
+        return new AsyncAssembly(this, listener);
+    }
+
+    /**
+     * Returns an AsyncAssembly instance that can be used to create a new assembly asynchronously.
+     * This method is good for running assemblies in the background
+     *
      * @param listener an implementation of {@link AssemblyProgressListener} to serve as a callback
      *                 for the asynchronous assembly.
+     * @deprecated use {@link #newAssembly(UploadProgressListener)} instead
      * @return {@link AsyncAssembly}
      */
     public AsyncAssembly newAssembly(AssemblyProgressListener listener) {

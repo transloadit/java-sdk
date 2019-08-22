@@ -3,17 +3,21 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
+import io.socket.engineio.client.transports.WebSocket;
 import io.tus.java.client.*;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class represents a new assembly being created
@@ -26,6 +30,7 @@ public class Assembly extends OptionsBuilder {
     protected TusClient tusClient;
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
+    protected AssemblyListener assemblyListener;
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -117,10 +122,26 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Sets a listener that should be called after the assembly is done executing.
+     *
+     * @param assemblyListener {@link AssemblyListener}
+     */
+    public void setAssemblyListener(AssemblyListener assemblyListener) {
+        this.assemblyListener = assemblyListener;
+        shouldWaitForCompletion = assemblyListener != null;
+    }
+
+    public AssemblyListener getAssemblyListener() {
+        return assemblyListener;
+    }
+
+    /**
      * Determine whether or not to wait till the assembly is complete after it is saved.
      *
-     * @param shouldWaitForCompletion boolean value to determine whether or not to wait till the assembly is complete.
+     * @deprecated use {@link #setAssemblyListener(AssemblyListener)} instead
+     * @param shouldWaitForCompletion boolean value to determine whether or not to wait till the assembly is complete
      */
+    @Deprecated
     public void setShouldWaitForCompletion(boolean shouldWaitForCompletion) {
         this.shouldWaitForCompletion = shouldWaitForCompletion;
     }
@@ -182,6 +203,10 @@ public class Assembly extends OptionsBuilder {
                 throw new RequestException("Request to Assembly failed: " + response.json().getString("error"));
             }
 
+            if (shouldWaitWithSocket()) {
+                listenToSocket(response);
+            }
+
             try {
                 handleTusUpload(response);
             } catch (IOException e) {
@@ -191,9 +216,12 @@ public class Assembly extends OptionsBuilder {
             }
         } else {
             response = new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
+            if (shouldWaitWithSocket() && !response.isFinished()) {
+                listenToSocket(response);
+            }
         }
 
-        return shouldWaitForCompletion ? waitTillComplete(response) : response;
+        return shouldWaitWithoutSocket() ? waitTillComplete(response) : response;
     }
 
     public AssemblyResponse save() throws LocalOperationException, RequestException {
@@ -218,7 +246,6 @@ public class Assembly extends OptionsBuilder {
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @param tusUrl the tus url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
-     * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException, ProtocolException {
         tusClient.setUploadCreationURL(new URL(tusUrl));
@@ -342,6 +369,79 @@ public class Assembly extends OptionsBuilder {
             // remove upload instance from list
             uploads.remove(0);
         }
+    }
+
+    protected boolean shouldWaitWithoutSocket() {
+        return this.shouldWaitForCompletion && this.assemblyListener == null;
+    }
+
+    protected boolean shouldWaitWithSocket() {
+        return this.shouldWaitForCompletion && this.assemblyListener != null;
+    }
+
+    Socket getSocket(String socketUrl) throws LocalOperationException {
+        IO.Options options = new IO.Options();
+        options.transports = new String[] { WebSocket.NAME };
+        try {
+            URL url =  new URL(socketUrl);
+            options.path = url.getPath();
+            String host = url.getProtocol() + "://" + url.getHost();
+            return IO.socket(host, options);
+        } catch (URISyntaxException e) {
+            throw new LocalOperationException(e);
+        } catch (MalformedURLException e) {
+            throw new LocalOperationException(e);
+        }
+    }
+
+    /**
+     * Wait till the assembly is finished and then return the response of the complete state.
+     *
+     * @param response {@link AssemblyResponse}
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
+    private void listenToSocket(AssemblyResponse response) throws LocalOperationException {
+        final String assemblyUrl = response.getSslUrl();
+        final String assemblyId = response.getId();
+
+        final Socket socket = getSocket(response.getWebsocketUrl());
+        Emitter.Listener onFinished = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                socket.disconnect();
+                try {
+                    getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(assemblyUrl));
+                } catch (RequestException e) {
+                    getAssemblyListener().onError(e);
+                } catch (LocalOperationException e) {
+                    getAssemblyListener().onError(e);
+                }
+            }
+        };
+
+        Emitter.Listener onConnect = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject obj = new JSONObject();
+                obj.put("id", assemblyId);
+                socket.emit("assembly_connect", obj);
+            }
+        };
+
+        Emitter.Listener onError = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                socket.disconnect();
+                getAssemblyListener().onError((Exception)args[0]);
+            }
+        };
+
+        socket
+                .on(Socket.EVENT_CONNECT, onConnect)
+                .on("assembly_finished", onFinished)
+                .on("assembly_error", onFinished)
+                .on(Socket.EVENT_ERROR, onError);
+        socket.connect();
     }
 
     /**
