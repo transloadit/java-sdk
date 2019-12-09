@@ -18,7 +18,7 @@ or can be installed from the Maven and Jcenter repositories.
 **Gradle:**
 
 ```groovy
-compile 'com.transloadit.sdk:transloadit:0.1.0'
+compile 'com.transloadit.sdk:transloadit:0.1.5'
 ```
 
 **Maven:**
@@ -27,7 +27,7 @@ compile 'com.transloadit.sdk:transloadit:0.1.0'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.5</version>
 </dependency>
 ```
 
@@ -113,7 +113,7 @@ You may also get an assembly by url with the `getAssemblyByUrl` method.
 
 ### Cancel an Assembly
 
-To cancel an executing assembly, you use the `cancelAssembly` method, passing the assembly id as a parameter.
+To cancel an executing assembly, you use the `cancelAssembly` method, passing the Assembly ID as a parameter.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -201,7 +201,7 @@ public class Main {
             Response response = template.save();
 
             System.out.println(response.json());
-            System.out.println(response.json().getString("id")); // gets the template id.
+            System.out.println(response.json().getString("id")); // gets the Template ID.
         } catch (RequestException | LocalOperationException e) {
             // handle exception here
         }
@@ -211,7 +211,7 @@ public class Main {
 
 ### Update a Template
 
-To update a template, you use the `updateTemplate` method, passing the template id and options to update as a parameters.
+To update a template, you use the `updateTemplate` method, passing the Template ID and options to update as a parameters.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -249,7 +249,7 @@ public class Main {
 
 ### Delete a Template
 
-To delete a template, you use the `deleteTemplate` method, passing the template id as a parameter.
+To delete a template, you use the `deleteTemplate` method, passing the Template ID as a parameter.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -302,7 +302,7 @@ public class Main {
 
 ### Get a template
 
-To get a particular template, you use the `getTemplate` method, passing the template id as a parameter.
+To get a particular template, you use the `getTemplate` method, passing the Template ID as a parameter.
 
 ```java
 import com.transloadit.sdk.Transloadit;
