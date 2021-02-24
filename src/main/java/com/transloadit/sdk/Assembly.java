@@ -187,7 +187,9 @@ public class Assembly extends OptionsBuilder {
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
         Request request = new Request(getClient());
-        options.put("steps", steps.toMap());
+     		if(!steps.toMap().isEmpty) {
+					options.put("steps", steps.toMap());
+				}
 
         AssemblyResponse response;
         // only do tus uploads if files will be uploaded
