@@ -187,7 +187,7 @@ public class Assembly extends OptionsBuilder {
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
         Request request = new Request(getClient());
-     		if(!steps.toMap().isEmpty) {
+     		if(!steps.toMap().isEmpty()) {
 					options.put("steps", steps.toMap());
 				}
 
