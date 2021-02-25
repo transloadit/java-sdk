@@ -18,7 +18,7 @@ or can be installed from the Maven and Jcenter repositories.
 **Gradle:**
 
 ```groovy
-compile 'com.transloadit.sdk:transloadit:0.1.5'
+compile 'com.transloadit.sdk:transloadit:0.1.6'
 ```
 
 **Maven:**
@@ -27,7 +27,7 @@ compile 'com.transloadit.sdk:transloadit:0.1.5'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
 </dependency>
 ```
 

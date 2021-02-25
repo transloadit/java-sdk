@@ -1,3 +1,7 @@
+### 0.1.6 / 2021-02-24 ###
+
+* Fix bug that doesn't allow usage of templates that have disabled allow steps override. 
+
 ### 0.1.5 / 2019-07-16 ###
 
 * Make tus uploads to assembly's tus url
