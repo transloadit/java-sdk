@@ -19,6 +19,7 @@ hs_err_pid*
 *.iml
 local.properties
 build/
+/examples/build
 
 # Gradle
 .gradle/

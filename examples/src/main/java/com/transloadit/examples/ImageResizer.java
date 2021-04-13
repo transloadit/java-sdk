@@ -38,7 +38,7 @@ public class ImageResizer {
                 for (int i = 0; i < result.length(); i++) {
                     JSONObject item = result.getJSONObject(i);
                     System.out.println(String.format("%s.%s: %s",
-                            item.getString("basename"), item.getString("ext"), item.getString("url")));
+                            item.getString("basename"), item.getString("ext"), item.getString("ssl_url")));
                 }
             }
 
