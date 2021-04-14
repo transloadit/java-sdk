@@ -26,16 +26,16 @@ public class MultiStepProcessing {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
         Assembly assembly = transloadit.newAssembly();
 
-        //Add Files and define Field name
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/dutch-anthem.mp3").getFile()),"a1");
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/german-anthem-0.mp3").getFile()),"a2");
+        // Add Files and define Field name
+        assembly.addFile(new File(MultiStepProcessing.class.getResource("/dutch-anthem.mp3").getFile()), "file_1");
+        assembly.addFile(new File(MultiStepProcessing.class.getResource("/german-anthem-0.mp3").getFile()), "file_2");
 
         // Step1 Reduce File's Bitrates
         Map<String, Object> step1 = new HashMap<>();
-        step1.put("preset","mp3");
-        step1.put("bitrate",128000);
+        step1.put("preset", "mp3");
+        step1.put("bitrate", 128000);
 
-        assembly.addStep("encode","/audio/encode",step1);
+        assembly.addStep("encode", "/audio/encode", step1);
 
         // Step2 Concatenation
             /* Building "use" parameter as JSONObject
@@ -45,24 +45,24 @@ public class MultiStepProcessing {
                 => Needs to be stored under key "steps" as it defines every substep
              */
         JSONObject outerJsonObject = new JSONObject();
-        outerJsonObject.append("steps",new JSONObject().put("name","encode" ).put("fields","a1").put("as","audio_1"));
-        outerJsonObject.append("steps",new JSONObject().put("name","encode" ).put("fields","a2").put("as","audio_2"));
+        outerJsonObject.append("steps", new JSONObject().put("name", "encode" ).put("fields", "file_1").put("as", "audio_1"));
+        outerJsonObject.append("steps", new JSONObject().put("name", "encode" ).put("fields", "file_2").put("as", "audio_2"));
 
         Map<String, Object> step2 = new HashMap<>();
         step2.put("preset", "mp3");
-        step2.put("use",outerJsonObject);
+        step2.put("use", outerJsonObject);
 
-        assembly.addStep("concat","/audio/concat", step2);
+        assembly.addStep("concat", "/audio/concat", step2);
 
         // Step 3 Waveform
 
         Map<String,Object> step3 = new HashMap<>();
-        step3.put("use","concat");
-        step3.put("width",1920);
-        step3.put("height",720);
-        step3.put("outer_color","ff00c7ff");
+        step3.put("use", "concat");
+        step3.put("width", 1920);
+        step3.put("height", 720);
+        step3.put("outer_color", "ff00c7ff");
 
-        assembly.addStep("waveform","/audio/waveform",step3);
+        assembly.addStep("waveform", "/audio/waveform", step3);
 
 
         // Register AssemblyListener => Informs User on Assembly completion
@@ -72,7 +72,6 @@ public class MultiStepProcessing {
                 JSONArray waveformStatus = response.getStepResult("waveform");
                 System.out.println("Result of Operation:");
                 printStatus(waveformStatus);
-                System.exit(0);
             }
 
             public void printStatus(JSONArray status) {

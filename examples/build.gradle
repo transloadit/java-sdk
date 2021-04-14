@@ -8,10 +8,6 @@ repositories {
 }
 
 dependencies {
-    compile project(':')
-    compile 'org.json:json:20160212'
-    // Uncomment following line if you want to use the local java-sdk
-    // for the example instead of pulling the JARs from JCenter.
-    // This is useful for debugging and testing new features.
-    //compile rootProject
+    implementation rootProject
+    implementation 'org.json:json:20160212'
 }
