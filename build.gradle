@@ -31,9 +31,9 @@ dependencies {
     implementation 'org.json:json:20160212'
     implementation 'commons-codec:commons-codec:1.9'
     implementation 'io.socket:socket.io-client:1.0.0'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mock-server:mockserver-netty:3.9.17'
-    testCompile 'org.mockito:mockito-core:2.+'
+    testImplementation 'junit:junit:4.12'
+    testImplementation  'org.mock-server:mockserver-netty:3.9.17'
+    testImplementation  'org.mockito:mockito-core:2.+'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
