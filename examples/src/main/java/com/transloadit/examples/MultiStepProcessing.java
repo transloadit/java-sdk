@@ -55,7 +55,6 @@ public class MultiStepProcessing {
         assembly.addStep("concat", "/audio/concat", step2);
 
         // Step 3 Waveform
-
         Map<String,Object> step3 = new HashMap<>();
         step3.put("use", "concat");
         step3.put("width", 1920);
