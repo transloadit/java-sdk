@@ -32,7 +32,7 @@ public class TemplateExample {
                 response = transloadit.getAssemblyByUrl(response.getSslUrl());
             }
 
-            String resultUrl = response.getStepResult("resize").getJSONObject(0).getString("url");
+            String resultUrl = response.getStepResult("resize").getJSONObject(0).getString("ssl_url");
             System.out.println("Here's your assembly result: " + resultUrl);
 
         } catch (RequestException | LocalOperationException e) {

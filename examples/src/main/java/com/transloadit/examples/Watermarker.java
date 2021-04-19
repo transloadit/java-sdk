@@ -40,7 +40,7 @@ public class Watermarker {
                 response = transloadit.getAssemblyByUrl(response.getSslUrl());
             }
 
-            String resultUrl = response.getStepResult("encode").getJSONObject(0).getString("url");
+            String resultUrl = response.getStepResult("encode").getJSONObject(0).getString("ssl_url");
             System.out.println("Here's your assembly result: " + resultUrl);
         } catch (RequestException | LocalOperationException e) {
             e.printStackTrace();
