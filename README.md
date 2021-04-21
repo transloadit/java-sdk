@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/transloadit/java-sdk.png?branch=master)](https://travis-ci.org/transloadit/java-sdk)
+[![build](https://github.com/transloadit/java-sdk/actions/workflows/javaCI.yml/badge.svg?branch=master)](https://github.com/transloadit/java-sdk/actions/workflows/javaCI.yml)
 
 ## java-sdk
 
