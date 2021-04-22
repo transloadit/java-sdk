@@ -1,11 +1,17 @@
 # This workflow will build a Java project with Gradle
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Java CI with Gradle
+name: Java CI with Gradle on Dev_Branches
 
 on:
-  [push, pull_request]
-
+  push:
+    branches-ignore:
+      - master
+      
+  pull_request:
+    branches-ignore:
+      - master
+      
 jobs:
     Java_CI:
       strategy:
@@ -27,17 +33,4 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assemble
       - name: Run Tests
-        run: ./gradlew check
-
-    slack-on-failure:
-      needs: [Java_CI]
-      if: failure()
-
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: 8398a7/action-slack@v3
-          with:
-            status: failure
-          env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: ./gradlew check --stacktrace
