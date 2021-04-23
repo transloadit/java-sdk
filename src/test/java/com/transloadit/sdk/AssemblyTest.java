@@ -2,10 +2,8 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
@@ -19,7 +17,7 @@ import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.RegexBody.regex;
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+
 public class AssemblyTest extends MockHttpService {
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
@@ -42,7 +40,6 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(file, "file_name");
 
         assertEquals(file, assembly.files.get("file_name"));
-
     }
 
     @Test
@@ -51,7 +48,6 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(file, "file_name");
 
         assertEquals(file, assembly.fileStreams.get("file_name"));
-
     }
 
     @Test
@@ -64,7 +60,6 @@ public class AssemblyTest extends MockHttpService {
 
         assertFalse(assembly.fileStreams.containsKey("file_name"));
         assertEquals(file, assembly.files.get("file_name"));
-
     }
 
 
@@ -77,7 +72,6 @@ public class AssemblyTest extends MockHttpService {
 
         assembly.removeFile("file_name");
         assertFalse(assembly.files.containsKey("file_name"));
-
     }
 
     @Test
@@ -92,7 +86,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
-
     }
 
     @Test
@@ -107,7 +100,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
-
     }
 
     @Test
@@ -127,7 +119,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
-
     }
 
     @Test
@@ -145,7 +136,6 @@ public class AssemblyTest extends MockHttpService {
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
         assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_UPLOADING");
-
     }
 
     @Test
@@ -185,7 +175,6 @@ public class AssemblyTest extends MockHttpService {
         // emit that assembly is complete
         assembly.getSocket("").emit("assembly_finished");
         assertTrue(assemblyFinished);
-
     }
 
     @Test
@@ -208,7 +197,6 @@ public class AssemblyTest extends MockHttpService {
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
         assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
-
     }
 
     @Test
@@ -225,6 +213,5 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-
     }
 }

@@ -28,8 +28,6 @@ public class AssemblyResponse extends Response {
      * @return assembly url
      */
     public String getTusUrl() {
-        System.out.println("HilfMir");
-        System.out.println(this.json().toString());
         return this.json().getString( "tus_url");
     }
 

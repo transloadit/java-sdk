@@ -33,4 +33,4 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assemble
       - name: Run Tests
-        run: ./gradlew check --info
+        run: ./gradlew check
