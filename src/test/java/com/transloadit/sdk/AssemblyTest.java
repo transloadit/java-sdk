@@ -2,8 +2,10 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
@@ -17,7 +19,7 @@ import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.RegexBody.regex;
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AssemblyTest extends MockHttpService {
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
