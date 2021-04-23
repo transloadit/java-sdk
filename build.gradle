@@ -27,7 +27,6 @@ dependencies {
     implementation 'io.tus.java.client:tus-java-client:0.4.1'
     implementation 'joda-time:joda-time:2.9.7'
     implementation 'com.squareup.okhttp3:okhttp:3.6.0'
-    // implementation 'org.json:json:20160212'
     implementation 'org.json:json:20210307'
     implementation 'commons-codec:commons-codec:1.9'
     implementation 'io.socket:socket.io-client:1.0.0'
