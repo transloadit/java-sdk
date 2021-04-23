@@ -41,6 +41,8 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(file, "file_name");
 
         assertEquals(file, assembly.files.get("file_name"));
+
+        mockServerClient.reset();
     }
 
     @Test
@@ -49,6 +51,8 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(file, "file_name");
 
         assertEquals(file, assembly.fileStreams.get("file_name"));
+
+        mockServerClient.reset();
     }
 
     @Test
@@ -61,6 +65,8 @@ public class AssemblyTest extends MockHttpService {
 
         assertFalse(assembly.fileStreams.containsKey("file_name"));
         assertEquals(file, assembly.files.get("file_name"));
+
+        mockServerClient.reset();
     }
 
 
@@ -73,6 +79,8 @@ public class AssemblyTest extends MockHttpService {
 
         assembly.removeFile("file_name");
         assertFalse(assembly.files.containsKey("file_name"));
+
+        mockServerClient.reset();
     }
 
     @Test
