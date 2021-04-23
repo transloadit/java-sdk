@@ -4,13 +4,7 @@
 name: builds
 
 on:
-  push:
-    branches:
-      - master
-      
-  pull_request:
-    branches:
-      - master
+  [push, pull_request]
       
 jobs:
     Java:
@@ -35,9 +29,10 @@ jobs:
       - name: Run Tests
         run: ./gradlew check
 
+
     slack-on-failure:
       needs: [Java]
-      if: failure() 
+      if: failure() && github.ref == 'refs/head/master'
       runs-on: ubuntu-latest
 
       steps:
