@@ -1,18 +1,7 @@
 package com.transloadit.sdk.response;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
-import org.json.JSONArray;
-
-/**
- * An AssemblyApi tailored Http Response
- */
-public class AssemblyResponse extends Response {
-    public AssemblyResponse(okhttp3.Response response, boolean usesTus) throws LocalOperationException {
-        super(response);
-    }
-
-    public AssemblyResponse(okhttp3.Response response) throws LocalOperationException {
-        this(response, false);
+import e, false);
     }
 
     /**
@@ -25,21 +14,6 @@ public class AssemblyResponse extends Response {
 
     /**
      *
-     * @return assembly url
-     */
-    public String getTusUrl() {
-        return this.json().getString( "tus_url");
-    }
-
-
-    /**
-     *
-     * @return assembly url
-     */
-    public String getUrl() {
-        return this.json().getString( "assembly_url");
-    }
-
     /**
      *
      * @return assembly ssl url
