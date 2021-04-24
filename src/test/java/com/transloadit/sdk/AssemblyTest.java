@@ -31,6 +31,7 @@ public class AssemblyTest extends MockHttpService {
     public void setUp() throws Exception {
         assembly = new Assembly(transloadit);
         assemblyFinished = false;
+        mockServerClient.reset();
     }
 
     @Test
@@ -85,8 +86,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
-
-        mockServerClient.reset();
     }
 
     @Test
@@ -101,8 +100,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
-
-        mockServerClient.reset();
     }
 
     @Test
@@ -122,8 +119,6 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse savedAssembly = assembly.save(false);
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
-
-        mockServerClient.reset();
     }
 
     @Test

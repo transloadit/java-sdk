@@ -1,13 +1,13 @@
 # This workflow will build a Java project with Gradle
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Java CI with Gradle
+name: builds
 
 on:
   [push, pull_request]
 
 jobs:
-    Java_CI:
+    Java:
       strategy:
         matrix:
          java: ['8','11']
@@ -30,9 +30,8 @@ jobs:
         run: ./gradlew check
 
     slack-on-failure:
-      needs: [Java_CI]
-      if: failure()
-
+      needs: [Java]
+      if: failure() && github.ref == 'refs/heads/master'
       runs-on: ubuntu-latest
 
       steps:
