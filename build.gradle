@@ -33,7 +33,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation  'org.mock-server:mockserver-netty:3.9.17'
     testImplementation  'org.mockito:mockito-core:2.+'
-
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
