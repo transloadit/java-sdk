@@ -1,0 +1,24 @@
+name: Publish to Maven Repository
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish_to_maven:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chekout Repository
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Publish package to Maven Repository
+          run: ./gradlew publish
+          env:
+            SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+            SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+
