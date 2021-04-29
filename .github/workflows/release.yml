@@ -7,7 +7,7 @@ jobs:
   publish_to_maven:
     runs-on: ubuntu-latest
     steps:
-      - name: Chekout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Set up JDK
         uses: actions/setup-java@v2

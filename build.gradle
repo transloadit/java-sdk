@@ -93,7 +93,8 @@ publishing {
     }
     repositories {
         maven {
-            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            // url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"  // For Snapshot testing
             credentials {
                 username = System.getenv("SONATYPE_USER")
                 password = System.getenv("SONATYPE_KEY")
