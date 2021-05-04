@@ -1,5 +1,6 @@
 plugins {
     id "com.jfrog.bintray" version "1.7"
+    id 'signing'
 }
 
 apply plugin: 'java'
@@ -93,14 +94,24 @@ publishing {
     }
     repositories {
         maven {
-            // url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"  // For Snapshot testing
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            if (version.toString().toLowerCase().endsWith("snapshot")){
+                url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"  // For Snapshot testing
+            }
+
             credentials {
                 username = System.getenv("SONATYPE_USER")
                 password = System.getenv("SONATYPE_KEY")
             }
         }
     }
+}
+signing{
+    def signingKeyId = "F39FC556"
+    def signingPassword = System.getenv("SIGNING_KEY_PASSWORD")
+    def signingKey = System.getenv("SIGNING_KEY_AMORED")
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    sign publishing.publications.mavenJava
 }
 
 /*
