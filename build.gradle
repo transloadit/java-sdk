@@ -1,10 +1,11 @@
 plugins {
-    id "com.jfrog.bintray" version "1.7"
     id 'signing'
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 apply plugin: 'java'
 apply plugin: 'maven-publish'
+
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -113,27 +114,12 @@ signing{
     useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications.mavenJava
 }
-
-/*
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publications = ['mavenJava']
-    dryRun = true
-    pkg {
-        repo = 'maven'
-        name = 'transloadit'
-        userOrg = 'transloadit'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/transloadit/java-sdk.git'
-        websiteUrl = 'https://github.com/transloadit/java-sdk'
-        issueTrackerUrl = 'https://github.com/transloadit/java-sdk/issues'
-        publicDownloadNumbers = true
-        version {
-            name = project.getVersion()
-            desc = project.getDescription()
-            vcsTag = project.getVersion()
+nexusPublishing {
+    repositories {
+        sonatype{
+            username = System.getenv("SONATYPE_USER")
+            password = System.getenv("SONATYPE_KEY")
         }
     }
+}
 
-} */
