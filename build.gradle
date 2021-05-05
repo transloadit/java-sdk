@@ -107,7 +107,7 @@ publishing {
     }
 }
 signing{
-    def signingKeyId = "F39FC556"
+    def signingKeyId = "749B96E4"
     def signingPassword = System.getenv("SIGNING_KEY_PASSWORD")
     def signingKey = System.getenv("SIGNING_KEY_AMORED")
     useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
