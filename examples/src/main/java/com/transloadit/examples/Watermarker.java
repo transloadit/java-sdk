@@ -14,8 +14,13 @@ import java.util.Map;
  * This Example adds a watermark to an uploaded video file.
  * The watermark image is passed as a url to the "watermark_url" parameter.
  */
-public class Watermarker {
-    public static void main (String [] args) {
+public final class Watermarker {
+
+    /**
+     * Runs a Watermarking Assembly.
+     * @param args
+     */
+    public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
         Map<String, Object> stepOptions = new HashMap<>();
@@ -45,5 +50,12 @@ public class Watermarker {
         } catch (RequestException | LocalOperationException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private Watermarker() {
+        throw new IllegalStateException("Utility class");
     }
 }
