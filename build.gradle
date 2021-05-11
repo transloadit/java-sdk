@@ -1,5 +1,6 @@
 plugins {
-    id "com.jfrog.bintray" version "1.7"
+    id 'signing'
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 apply plugin: 'java'
@@ -12,7 +13,7 @@ group 'com.transloadit.sdk'
 
 def config = new ConfigSlurper().parse(new File("${projectDir}/src/main/resources/version.properties").toURI().toURL())
 version = config.versionNumber
-description = "A Java Integration of the Transloadit's(https://transloadit.com) file uploading and encoding service."
+description = "A Java Integration of the Transloadit's (https://transloadit.com) file uploading and encoding service."
 
 allprojects {
     repositories {
@@ -20,7 +21,6 @@ allprojects {
         jcenter()
     }
 }
-
 
 dependencies {
     implementation 'org.jetbrains:annotations:13.0'
@@ -61,9 +61,9 @@ def pomConfig = {
 
     developers {
         developer {
-            id 'ifedapoolarewaju'
-            name 'Ifedapo Olarewaju'
-            email 'ifedapoolarewaju@gmail.com'
+            id 'Transloadit'
+            name 'Transloadit'
+            email 'support@transloadit.com'
         }
     }
 
@@ -91,26 +91,36 @@ publishing {
             }
         }
     }
+    
+    /* Keeping this as fallback in case of a failure within the nexus-publishing plugin
+    repositories {
+        maven {
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            if (version.toString().toLowerCase().endsWith("snapshot")) {
+                url = "https://s01.oss.sonatype.org/content/repositories/snapshots/" // For Snapshot testing
+            }
+
+            credentials {
+                username = System.getenv("SONATYPE_USER")
+                password = System.getenv("SONATYPE_KEY")
+            }
+        }
+    }
+    */
+}
+signing{
+    def signingKeyId = System.getenv("SIGNING_KEY_ID")
+    def signingPassword = System.getenv("SIGNING_KEY_PASSWORD")
+    def signingKey = System.getenv("SIGNING_KEY_AMORED")
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    sign publishing.publications.mavenJava
 }
 
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publications = ['mavenJava']
-    dryRun = true
-    pkg {
-        repo = 'maven'
-        name = 'transloadit'
-        userOrg = 'transloadit'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/transloadit/java-sdk.git'
-        websiteUrl = 'https://github.com/transloadit/java-sdk'
-        issueTrackerUrl = 'https://github.com/transloadit/java-sdk/issues'
-        publicDownloadNumbers = true
-        version {
-            name = project.getVersion()
-            desc = project.getDescription()
-            vcsTag = project.getVersion()
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = System.getenv("SONATYPE_USER")
+            password = System.getenv("SONATYPE_KEY")
         }
     }
 }
