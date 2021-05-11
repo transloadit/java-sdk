@@ -24,6 +24,3 @@ jobs:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_KEY_AMORED: ${{ secrets.SIGNING_KEY_AMORED }}
-
-
-
