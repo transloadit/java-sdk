@@ -2,10 +2,7 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.Instant;
@@ -27,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 /**
  * Transloadit tailored Http Request class
@@ -35,6 +33,7 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
+    private int retriesLeft = 5;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
@@ -105,7 +104,16 @@ public class Request {
                 .build();
 
         try {
-            return httpClient.newCall(request).execute();
+            Response response = httpClient.newCall(request).execute();
+
+            // Intercept Rate Limit Errors
+            if (!params.isEmpty()) {
+                JSONObject json = new JSONObject(response.peekBody(Long.MAX_VALUE).string()); // peek on Response Body (max. 2048 byte)
+                if (json.has("http_code") && json.get("http_code").toString().equals("413") && retriesLeft > 0) {
+                    return retry(response, url, params, extraData, files, fileStreams);
+                }
+            }
+            return response;
         } catch (IOException e) {
             throw new RequestException(e);
         }
@@ -320,5 +328,37 @@ public class Request {
             throw new LocalOperationException(e);
         }
         return mac.doFinal(data.getBytes(Charset.forName("UTF-8")));
+    }
+
+    /**
+     * Helper method, which performs a retry action if a POST request has hit the servers rate limit.
+     * All parameters of the failed POST request should be provided to this method.
+     * @param response response to retry
+     * @return {@link okhttp3.Response}
+     */
+    private okhttp3.Response retry(Response response, String url, Map<String, Object> params,
+                                   @Nullable Map<String, String> extraData,
+                                   @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
+            throws IOException, LocalOperationException, RequestException {
+        retriesLeft--;
+        System.out.println("Retries left: " + retriesLeft);
+        long timeToWait = 60000; // default server cooldown
+
+        JSONObject json = new JSONObject(response.body().string());
+
+        // Use server provided retry time if available
+        if (json.has("info") && json.getJSONObject("info").has("retryIn")) {
+            String retryIn = json.getJSONObject("info").get("retryIn").toString();
+            if (!retryIn.isEmpty()) {
+                int randInt = new Random().nextInt(1000);
+                timeToWait = Long.parseLong(retryIn) * 1000 + randInt;
+            }
+        }
+        try {
+            Thread.sleep(timeToWait);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return this.post(url, params, extraData, files, fileStreams);
     }
 }
