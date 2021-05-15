@@ -33,7 +33,7 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
-    private int retryAttemptsLeft = 5;
+    private int retryAttemptsLeft = 0;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
@@ -108,7 +108,7 @@ public class Request {
 
             // Intercept Rate Limit Errors
             if (!params.isEmpty()) {
-                JSONObject json = new JSONObject(response.peekBody(Long.MAX_VALUE).string()); // peek on Response Body (max. 2048 byte)
+                JSONObject json = new JSONObject(response.peekBody(Long.MAX_VALUE).string()); // peek on Response Body
                 if (json.has("http_code") && json.get("http_code").toString().equals("413") && retryAttemptsLeft > 0) {
                     return retry(response, url, params, extraData, files, fileStreams);
                 }
@@ -341,7 +341,6 @@ public class Request {
                                    @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
             throws IOException, LocalOperationException, RequestException {
         retryAttemptsLeft--;
-        System.out.println("Retries left: " + retryAttemptsLeft);
         long timeToWait = 60000; // default server cooldown
 
         JSONObject json = new JSONObject(response.body().string());
@@ -360,5 +359,13 @@ public class Request {
             e.printStackTrace();
         }
         return this.post(url, params, extraData, files, fileStreams);
+    }
+
+     /**
+      *Adjust number of retry attempts after hitting the rate limit
+     * @param retryAttemptsLeft - number of attempts
+     */
+    public void setRetryAttemptsLeft(int retryAttemptsLeft) {
+        this.retryAttemptsLeft = retryAttemptsLeft;
     }
 }
