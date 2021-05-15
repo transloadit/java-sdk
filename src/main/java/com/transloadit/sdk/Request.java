@@ -33,7 +33,7 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
-    private int retriesLeft = 5;
+    private int retryAttemptsLeft = 5;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
@@ -109,7 +109,7 @@ public class Request {
             // Intercept Rate Limit Errors
             if (!params.isEmpty()) {
                 JSONObject json = new JSONObject(response.peekBody(Long.MAX_VALUE).string()); // peek on Response Body (max. 2048 byte)
-                if (json.has("http_code") && json.get("http_code").toString().equals("413") && retriesLeft > 0) {
+                if (json.has("http_code") && json.get("http_code").toString().equals("413") && retryAttemptsLeft > 0) {
                     return retry(response, url, params, extraData, files, fileStreams);
                 }
             }
@@ -340,8 +340,8 @@ public class Request {
                                    @Nullable Map<String, String> extraData,
                                    @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
             throws IOException, LocalOperationException, RequestException {
-        retriesLeft--;
-        System.out.println("Retries left: " + retriesLeft);
+        retryAttemptsLeft--;
+        System.out.println("Retries left: " + retryAttemptsLeft);
         long timeToWait = 60000; // default server cooldown
 
         JSONObject json = new JSONObject(response.body().string());
