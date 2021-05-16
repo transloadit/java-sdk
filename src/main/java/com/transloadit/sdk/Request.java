@@ -387,12 +387,4 @@ public class Request {
         }
         return this.post(url, params, extraData, files, fileStreams);
     }
-
-     /**
-      *Adjust number of retry attempts after hitting the rate limit.
-     * @param retryAttemptsLeft - number of attempts
-     */
-    public void setRetryAttemptsLeft(int retryAttemptsLeft) {
-        this.retryAttemptsLeft = retryAttemptsLeft;
-    }
 }

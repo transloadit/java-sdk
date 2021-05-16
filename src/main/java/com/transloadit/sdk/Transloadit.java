@@ -24,7 +24,7 @@ public class Transloadit {
     long duration;
     private String hostUrl;
     boolean shouldSignRequest;
-    protected int retryAttempts = 3;
+    protected int retryAttempts = 3;  // default value
 
     /**
      * A new instance to transloadit client
@@ -90,8 +90,9 @@ public class Transloadit {
     /**
      * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
      * during assembly processing.
-     * @param retryAttempts - number of retry attempts
-     * @throws LocalOperationException - if provided number is negative
+     * Default value for every Transloadit instance is 3 retries.
+     * @param retryAttempts number of retry attempts
+     * @throws LocalOperationException if provided number is negative
      */
     public void setRetryAttempts(int retryAttempts) throws LocalOperationException{
         if (retryAttempts < 0) {

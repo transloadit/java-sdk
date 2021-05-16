@@ -31,7 +31,7 @@ public class Assembly extends OptionsBuilder {
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
-    protected int retryAttempts;
+
 
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
@@ -123,16 +123,6 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Specifies the number of retry attemps that should be taken in case of RATE_LIMIT_REACHED error.
-     * Only takes effect on the current assembly.
-     * Default value: 0
-     * @param retryAttempts - Number of retry attempts in Range 0 - Integer.Max_Value
-     */
-    public void setRetryAttempts(int retryAttempts) {
-        this.retryAttempts = retryAttempts;
-    }
-
-    /**
      * Sets a listener that should be called after the assembly is done executing.
      *
      * @param assemblyListener {@link AssemblyListener}
@@ -200,11 +190,6 @@ public class Assembly extends OptionsBuilder {
         Request request = new Request(getClient());
         if(!steps.toMap().isEmpty()) {
             options.put("steps", steps.toMap());
-        }
-
-        // Adjust number of retries in case of hitting the Rate Limit
-        if(retryAttempts >= 0) {
-            request.setRetryAttemptsLeft(retryAttempts);
         }
 
         AssemblyResponse response;
