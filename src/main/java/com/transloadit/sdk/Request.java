@@ -2,7 +2,11 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.Instant;
@@ -27,7 +31,7 @@ import java.util.Properties;
 import java.util.Random;
 
 /**
- * Transloadit tailored Http Request class
+ * Transloadit tailored Http Request class.
  */
 public class Request {
     private Transloadit transloadit;
@@ -52,7 +56,7 @@ public class Request {
 
     /**
      * Makes http GET request.
-     * @param url url to makes request to
+     * @param url url to make request to
      * @param params data to add to params field
      * @return {@link okhttp3.Response}
      * @throws RequestException
@@ -74,16 +78,24 @@ public class Request {
         }
     }
 
+    /**
+     * Makes HTTP GET request by calling {@link #get(String , Map<String, Object> ) } with empty params field.
+     * @param url url to make request to
+     * @return {@link okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
     okhttp3.Response get(String url) throws RequestException, LocalOperationException {
         return get(url, new HashMap<String, Object>());
     }
 
     /**
-     * Makes http POST request
-     * @param url url to makes request to
+     * Makes http POST request.
+     * @param url url to make request to
      * @param params data to add to params field
      * @param extraData data to send along with request body, outside of params field.
      * @param files files to be uploaded along with the request.
+     * @param fileStreams filestreams to be uploaded along with the request.
      * @return {@link okhttp3.Response}
      * @throws RequestException
      * @throws LocalOperationException
@@ -105,27 +117,33 @@ public class Request {
 
         try {
             Response response = httpClient.newCall(request).execute();
-
             // Intercept Rate Limit Errors
-            if (!params.isEmpty()) {
-                JSONObject json = new JSONObject(response.peekBody(Long.MAX_VALUE).string()); // peek on Response Body
-                if (json.has("http_code") && json.get("http_code").toString().equals("413") && retryAttemptsLeft > 0) {
+                if (response.code() == 413 && retryAttemptsLeft > 0) {
                     return retry(response, url, params, extraData, files, fileStreams);
                 }
-            }
+
             return response;
         } catch (IOException e) {
             throw new RequestException(e);
         }
     }
 
+    /**
+     * Makes http POST request by calling {@link #post(String, Map, Map, Map, Map)} with only url and params field
+     * being set.
+     * @param url url to make request to
+     * @param params data to add to params field
+     * @return {okhttp3.Response}
+     * @throws RequestException
+     * @throws LocalOperationException
+     */
     okhttp3.Response post(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
         return post(url, params, null, null, null);
     }
 
     /**
-     * Makes http DELETE request
+     * Makes http DELETE request.
      * @param url url to makes request to
      * @param params data to add to params field
      * @return {@link okhttp3.Response}
@@ -148,12 +166,13 @@ public class Request {
     }
 
     /**
-     * Makes http PUT request
+     * Makes http PUT request.
      * @param url
      * @param data
      * @return
      * @throws RequestException
      * @throws LocalOperationException
+     * @return {@link okhttp3.Response}
      */
     okhttp3.Response put(String url, Map<String, Object> data)
             throws RequestException, LocalOperationException {
@@ -184,8 +203,8 @@ public class Request {
 
     private String addUrlParams(String url, Map<String, ? extends Object> params) throws LocalOperationException {
         StringBuilder sb = new StringBuilder();
-        for(Map.Entry<String, ? extends Object> entry : params.entrySet()){
-            if(sb.length() > 0){
+        for (Map.Entry<String, ? extends Object> entry : params.entrySet()) {
+            if (sb.length() > 0) {
                 sb.append('&');
             }
 
@@ -205,6 +224,7 @@ public class Request {
      *
      * @param data data to add to request body
      * @param files files to upload
+     * @param fileStreams fileStreams to upload
      * @return {@link RequestBody}
      */
     private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files, @Nullable Map<String,
@@ -248,7 +268,8 @@ public class Request {
         return builder.build();
     }
 
-    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files) throws LocalOperationException {
+    private RequestBody getBody(Map<String, String> data, @Nullable Map<String, File> files)
+            throws LocalOperationException {
         return getBody(data, files, null);
     }
 
@@ -273,7 +294,7 @@ public class Request {
     }
 
     /**
-     * converts Map of data to json string
+     * converts Map of data to json string.
      *
      * @param data map data to converted to json
      * @return {@link String}
@@ -309,19 +330,19 @@ public class Request {
      */
     private String getSignature(String message) throws LocalOperationException {
         byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
-        byte[] rawHmac = HmacSHA1(kSecret, message);
+        byte[] rawHmac = hmacSHA1(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
 
         return new String(hexBytes, Charset.forName("UTF-8"));
     }
 
-    private byte[] HmacSHA1(byte[] key, String data) throws LocalOperationException {
-        final String ALGORITHM = "HmacSHA1";
+    private byte[] hmacSHA1(byte[] key, String data) throws LocalOperationException {
+        final String algorithm = "HmacSHA1";
         Mac mac;
 
         try {
-            mac = Mac.getInstance(ALGORITHM);
-            mac.init(new SecretKeySpec(key, ALGORITHM));
+            mac = Mac.getInstance(algorithm);
+            mac.init(new SecretKeySpec(key, algorithm));
         } catch (NoSuchAlgorithmException e) {
             throw new LocalOperationException(e);
         } catch (InvalidKeyException e) {
@@ -334,6 +355,11 @@ public class Request {
      * Helper method, which performs a retry action if a POST request has hit the servers rate limit.
      * All parameters of the failed POST request should be provided to this method.
      * @param response response to retry
+     * @param url url to make request to
+     * @param params data to add to params field
+     * @param extraData data to send along with request body, outside of params field.
+     * @param files files to be uploaded along with the request.
+     * @param fileStreams filestreams to be uploaded along with the request.
      * @return {@link okhttp3.Response}
      */
     private okhttp3.Response retry(Response response, String url, Map<String, Object> params,
@@ -362,7 +388,7 @@ public class Request {
     }
 
      /**
-      *Adjust number of retry attempts after hitting the rate limit
+      *Adjust number of retry attempts after hitting the rate limit.
      * @param retryAttemptsLeft - number of attempts
      */
     public void setRetryAttemptsLeft(int retryAttemptsLeft) {
