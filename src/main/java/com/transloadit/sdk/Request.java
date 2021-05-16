@@ -37,10 +37,11 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
-    private int retryAttemptsLeft = 0;
+    private int retryAttemptsLeft;
 
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
+        retryAttemptsLeft = transloadit.getRetryAttempts();
         Properties prop = new Properties();
         InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
         try {

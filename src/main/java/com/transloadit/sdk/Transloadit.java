@@ -24,6 +24,7 @@ public class Transloadit {
     long duration;
     private String hostUrl;
     boolean shouldSignRequest;
+    protected int retryAttempts = 3;
 
     /**
      * A new instance to transloadit client
@@ -84,6 +85,29 @@ public class Transloadit {
         } else {
             shouldSignRequest = flag;
         }
+    }
+
+    /**
+     * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
+     * during assembly processing.
+     * @param retryAttempts - number of retry attempts
+     * @throws LocalOperationException - if provided number is negative
+     */
+    public void setRetryAttempts(int retryAttempts) throws LocalOperationException{
+        if (retryAttempts < 0) {
+            throw new LocalOperationException("No negative number of retry Attempts possible.");
+        } else {
+            this.retryAttempts = retryAttempts;
+        }
+    }
+
+    /**
+     * Returns number of retry attempts that should be taken in case of a "RATE_LIMIT_REACHED" error appears
+     * during assembly processing.
+     * @return number of retry attempts
+     */
+    public int getRetryAttempts() {
+        return retryAttempts;
     }
 
     /**
