@@ -12,8 +12,12 @@ import java.io.File;
  * This Example makes use of a Template to run Assembly instructions on a file.
  * This is done by passing the template id through the "template_id" parameter.
  */
-public class TemplateExample {
-    public static void main (String [] args) {
+public final class TemplateExample {
+    /**
+     * Runs a Transloadit assembly with use of a user provided template.
+     * @param args
+     */
+    public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
         Assembly assembly = transloadit.newAssembly();
@@ -38,5 +42,11 @@ public class TemplateExample {
         } catch (RequestException | LocalOperationException e) {
             e.printStackTrace();
         }
+    }
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private TemplateExample() {
+        throw new IllegalStateException("Utility class");
     }
 }

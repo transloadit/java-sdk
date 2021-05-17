@@ -16,8 +16,12 @@ import java.util.Map;
 /**
  * This example resizes 2 uploaded files, both to 75x75.
  */
-public class ImageResizer {
-    public static void main (String [] args) {
+public final class ImageResizer {
+    /**
+     * Runs a Transloadit assembly which resizes two examples images.
+     * @param args
+     */
+    public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
         Map<String, Object> stepOptions = new HashMap<>();
@@ -54,5 +58,11 @@ public class ImageResizer {
         } catch (RequestException | LocalOperationException e) {
             e.printStackTrace();
         }
+    }
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private ImageResizer() {
+        throw new IllegalStateException("Utility class");
     }
 }

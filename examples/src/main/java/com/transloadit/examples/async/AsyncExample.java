@@ -10,7 +10,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AsyncExample {
+public final class AsyncExample {
+    /**
+     * Runs a asynchronous Transloadit assembly.
+     * @param args
+     */
     public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
@@ -49,5 +53,11 @@ public class AsyncExample {
             System.out.println("upload failed :(");
             exception.printStackTrace();
         }
+    }
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private AsyncExample() {
+        throw new IllegalStateException("Utility class");
     }
 }

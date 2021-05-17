@@ -10,7 +10,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AsyncPausePlayExample {
+public final class AsyncPausePlayExample {
+    /**
+     * Runs an asynchronous Transloadit assembly, with the file's upload being paused and resumed.
+     * @param args
+     */
     public static void main(String[] args) {
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
 
@@ -55,7 +59,7 @@ public class AsyncPausePlayExample {
 
         @Override
         public void onUploadProgress(long uploadedBytes, long totalBytes) {
-            double percentage = ((double)uploadedBytes / (double)totalBytes) * 100.0;
+            double percentage = ((double) uploadedBytes / (double) totalBytes) * 100.0;
             System.out.println("uploaded: " + uploadedBytes + " of: " + totalBytes);
 
             // notify the main class to pause the upload
@@ -71,5 +75,11 @@ public class AsyncPausePlayExample {
             System.out.println("upload failed :(");
             exception.printStackTrace();
         }
+    }
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private AsyncPausePlayExample() {
+        throw new IllegalStateException("Utility class");
     }
 }
