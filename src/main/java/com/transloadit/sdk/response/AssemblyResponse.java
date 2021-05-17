@@ -4,13 +4,24 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import org.json.JSONArray;
 
 /**
- * An AssemblyApi tailored Http Response
+ * An AssemblyApi tailored Http Response.
  */
 public class AssemblyResponse extends Response {
+    /**
+     * Initializes a new AssemblyResponse object representing the response of the AssemblyApi.
+     * @param response {@link okhttp3.Response} - response from interaction with the Web API
+     * @param usesTus indicates if {@link io.tus.java.client.TusClient} is used
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
     public AssemblyResponse(okhttp3.Response response, boolean usesTus) throws LocalOperationException {
         super(response);
     }
 
+    /**
+     * Calls {@link #AssemblyResponse(okhttp3.Response, boolean)} with boolean usesTus = false.
+     * @param response {@link okhttp3.Response} - response from interaction with the Web API
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
     public AssemblyResponse(okhttp3.Response response) throws LocalOperationException {
         this(response, false);
     }
@@ -28,7 +39,7 @@ public class AssemblyResponse extends Response {
      * @return assembly url
      */
     public String getTusUrl() {
-        return this.json().getString( "tus_url");
+        return this.json().getString("tus_url");
     }
 
 
@@ -37,7 +48,7 @@ public class AssemblyResponse extends Response {
      * @return assembly url
      */
     public String getUrl() {
-        return this.json().getString( "assembly_url");
+        return this.json().getString("assembly_url");
     }
 
     /**
