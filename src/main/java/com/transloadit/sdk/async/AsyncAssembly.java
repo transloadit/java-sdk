@@ -168,7 +168,10 @@ public class AsyncAssembly extends Assembly {
         this.uploadChunkSize = uploadChunkSize;
     }
 
-
+    /**
+     *
+     * @return false
+     */
     protected boolean shouldWaitWithoutSocket() {
         return false;
     }
