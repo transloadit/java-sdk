@@ -1,7 +1,7 @@
 package com.transloadit.sdk.async;
 
 /**
- * Implementations of this interface are used to handle progress and completeion of a background
+ * Implementations of this interface are used to handle progress and completion of a background
  * Assembly file upload.
  */
 public interface UploadProgressListener {
