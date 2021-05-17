@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class represents a new template being created
+ * This class represents a new template being created.
  */
 public class Template extends OptionsBuilder {
     private String name;
@@ -37,7 +37,7 @@ public class Template extends OptionsBuilder {
     }
 
     /**
-     * Set the name of the template
+     * Set the name of the template.
      * @param name name of the template
      */
     public void setName(String name) {

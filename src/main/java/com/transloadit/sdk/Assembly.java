@@ -7,7 +7,13 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import io.socket.engineio.client.transports.WebSocket;
-import io.tus.java.client.*;
+import io.tus.java.client.ProtocolException;
+import io.tus.java.client.TusClient;
+import io.tus.java.client.TusExecutor;
+import io.tus.java.client.TusURLMemoryStore;
+import io.tus.java.client.TusURLStore;
+import io.tus.java.client.TusUpload;
+import io.tus.java.client.TusUploader;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -17,10 +23,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * This class represents a new assembly being created
+ * This class represents a new assembly being created.
  */
 public class Assembly extends OptionsBuilder {
     private TusURLStore tusURLStore;
@@ -32,7 +41,10 @@ public class Assembly extends OptionsBuilder {
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
 
-
+    /**
+     * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
+     * @param transloadit {@link Transloadit} the transloadit client.
+     */
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
@@ -113,11 +125,11 @@ public class Assembly extends OptionsBuilder {
      * @param name field name of the file to remove.
      */
     public void removeFile(String name) {
-        if(files.containsKey(name)) {
+        if (files.containsKey(name)) {
             files.remove(name);
         }
 
-        if(fileStreams.containsKey(name)) {
+        if (fileStreams.containsKey(name)) {
             fileStreams.remove(name);
         }
     }
@@ -132,6 +144,10 @@ public class Assembly extends OptionsBuilder {
         shouldWaitForCompletion = assemblyListener != null;
     }
 
+    /**
+     * Returns the listener that should be called after assembly executing has been finished.
+     * @return {@link AssemblyListener}
+     */
     public AssemblyListener getAssemblyListener() {
         return assemblyListener;
     }
@@ -188,7 +204,7 @@ public class Assembly extends OptionsBuilder {
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
         Request request = new Request(getClient());
-        if(!steps.toMap().isEmpty()) {
+        if (!steps.toMap().isEmpty()) {
             options.put("steps", steps.toMap());
         }
 
@@ -227,6 +243,12 @@ public class Assembly extends OptionsBuilder {
         return shouldWaitWithoutSocket() ? waitTillComplete(response) : response;
     }
 
+    /**
+     * Calls {@link #save(boolean)} with boolean isResumable = true.
+     * @return {@link AssemblyResponse} the response received from the Transloadit server.
+     * @throws RequestException        if request to Transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
     public AssemblyResponse save() throws LocalOperationException, RequestException {
         return this.save(true);
     }
@@ -327,7 +349,8 @@ public class Assembly extends OptionsBuilder {
      * @return {@link TusUpload}
      * @throws IOException when there's a failure with reading the input stream.
      */
-    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
+    protected TusUpload getTusUploadInstance(InputStream inputStream, String fieldName, String assemblyUrl)
+            throws IOException {
         TusUpload tusUpload = new TusUpload();
         tusUpload.setInputStream(inputStream);
         tusUpload.setFingerprint(String.format("%s-%d-%s", fieldName, inputStream.available(), assemblyUrl));
@@ -382,9 +405,15 @@ public class Assembly extends OptionsBuilder {
         return this.shouldWaitForCompletion && this.assemblyListener != null;
     }
 
+    /**
+     * Returns corresponding websocket to socketUrl.
+     * @param socketUrl url of socket
+     * @return {@link Socket}
+     * @throws LocalOperationException
+     */
     Socket getSocket(String socketUrl) throws LocalOperationException {
         IO.Options options = new IO.Options();
-        options.transports = new String[] { WebSocket.NAME };
+        options.transports = new String[] {WebSocket.NAME };
         try {
             URL url =  new URL(socketUrl);
             options.path = url.getPath();
@@ -435,7 +464,7 @@ public class Assembly extends OptionsBuilder {
             @Override
             public void call(Object... args) {
                 socket.disconnect();
-                getAssemblyListener().onError((Exception)args[0]);
+                getAssemblyListener().onError((Exception) args[0]);
             }
         };
 
@@ -455,7 +484,8 @@ public class Assembly extends OptionsBuilder {
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      * @throws RequestException if request to Transloadit server fails.
      */
-    protected AssemblyResponse waitTillComplete(AssemblyResponse response) throws LocalOperationException, RequestException {
+    protected AssemblyResponse waitTillComplete(AssemblyResponse response)
+            throws LocalOperationException, RequestException {
         try {
             // wait for assembly to finish executing.
             while (!response.isFinished()) {

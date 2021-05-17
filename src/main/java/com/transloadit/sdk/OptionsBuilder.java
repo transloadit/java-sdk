@@ -17,7 +17,7 @@ public class OptionsBuilder {
      * @param robot {@link String} name of the robot used by the step.
      * @param options {@link Map} extra options required for the step.
      */
-    public void addStep(String name, String robot, Map<String, Object> options){
+    public void addStep(String name, String robot, Map<String, Object> options) {
         steps.addStep(name, robot, options);
     }
 

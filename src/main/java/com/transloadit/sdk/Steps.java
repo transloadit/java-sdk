@@ -9,7 +9,10 @@ import java.util.Map;
 public class Steps {
     Map<String, Step> all;
 
-    public Steps(){
+    /**
+     * Constructor for a new Step instance.
+     */
+    public Steps() {
         all = new HashMap<String, Step>();
     }
 
@@ -27,7 +30,7 @@ public class Steps {
          * @param robot The name of the robot ot use with the step.
          * @param options extra options required for the step.
          */
-        public Step(String name, String robot, Map<String, Object> options){
+        public Step(String name, String robot, Map<String, Object> options) {
             this.name = name;
             this.robot = robot;
             this.options = options;
@@ -77,10 +80,10 @@ public class Steps {
      *
      * @return Steps as a HashMap ready to be used by an assembly.
      */
-    public Map<String, Map> toMap(){
+    public Map<String, Map> toMap() {
         Map<String, Map> hash = new HashMap<String, Map>();
-        for (Map.Entry<String, Step> entry :
-                all.entrySet()) {
+        for (Map.Entry<String, Step> entry
+                : all.entrySet()) {
             hash.put(entry.getKey(), entry.getValue().toMap());
         }
         return  hash;

@@ -15,9 +15,12 @@ import java.util.Map;
 
 
 /**
- * This class serves as a client interface to the Transloadit API
+ * This class serves as a client interface to the Transloadit API.
  */
 public class Transloadit {
+    /**
+     * Default url of the Transloadit API.
+     */
     public static final String DEFAULT_HOST_URL = "https://api2.transloadit.com";
     String key;
     String secret;
@@ -27,7 +30,7 @@ public class Transloadit {
     protected int retryAttempts = 3;  // default value
 
     /**
-     * A new instance to transloadit client
+     * A new instance to transloadit client.
      *
      * @param key User's transloadit key
      * @param secret User's transloadit secret.
@@ -43,7 +46,7 @@ public class Transloadit {
     }
 
     /**
-     * A new instance to transloadit client
+     * A new instance to transloadit client.
      *
      * @param key User's transloadit key
      * @param secret User's transloadit secret.
@@ -54,7 +57,7 @@ public class Transloadit {
     }
 
     /**
-     * A new instance to transloadit client
+     * A new instance to transloadit client.
      *
      * @param key User's transloadit key
      * @param secret User's transloadit secret.
@@ -65,7 +68,7 @@ public class Transloadit {
     }
 
     /**
-     * A new instance to transloadit client
+     * A new instance to transloadit client.
      *
      * @param key User's transloadit key
      * @param secret User's transloadit secret.
@@ -94,7 +97,7 @@ public class Transloadit {
      * @param retryAttempts number of retry attempts
      * @throws LocalOperationException if provided number is negative
      */
-    public void setRetryAttempts(int retryAttempts) throws LocalOperationException{
+    public void setRetryAttempts(int retryAttempts) throws LocalOperationException {
         if (retryAttempts < 0) {
             throw new LocalOperationException("No negative number of retry Attempts possible.");
         } else {
@@ -195,7 +198,7 @@ public class Transloadit {
     }
 
     /**
-     * Returns a list of all assemblies under the user account
+     * Returns a list of all assemblies under the user account.
      *
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
@@ -208,6 +211,12 @@ public class Transloadit {
         return new ListResponse(request.get("/assemblies", options));
     }
 
+    /**
+     * Returns a list of all assemblies under the user account.
+     * @return {@link ListResponse}
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
     public ListResponse listAssemblies() throws RequestException, LocalOperationException {
         return listAssemblies(new HashMap<String, Object>());
     }
@@ -268,7 +277,7 @@ public class Transloadit {
     }
 
     /**
-     * Returns a list of all templates under the user account
+     * Returns a list of all templates under the user account.
      *
      * @param options {@link Map} extra options to send along with the request.
      * @return {@link ListResponse}
@@ -283,7 +292,7 @@ public class Transloadit {
     }
 
     /**
-     * Returns a list of all templates under the user account
+     * Returns a list of all templates under the user account.
      *
      * @return {@link ListResponse}
      *
