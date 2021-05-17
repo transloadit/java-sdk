@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.junit.MockServerRule;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -213,5 +214,28 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse resumableAssembly = assembly.save(true);
         assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+    }
+
+    /**
+     * Test retry functionality in case of hitting the servers RATE_LIMIT
+     * @throws Exception
+     */
+    @Test
+    public void testRetry() throws Exception {
+        int retries = 2;
+        // let it retry twice
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST"), Times.exactly(retries))
+                .respond(HttpResponse.response().withStatusCode(413).withBody(getJson("rate_limit_reached.json")));
+
+        // let it pass
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("assembly_executing.json")));
+
+        assembly.addFile(new File("LICENSE"), "file_name");
+        AssemblyResponse savedAssembly = assembly.save(false);
+        // check if assembly was successfully retried
+        assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
     }
 }
