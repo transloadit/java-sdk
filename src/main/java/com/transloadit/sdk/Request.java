@@ -383,7 +383,7 @@ public class Request {
         try {
             Thread.sleep(timeToWait);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new LocalOperationException(e);
         }
         return this.post(url, params, extraData, files, fileStreams);
     }
