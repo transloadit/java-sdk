@@ -12,13 +12,15 @@ This is a **Java** SDK to make it easy to talk to the [Transloadit](https://tran
 
 ## Install
 
-The JARs can be downloaded manually from our [Bintray project](https://bintray.com/transloadit/maven/transloadit/view#files),
-or can be installed from the Maven and Jcenter repositories.
+The JARs can be downloaded manually from our [Maven Central Search](https://search.maven.org/artifact/com.transloadit.sdk/transloadit),
+or can be installed from the Maven repository.
+
+Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/) and update their build files to receive the most recent versions.
 
 **Gradle:**
 
 ```groovy
-compile 'com.transloadit.sdk:transloadit:0.1.6'
+implementation 'com.transloadit.sdk:transloadit:0.1.7'
 ```
 
 **Maven:**
@@ -27,7 +29,7 @@ compile 'com.transloadit.sdk:transloadit:0.1.6'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
 </dependency>
 ```
 
@@ -360,3 +362,13 @@ See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.1.0) for f
 ## License
 
 [The MIT License](LICENSE).
+
+## Verfication 
+Releases can be verified with our GPG Release Signing Key:
+
+
+`User ID: Transloadit Release Signing Key <keys@transloadit.com>`
+
+`Fingerprint: 2F4F F0E1 8659 76C6 5B73 782B ECBD 0B65 8705 AE5A`
+
+Or download it from [keys.openpgp.org](https://keys.openpgp.org/vks/v1/by-fingerprint/2F4FF0E1865976C65B73782BECBD0B658705AE5A)

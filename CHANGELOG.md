@@ -1,3 +1,6 @@
+### 0.1.7 / 2021-05-17 ###
+* Added retry functionality for assemblies in case of reaching the rate limit
+
 ### 0.1.6 / 2021-02-24 ###
 
 * Fix bug that doesn't allow usage of templates that have disabled allow steps override. 
