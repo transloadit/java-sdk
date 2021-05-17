@@ -1,4 +1,4 @@
-### 0.1.7 / 2021-05-17 ###
+### 0.2.0 / 2021-05-17 ###
 * Added retry functionality for assemblies in case of reaching the rate limit
 
 ### 0.1.6 / 2021-02-24 ###
