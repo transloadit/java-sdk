@@ -5,7 +5,7 @@ package com.transloadit.sdk.exceptions;
  */
 public class LocalOperationException extends Exception {
     /**
-     * Wraps an exception in a LocalOperationException
+     * Wraps an exception in a LocalOperationException.
      * @param e {@link Exception}
      */
     public LocalOperationException(Exception e) {
