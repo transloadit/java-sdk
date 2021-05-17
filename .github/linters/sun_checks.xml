@@ -169,13 +169,13 @@
     <!-- See https://checkstyle.org/config_coding.html -->
     <module name="EmptyStatement"/>
     <module name="EqualsHashCode"/>
-    <module name="HiddenField">
+    <!-- <module name="HiddenField">
       <property name="ignoreSetter" value="true"/>
       <property name="ignoreFormat" value="^runnable"/>
-    </module>
+    </module>  Disabled online due to constructors-->
     <module name="IllegalInstantiation"/>
     <module name="InnerAssignment"/>
-    <module name="MagicNumber"/>
+    <!--  <module name="MagicNumber"/>  Disabled only online-->
     <module name="MissingSwitchDefault"/>
     <module name="MultipleVariableDeclarations"/>
     <module name="SimplifyBooleanExpression"/>

@@ -32,6 +32,7 @@ public class Assembly extends OptionsBuilder {
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
 
+
     public Assembly(Transloadit transloadit) {
         this(transloadit, new Steps(), new HashMap<String, File>(), new HashMap<String, Object>());
     }
