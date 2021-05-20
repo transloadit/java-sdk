@@ -1,4 +1,4 @@
-[![builds](https://github.com/transloadit/java-sdk/actions/workflows/builds.yml/badge.svg?branch=master)](https://github.com/transloadit/java-sdk/actions/workflows/builds.yml)
+[![Tests](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml)
 
 ## java-sdk
 
@@ -12,7 +12,7 @@ This is a **Java** SDK to make it easy to talk to the [Transloadit](https://tran
 
 ## Install
 
-The JARs can be downloaded manually from our [Maven Central Search](https://search.maven.org/artifact/com.transloadit.sdk/transloadit),
+The JARs can be downloaded manually from [Maven Central Search](https://search.maven.org/artifact/com.transloadit.sdk/transloadit),
 or can be installed from the Maven repository.
 
 Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/) and update their build files to receive the most recent versions.
