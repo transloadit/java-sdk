@@ -27,7 +27,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Returns the ID of the current Assembly
      * @return assembly id
      */
     public String getId() {
@@ -35,7 +35,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Returns the URL of the current Assembly whilst using TUS.
      * @return assembly url
      */
     public String getTusUrl() {
@@ -44,7 +44,7 @@ public class AssemblyResponse extends Response {
 
 
     /**
-     *
+     * Returns the URL of the current Assembly
      * @return assembly url
      */
     public String getUrl() {
@@ -52,7 +52,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Returns the URL of the current Assembly with the "https://" prefix.
      * @return assembly ssl url
      */
     public String getSslUrl() {
@@ -60,7 +60,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Returns the URL of the websocket used in the Assembly execution.
      * @return assembly websocket url
      */
     public String getWebsocketUrl() {
@@ -78,7 +78,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for completion.
      * @return {@link Boolean} indicating the assembly has completed.
      */
     public Boolean isCompleted() {
@@ -86,7 +86,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for abortion.
      * @return {@link Boolean} indicating the assembly has aborted.
      */
     public Boolean isAborted() {
@@ -94,7 +94,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for being canceled.
      * @return {@link Boolean} indicating the assembly has canceled.
      */
     public Boolean isCanceled() {
@@ -102,7 +102,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for being still in execution.
      * @return {@link Boolean} indicating the assembly is still executing.
      */
     public Boolean isExecuting() {
@@ -110,7 +110,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for being in the upload process.
      * @return {@link Boolean} indicating the assembly is uploading.
      */
     public Boolean isUploading() {
@@ -118,7 +118,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks the execution status of the current Assembly for errors.
      * @return {@link Boolean} indicating if the assembly returned an error
      */
     public Boolean hasError() {
@@ -126,7 +126,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     *
+     * Checks if the execution of the current Assembly has been finished.
      * @return {@link Boolean} indicating the assembly has stopped executing.
      */
     public Boolean isFinished() {

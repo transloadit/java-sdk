@@ -16,10 +16,11 @@ import org.mockserver.model.HttpResponse;
 import java.io.IOException;
 import java.util.HashMap;
 
+
 import static org.junit.Assert.assertEquals;
 
 /**
- * unit test for Transloadit class.
+ * Unit test for Transloadit class. Api-Responses are simulated by mocking the server's response.
  */
 public class TransloaditTest extends MockHttpService {
 
@@ -35,7 +36,7 @@ public class TransloaditTest extends MockHttpService {
     private MockServerClient mockServerClient;
 
     /**
-     * Runs after finishing the Tests and resets the mockServerClient.
+     * Runs after each test run and resets the mockServerClient.
      */
     @After
     public void tearDown() {
@@ -52,7 +53,7 @@ public class TransloaditTest extends MockHttpService {
 
     /**
      * Tests if {@link Transloadit#getAssembly(String)} returns the specified Assembly's response
-     * by verifying the assembly_id and host URL
+     * by verifying the assembly_id and host URL.
      * @throws LocalOperationException if building the request goes wrong.
      * @throws RequestException if communication with the server goes wrong.
      * @throws IOException if Test resource "assembly.json" is missing.
@@ -126,6 +127,13 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(assemblies.size(), 0);
     }
 
+    /**
+     * Proves functionality of {@link Transloadit#getTemplate(String)} by requesting a specific template and verifying
+     * the mock-api-response's Assembly-ID and status ("TEMPLATE_FOUND").
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "template.json" is missing.
+     */
     @Test
     public void getTemplate() throws RequestException, LocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
@@ -138,9 +146,16 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(template.json().get("ok"), "TEMPLATE_FOUND");
     }
 
+    /**
+     * Proves that {@link Transloadit#updateTemplate(String, Map)} sends a PUT - request and verifies that the
+     * {@link Response} receives the mockserver's answer "TEMPLATE_UPDATED".
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "update_template.json" is missing.
+     */
     @Test
     public void updateTemplate()
-            throws RequestException, LocalOperationException, InterruptedException, IOException {
+            throws RequestException, LocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/55c965a063a311e6ba2d379ef10b28f7").withMethod("PUT"))
                 .respond(HttpResponse.response().withBody(getJson("update_template.json")));
@@ -151,9 +166,16 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(template.json().get("ok"), "TEMPLATE_UPDATED");
     }
 
+    /**
+     * Proves that {@link Transloadit#deleteTemplate(String)} sends a DELETE - request and verifies that the
+     * {@link Response} receives the mockserver's answer "TEMPLATE_DELETED".
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "delete_template.json" is missing.
+     */
     @Test
     public void deleteTemplate()
-            throws LocalOperationException, RequestException, InterruptedException, IOException {
+            throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/templates/11148db0ec4f11e6a05ca3d04d2a53e6").withMethod("DELETE"))
                 .respond(HttpResponse.response().withBody(getJson("delete_template.json")));
@@ -162,6 +184,12 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(deletedTemplate.json().get("ok"), "TEMPLATE_DELETED");
     }
 
+    /**
+     * Proves the functionality of {@link Transloadit#listTemplates()} by checking the size of the returned list.
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "templates.json" is missing.
+     */
     @Test
     public void listTemplates() throws RequestException, LocalOperationException, IOException {
         mockServerClient.when(HttpRequest.request()
@@ -172,6 +200,13 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(templates.size(), 0);
     }
 
+    /**
+     * Verifies that {@link Transloadit#getBill(int, int)} sends a GET request and checks the ID of the returned
+     * invoice.
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "templates.json" is missing.
+     */
     @Test
     public void getBill() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
