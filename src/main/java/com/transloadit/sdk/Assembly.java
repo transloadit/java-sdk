@@ -50,6 +50,7 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Constructs a new instance of the Assembly object.
      * @param transloadit {@link Transloadit} the transloadit client.
      * @param steps       {@link Steps} the steps to add to the assembly.
      * @param files       is a map of file names and files that are meant to be uploaded.

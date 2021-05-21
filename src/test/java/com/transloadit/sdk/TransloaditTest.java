@@ -19,27 +19,46 @@ import java.util.HashMap;
 import static org.junit.Assert.assertEquals;
 
 /**
- * unit test for Transloadit class
+ * unit test for Transloadit class.
  */
 public class TransloaditTest extends MockHttpService {
 
+    /**
+     * MockServer can be run using the MockServerRule.
+     */
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
 
+    /**
+     * MockServerClient makes HTTP requests to a remote MockServer instance.
+     */
     private MockServerClient mockServerClient;
 
+    /**
+     * Runs after finishing the Tests and resets the mockServerClient.
+     */
     @After
     public void tearDown() {
         mockServerClient.reset();
     }
 
+    /**
+     * Checks if the host URL set in the Transloadit-Client matches the expectation.
+     */
     @Test
-    public void getHostUrl() throws Exception {
+    public void getHostUrl() {
         assertEquals(transloadit.getHostUrl(), "http://localhost:" + PORT);
     }
 
+    /**
+     * Tests if {@link Transloadit#getAssembly(String)} returns the specified Assembly's response
+     * by verifying the assembly_id and host URL
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "assembly.json" is missing.
+     */
     @Test
-    public void getAssembly() throws Exception {
+    public void getAssembly() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
@@ -50,6 +69,13 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
+    /**
+     * Tests if {@link Transloadit#getAssemblyByUrl(String)} returns the correct {@link AssemblyResponse} for specified
+     * {@link Assembly}. The Test validates the assembly_id and host URL.
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "assembly.json" is missing.
+     */
     @Test
     public void getAssemblyByUrl() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
@@ -64,6 +90,13 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
+    /**
+     * Tests if sending an cancel request for an running Assembly with {@link Transloadit#cancelAssembly(String)} works.
+     *
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "cancel_assembly.json" is missing.
+     */
     @Test
     public void cancelAssembly() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
@@ -76,6 +109,12 @@ public class TransloaditTest extends MockHttpService {
         assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
     }
 
+    /**
+     * Proves the functionality of {@link Transloadit#listAssemblies()} by checking the size of the returned list.
+     * @throws LocalOperationException if building the request goes wrong.
+     * @throws RequestException if communication with the server goes wrong.
+     * @throws IOException if Test resource "assemblies.json" is missing.
+     */
     @Test
     public void listAssemblies() throws RequestException, LocalOperationException, IOException {
 
@@ -142,5 +181,4 @@ public class TransloaditTest extends MockHttpService {
         Response bill = transloadit.getBill(9, 2016);
         assertEquals(bill.json().get("invoice_id"), "76fe5df1c93a0a530f3e583805cf98b4");
     }
-
 }
