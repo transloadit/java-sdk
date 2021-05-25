@@ -173,7 +173,7 @@ public class AsyncAssembly extends Assembly {
      * to be complete by observing the HTTP - Response.
      * @return false
      * @see Assembly#shouldWaitWithoutSocket()
-     * @see Assembly#save(boolean) 
+     * @see Assembly#save(boolean)
      */
     protected boolean shouldWaitWithoutSocket() {
         return false;
@@ -321,6 +321,9 @@ public class AsyncAssembly extends Assembly {
         return size;
     }
 
+    /**
+     * Provides pattern for an AsyncAssemblyExecutor
+     */
     protected interface AsyncAssemblyExecutor {
         /**
          * starts the execution of the assembly on a separate thread.

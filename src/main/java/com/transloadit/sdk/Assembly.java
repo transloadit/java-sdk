@@ -405,9 +405,12 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Determines if the Client should wait for the assembly processing to be finished by observing the
-     * {@link AssemblyResponse} status. <p>Can only be {@code true} if <code> {@link #shouldWaitForCompletion}  = true</code> and no
+     * {@link AssemblyResponse} status. <p>Can only be {@code true} if <code>
+     * {@link #shouldWaitForCompletion}  = true
+     * </code> and no
      * {@link AssemblyListener} has been specified.</p>
-     * @return <ul><li>{@code true} if the client should wait for assembly completion by observing the HTTP - Response;</li>
+     * @return <ul><li>{@code true} if the client should wait for assembly completion by observing the
+     * HTTP - Response;</li>
      * <li>{@code false} if the client should not wait for completion by observing the HTTP - Response</li></ul>
      * @see Assembly#save(boolean) Usage in Assembly.save()
      */
@@ -416,7 +419,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Determines if the Client should wait for the assembly processing to be finished by observing a server socket. <p>Can only be {@code true} if <code> {@link #shouldWaitForCompletion}  = true</code> and an
+     * Determines if the Client should wait for the assembly processing to be finished by observing a server socket. <p>
+     * Can only be {@code true} if <code> {@link #shouldWaitForCompletion}  = true</code> and an
      * {@link AssemblyListener} has been specified.</p>
      * @return <ul><li>{@code true} if the client should wait for assembly completion by observing the socket</li>
      * <li>{@code false} if the client should not wait for completion by observing the socket.</li></ul>

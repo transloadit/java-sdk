@@ -6,8 +6,17 @@ import java.util.Map;
  * Base class for objects that use steps and send options to Transloadit.
  */
 public class OptionsBuilder {
+    /**
+     * The {@link Transloadit} client.
+     */
     protected Transloadit transloadit;
+    /**
+     * Map of {@link Steps} to be performed during {@link Assembly} execution.
+     */
     protected Steps steps;
+    /**
+     * Map of extra options to be sent along with the {@link Request}.
+     */
     protected Map<String, Object> options;
 
     /**

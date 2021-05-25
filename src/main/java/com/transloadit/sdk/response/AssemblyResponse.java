@@ -27,7 +27,7 @@ public class AssemblyResponse extends Response {
     }
 
     /**
-     * Returns the ID of the current Assembly
+     * Returns the ID of the current Assembly.
      * @return assembly id
      */
     public String getId() {
@@ -44,7 +44,7 @@ public class AssemblyResponse extends Response {
 
 
     /**
-     * Returns the URL of the current Assembly
+     * Returns the URL of the current Assembly.
      * @return assembly url
      */
     public String getUrl() {
