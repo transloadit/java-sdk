@@ -11,24 +11,39 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * test Steps
+ * Unit test for {@link Steps} class.
  */
 public class StepsTest {
-    public Steps steps;
+    /**
+     * Variable that holds an {@link Steps} instance to perform the tests on.
+     */
+    private Steps steps;
 
+    /**
+     * Assings a new {@link Steps} instance to Steps variable before each individual test.
+     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         steps = new Steps();
     }
 
+    /**
+     * Checks the functionality of the {@link Steps#addStep(String, String, Map)} and {@link Steps#getStep(String)}
+     * methods by first creating a Step  with defined parameters and then querying it using these parameters.
+     */
     @Test
-    public void addStep() {
+    public void addStepGetStep() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
-        assertEquals(steps.getStep("encode").robot , "/video/encode");
+        assertEquals(steps.getStep("encode").robot, "/video/encode");
     }
 
+    /**
+     * Checks the functionality of the {@link Steps#removeStep(String)} method by first adding a specific Step to the
+     * Steps instance, verifying its existence and deleting it afterwards. Test passes if existence of Step can't
+     * be verified after deleting it.
+     */
     @Test
-    public void removeStep() throws Exception {
+    public void removeStep() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
 
         assertTrue(steps.all.containsKey("encode"));
@@ -36,14 +51,11 @@ public class StepsTest {
         assertFalse(steps.all.containsKey("encode"));
     }
 
+    /**
+     * Compares the result of {@link Steps#toMap()} against a predefined HashMap. Test passe if they are identical.
+     */
     @Test
-    public void getStep() throws Exception {
-        steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
-        assertEquals(steps.getStep("encode").robot , "/video/encode");
-    }
-
-    @Test
-    public void toMap() throws Exception {
+    public void toMap() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
         steps.addStep("thumbs", "/video/thumbs", new HashMap<String, Object>());
 

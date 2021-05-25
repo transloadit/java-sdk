@@ -20,7 +20,7 @@ import static org.mockserver.model.RegexBody.regex;
  */
 public class TemplateTest extends MockHttpService {
     /**
-     * Rule that enables the MockServer.
+     * Unit test for {@link Template} class. Api-Responses are simulated by mocking the server's response.
      */
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);

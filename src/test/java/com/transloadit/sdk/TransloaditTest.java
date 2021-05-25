@@ -20,7 +20,7 @@ import java.util.HashMap;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Unit test for Transloadit class. Api-Responses are simulated by mocking the server's response.
+ * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
  */
 public class TransloaditTest extends MockHttpService {
 
