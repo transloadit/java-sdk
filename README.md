@@ -353,11 +353,11 @@ public class Main {
 
 ## Example
 
-For fully working examples take a look at [examples/](https://github.com/transloadit/java-sdk/tree/master/examples).
+For fully working examples take a look at [/examples](https://github.com/transloadit/java-sdk/tree/master/examples).
 
 ## Documentation
 
-See [Javadoc](http://javadoc.io/doc/com.transloadit.sdk/transloadit/0.1.0) for full API documentation.
+See [Javadoc](https://javadoc.io/doc/com.transloadit.sdk/transloadit) for full API documentation.
 
 ## License
 
