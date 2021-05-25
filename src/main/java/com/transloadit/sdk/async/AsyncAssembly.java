@@ -169,7 +169,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Returns always false to indicate to the {@link Assembly#save} method that it should never wait for the Assembly 
+     * Returns always false to indicate to the {@link Assembly#save} method that it should never wait for the Assembly
      * to be complete by observing the HTTP - Response.
      * @return false
      * @see Assembly#shouldWaitWithoutSocket()
@@ -322,7 +322,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Provides pattern for an AsyncAssemblyExecutor
+     * Provides a pattern for an AsyncAssemblyExecutor.
      */
     protected interface AsyncAssemblyExecutor {
         /**
