@@ -169,8 +169,11 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     *
+     * Returns always false to indicate to the {@link Assembly#save} method that it should never wait for the Assembly 
+     * to be complete by observing the HTTP - Response.
      * @return false
+     * @see Assembly#shouldWaitWithoutSocket()
+     * @see Assembly#save(boolean) 
      */
     protected boolean shouldWaitWithoutSocket() {
         return false;
