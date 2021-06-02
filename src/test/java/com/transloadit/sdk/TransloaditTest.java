@@ -15,8 +15,9 @@ import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
+//CHECKSTYLE:OFF
 import java.util.Map;
-
+//CHECKSTYLE:ON
 
 import static org.junit.Assert.assertEquals;
 
