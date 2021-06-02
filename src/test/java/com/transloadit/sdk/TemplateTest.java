@@ -16,16 +16,16 @@ import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
- * test for template class.
+ * Unit test for {@link Template} class. Api-Responses are simulated by mocking the server's response.
  */
 public class TemplateTest extends MockHttpService {
     /**
-     * Unit test for {@link Template} class. Api-Responses are simulated by mocking the server's response.
+     * MockServer can be run using the MockServerRule.
      */
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
     /**
-     * MockServerClient makes HTTP requests to a remote MockServer instance.
+     * MockServerClient makes HTTP requests to a MockServer instance.
      */
     private MockServerClient mockServerClient;
 

@@ -15,6 +15,7 @@ import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +32,7 @@ public class TransloaditTest extends MockHttpService {
     public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
 
     /**
-     * MockServerClient makes HTTP requests to a remote MockServer instance.
+     * MockServerClient makes HTTP requests to a MockServer instance.
      */
     private MockServerClient mockServerClient;
 
