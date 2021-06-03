@@ -13,7 +13,7 @@ jobs:
       - name: Lint_Java
         uses: github/super-linter@v3
         env:
-          VALIDATE_ALL_CODEBASE: false # only lint new files
+          VALIDATE_ALL_CODEBASE: true # lint all files
           VALIDATE_JAVA: true  # only lint Java files
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Enables better overview of runs
