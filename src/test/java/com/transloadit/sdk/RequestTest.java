@@ -9,7 +9,7 @@ import org.mockserver.model.HttpRequest;
 
 import java.util.HashMap;
 //CHECKSTYLE:OFF
-import java.util.Map;  // Suppress warning as Map import is needed for the JavaDoc Comments
+import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
 //CHECKSTYLE:ON
 
 /**

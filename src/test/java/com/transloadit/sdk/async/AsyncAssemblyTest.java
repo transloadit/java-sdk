@@ -1,6 +1,8 @@
 package com.transloadit.sdk.async;
 
 //CHECKSTYLE:OFF
+// It was necessary to turn off Checkstyle because the import was needed for the links in Javadoc comments,
+// but Checkstyle misclassified it as unused.
 import com.transloadit.sdk.Assembly;
 //CHECKSTYLE:ON
 import com.transloadit.sdk.MockHttpService;

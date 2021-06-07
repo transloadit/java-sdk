@@ -16,7 +16,7 @@ import org.mockserver.model.HttpResponse;
 import java.io.IOException;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
-import java.util.Map;
+import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
 //CHECKSTYLE:ON
 
 import static org.junit.Assert.assertEquals;

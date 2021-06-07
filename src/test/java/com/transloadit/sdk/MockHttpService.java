@@ -9,10 +9,11 @@ import java.io.IOException;
  */
 public class MockHttpService {
     //CHECKSTYLE:OFF
+    // Checkstyle was turned off here to enable the upper case variable name of the "PORT" variable.
     protected final int PORT = 9040;
-    protected final Transloadit transloadit = new Transloadit("KEY", "SECRET", "http://localhost:" + PORT);
+    protected final Transloadit transloadit = new Transloadit("KEY", "SECRET",
+            "http://localhost:" + PORT);
     //CHECKSTYLE:ON
-
     /**
      * Loads test resources from src/test/resources/__files/ with the specified name and provides them as a JSON String.
      * @param name name of test resource.
