@@ -19,7 +19,7 @@ public interface AssemblyProgressListener {
      * @param uploadedBytes the number of bytes uploaded so far.
      * @param totalBytes the total number of bytes to uploaded (i.e the size of all the files all together).
      */
-    void onUploadPogress(long uploadedBytes, long totalBytes);
+    void onUploadProgress(long uploadedBytes, long totalBytes);
 
     /**
      * Callback to be executed when the Assembly execution is done executing.

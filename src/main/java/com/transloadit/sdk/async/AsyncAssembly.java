@@ -83,7 +83,7 @@ public class AsyncAssembly extends Assembly {
 
             @Override
             public void onUploadProgress(long uploadedBytes, long totalBytes) {
-                listener.onUploadPogress(uploadedBytes, totalBytes);
+                listener.onUploadProgress(uploadedBytes, totalBytes);
             }
 
             @Override
