@@ -39,6 +39,10 @@ public class Request {
     private String version;
     private int retryAttemptsLeft;
 
+    /**
+     * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
+     * @param transloadit The {@link Transloadit} Client
+     */
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
         retryAttemptsLeft = transloadit.getRetryAttempts();

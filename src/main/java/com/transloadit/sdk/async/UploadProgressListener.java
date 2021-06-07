@@ -1,18 +1,18 @@
 package com.transloadit.sdk.async;
 
 /**
- * Implementations of this interface are used to handle progress and completeion of a background
- * Assembly file upload
+ * Implementations of this interface are used to handle progress and completion of a background
+ * Assembly file upload.
  */
 public interface UploadProgressListener {
 
     /**
-     * Callback to be executed when the Assembly upload is complete
+     * Callback to be executed when the Assembly upload is complete.
      */
     void onUploadFinished();
 
     /**
-     * Callback to be executed as an upload progress receiver
+     * Callback to be executed as an upload progress receiver.
      *
      * @param uploadedBytes the number of bytes uploaded so far.
      * @param totalBytes the total number of bytes to uploaded (i.e the size of all the files all together).

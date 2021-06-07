@@ -40,6 +40,11 @@ public class AsyncAssembly extends Assembly {
 
     protected AsyncAssemblyExecutor executor;
 
+    /**
+     * Initializes a new {@link Assembly} object with asynchronous functionality.
+     * @param transloadit {@link Transloadit} the transloadit client.
+     * @param uploadListener {@link UploadProgressListener} tracks upload and completion of a background upload.
+     */
     public AsyncAssembly(Transloadit transloadit, UploadProgressListener uploadListener) {
         super(transloadit);
         // make true by default to avoid breaking change
@@ -52,11 +57,23 @@ public class AsyncAssembly extends Assembly {
         url = null;
     }
 
+    /**
+     * Initializes a new {@link Assembly} object with asynchroneous functionality.
+     * Calls {@link #AsyncAssembly(Transloadit, UploadProgressListener)}
+     * @param transloadit {@link Transloadit} the transloadit client.
+     * @param listener {@link AssemblyProgressListener} which gets converted to an {@link UploadProgressListener}.
+     */
     public AsyncAssembly(Transloadit transloadit, final AssemblyProgressListener listener) {
         this(transloadit, toUploadProgressListener(listener));
         progressListener = listener;
     }
 
+    /**
+     * Converts an {@link AssemblyProgressListener} to an {@link UploadProgressListener}.
+     * @param listener {@link AssemblyProgressListener} tracks upload and completion of a background upload and the
+     * states of Assembly execution.
+     * @return {@link UploadProgressListener} tracks upload and completion of a background upload.
+     */
     private static UploadProgressListener toUploadProgressListener(final AssemblyProgressListener listener) {
        return new UploadProgressListener() {
             @Override
@@ -66,7 +83,7 @@ public class AsyncAssembly extends Assembly {
 
             @Override
             public void onUploadProgress(long uploadedBytes, long totalBytes) {
-                listener.onUploadPogress(uploadedBytes, totalBytes);
+                listener.onUploadProgress(uploadedBytes, totalBytes);
             }
 
             @Override
@@ -77,7 +94,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Return the AssemblyProgresssListener that has been previously set
+     * Return the AssemblyProgresssListener that has been previously set.
      *
      * @return {@link AssemblyProgressListener}
      */
@@ -86,7 +103,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Return the AssemblyProgresssListener that has been previously set
+     * Return the AssemblyProgresssListener that has been previously set.
      *
      * @return {@link UploadProgressListener}
      */
@@ -122,6 +139,10 @@ public class AsyncAssembly extends Assembly {
         }
     }
 
+    /**
+     * Sets the state of the {@link AsyncAssembly} to the overhanded value.
+     * @param state {@link State} represents states of Assembly execution
+     */
     synchronized void setState(State state) {
         this.state = state;
     }
@@ -147,6 +168,13 @@ public class AsyncAssembly extends Assembly {
         this.uploadChunkSize = uploadChunkSize;
     }
 
+    /**
+     * Returns always false to indicate to the {@link Assembly#save} method that it should never wait for the Assembly
+     * to be complete by observing the HTTP - Response.
+     * @return false
+     * @see Assembly#shouldWaitWithoutSocket()
+     * @see Assembly#save(boolean)
+     */
     protected boolean shouldWaitWithoutSocket() {
         return false;
     }
@@ -164,7 +192,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * Does the actual uploading of files (when tus is enabled)
+     * Does the actual uploading of files (when tus is enabled).
      *
      * @throws IOException when there's a failure with file retrieval
      * @throws ProtocolException when there's a failure with tus upload
@@ -218,7 +246,7 @@ public class AsyncAssembly extends Assembly {
     }
 
     /**
-     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads
+     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads.
      *
      * @param response {@link AssemblyResponse}
      * @throws IOException when there's a failure with file retrieval.
@@ -293,6 +321,9 @@ public class AsyncAssembly extends Assembly {
         return size;
     }
 
+    /**
+     * Provides a pattern for an AsyncAssemblyExecutor.
+     */
     protected interface AsyncAssemblyExecutor {
         /**
          * starts the execution of the assembly on a separate thread.

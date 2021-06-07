@@ -14,12 +14,16 @@ import java.util.Map;
 
 
 /**
- * This Example demonstrates a multi-step Assembly:
+ * This Example demonstrates a multi-step Assembly.
  *  - Step1 converts two given audio files to mp3 with a bitrate of 128 kbit/s (128000 bits/s)
  *  - Step2 concatenates Step1's results to one file
  *  - Step3 derives a Waveform Image from Step2's output
  */
-public class MultiStepProcessing {
+public final class MultiStepProcessing {
+    /**
+     * Runs a multistep Transloadit assembly.
+     * @param args
+     */
     public static void main(String[] args) {
 
         // New Transloadit Instance
@@ -45,8 +49,19 @@ public class MultiStepProcessing {
                 => Needs to be stored under key "steps" as it defines every substep
              */
         JSONObject outerJsonObject = new JSONObject();
-        outerJsonObject.append("steps", new JSONObject().put("name", "encode" ).put("fields", "file_1").put("as", "audio_1"));
-        outerJsonObject.append("steps", new JSONObject().put("name", "encode" ).put("fields", "file_2").put("as", "audio_2"));
+        outerJsonObject.append(
+                "steps",
+                new JSONObject()
+                        .put("name", "encode")
+                        .put("fields", "file_1")
+                        .put("as", "audio_1"));
+
+        outerJsonObject.append(
+                "steps",
+                new JSONObject()
+                        .put("name", "encode")
+                        .put("fields", "file_2")
+                        .put("as", "audio_2"));
 
         Map<String, Object> step2 = new HashMap<>();
         step2.put("preset", "mp3");
@@ -55,7 +70,7 @@ public class MultiStepProcessing {
         assembly.addStep("concat", "/audio/concat", step2);
 
         // Step 3 Waveform
-        Map<String,Object> step3 = new HashMap<>();
+        Map<String, Object> step3 = new HashMap<>();
         step3.put("use", "concat");
         step3.put("width", 1920);
         step3.put("height", 720);
@@ -89,12 +104,18 @@ public class MultiStepProcessing {
             }
         });
 
-        try{
+        try {
             System.out.println("Processing... ");
             assembly.save();
-        } catch (LocalOperationException | RequestException e) {
+         } catch (LocalOperationException | RequestException e) {
             e.printStackTrace();
         }
+    }
+    /**
+     * Prohibits instantiation of utility class.
+     */
+    private MultiStepProcessing() {
+        throw new IllegalStateException("Utility class");
     }
 
 }

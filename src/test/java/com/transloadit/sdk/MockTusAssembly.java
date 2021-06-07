@@ -12,12 +12,19 @@ import java.util.Map;
 
 /**
  * This class serves as a Mock to {@link Assembly}, which can be used to test
- * Assemblies with resumability enabled.
+ * Assemblies with resumability enabled and provides a suitable {@link MockSocket}.
  */
 public class MockTusAssembly extends Assembly {
     private Socket socket;
+    /**
+     * Stores emitted information.
+     */
     Map<String, Object> emitted;
 
+    /**
+     * Constructs a new instance of {@link MockTusAssembly}.
+     * @param transloadit The {@link Transloadit} client.
+     */
     public MockTusAssembly(Transloadit transloadit) {
         super(transloadit);
         emitted = new HashMap<String, Object>();
@@ -33,6 +40,11 @@ public class MockTusAssembly extends Assembly {
         // do nothing
     }
 
+    /**
+     * Provides a {@link MockSocket} to simulate a WebSocket.
+     * @param url URL the {@link MockSocket} should mock.
+     * @return {@link MockSocket}
+     */
     @Override
     Socket getSocket(String url) {
         if (socket == null) {
@@ -41,11 +53,14 @@ public class MockTusAssembly extends Assembly {
         return socket;
     }
 
+    /**
+     * This class defines a MockSocket in order to simulate the behavior of a WebSocket.
+     */
     private class MockSocket extends Socket {
         private Emitter fakeSocket;
         private boolean connected = false;
 
-        public MockSocket() {
+        MockSocket() {
             super(new Manager(), "", new Manager.Options());
             fakeSocket = new Emitter();
         }

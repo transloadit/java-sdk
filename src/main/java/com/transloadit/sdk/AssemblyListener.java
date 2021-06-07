@@ -2,6 +2,9 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 
+/**
+ * Interface for a Listener, which tracks the progress in Assembly execution.
+ */
 public interface AssemblyListener {
     /**
      * Callback to be executed when the Assembly execution is done executing.
