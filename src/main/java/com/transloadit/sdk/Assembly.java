@@ -508,17 +508,13 @@ public class Assembly extends OptionsBuilder {
             }
         };
 
-        /**
-         * Hands over Filename of recently uploaded file to the callback in the {@link Assembly#assemblyListener}
-         */                                                                    
+        //Hands over Filename of recently uploaded file to the callback in the AssemblyListener
         Emitter.Listener onUploadFinished = args -> {
                    String name = ((JSONObject) args[0]).getString("name");
                    getAssemblyListener().onFileUploadFinished(name);
         };
 
-        /**
-         * Triggers callback in the {@link Assembly#assemblyListener} if the Assembly instructions have been uploaded.
-         */
+        // Triggers callback in the {@link Assembly#assemblyListener} if the Assembly instructions have been uploaded.
         Emitter.Listener onAssemblyUploadFinished = args -> {
                 getAssemblyListener().onAssemblyUploadFinished();
         };
