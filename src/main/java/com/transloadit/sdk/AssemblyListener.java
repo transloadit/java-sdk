@@ -22,4 +22,18 @@ public interface AssemblyListener {
      * @param error {@link Exception} the error thrown during the socket connection.
      */
     void onError(Exception error);
+
+    /**
+     * Callback to be exectued if the Assembly's files metadata has been extracted.
+     */
+    void onMetadataExtracted();
+
+    /**
+     * Callback to be executed if the Assembly's files have been uploaded
+     */
+    void onAssemblyUploadFinished();
+
+    void onFileUploadFinished(String fileName);
+
+
 }

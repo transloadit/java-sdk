@@ -493,9 +493,43 @@ public class Assembly extends OptionsBuilder {
             }
         };
 
+        Emitter.Listener onMetadataExtracted = args -> {
+            getAssemblyListener().onMetadataExtracted();
+        };
+
+
+        Emitter.Listener onAssemblyResultFinished = args -> {
+            try {
+                AssemblyResponse resp = transloadit.getAssemblyByUrl(assemblyUrl);
+            } catch (RequestException e) {
+                e.printStackTrace();
+            } catch (LocalOperationException e) {
+                e.printStackTrace();
+            }
+        };
+
+        /**
+         * Hands over Filename of recently uploaded file to the callback in the {@link Assembly#assemblyListener}
+         */                                                                    
+        Emitter.Listener onUploadFinished = args -> {
+                   String name = ((JSONObject) args[0]).getString("name");
+                   getAssemblyListener().onFileUploadFinished(name);
+        };
+
+        /**
+         * Triggers callback in the {@link Assembly#assemblyListener} if the Assembly instructions have been uploaded.
+         */
+        Emitter.Listener onAssemblyUploadFinished = args -> {
+                getAssemblyListener().onAssemblyUploadFinished();
+        };
+
         socket
                 .on(Socket.EVENT_CONNECT, onConnect)
                 .on("assembly_finished", onFinished)
+                .on("assembly_uploading_finished", onAssemblyUploadFinished)
+                .on("assembly_upload_finished", onUploadFinished)
+                .on("assembly_upload_meta_data_extracted", onMetadataExtracted)
+                .on("assembly_result_finished", onAssemblyResultFinished)
                 .on("assembly_error", onFinished)
                 .on(Socket.EVENT_ERROR, onError);
         socket.connect();
