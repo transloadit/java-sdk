@@ -50,6 +50,28 @@ public final class ImageResizer {
             public void onError(Exception error) {
                 error.printStackTrace();
             }
+
+            @Override
+            public void onMetadataExtracted() {
+                System.out.println("Metadata Extracted");
+            }
+
+            @Override
+            public void onAssemblyUploadFinished() {
+                System.out.println("Assembly Upload complete, Executing ...");
+
+            }
+
+            @Override
+            public void onFileUploadFinished(String fileName) {
+                System.out.println("File uploaded: " + fileName);
+            }
+
+            @Override
+            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+
+            }
+
         });
 
         try {

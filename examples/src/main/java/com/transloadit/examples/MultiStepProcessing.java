@@ -102,7 +102,28 @@ public final class MultiStepProcessing {
                 System.out.println("Error");
                 error.printStackTrace();
             }
+
+            @Override
+            public void onMetadataExtracted() {
+                System.out.println("Metadata extracted");
+            }
+
+            @Override
+            public void onAssemblyUploadFinished() {
+                System.out.println("Assembly Upload complete. Executing ...");
+            }
+
+            @Override
+            public void onFileUploadFinished(String fileName) {
+                System.out.println("File uploaded: " + fileName);
+            }
+
+            @Override
+            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+            }
         });
+
+
 
         try {
             System.out.println("Processing... ");

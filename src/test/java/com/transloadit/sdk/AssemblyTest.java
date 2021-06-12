@@ -252,6 +252,11 @@ public class AssemblyTest extends MockHttpService {
             public void onFileUploadFinished(String fileName) {
 
             }
+
+            @Override
+            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+
+            }
         });
 
         mockServerClient.when(HttpRequest.request()

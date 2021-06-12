@@ -29,7 +29,7 @@ public interface AssemblyListener {
     void onMetadataExtracted();
 
     /**
-     * Callback to be executed if the Assembly's files have been uploaded.
+     * Callback to be executed if the Assembly's files have been uploaded and the Assembly execution starts.
      */
     void onAssemblyUploadFinished();
 
@@ -38,6 +38,12 @@ public interface AssemblyListener {
      * @param fileName Name of the file, which has been successfully uploaded.
      */
     void onFileUploadFinished(String fileName);
+
+    /**
+     * Callback to be executed if there is an Assembly result.
+     * @param assemblyResponse {@link AssemblyResponse}, which contains status Information about the result.
+     */
+    void onAssemblyResultFinished(AssemblyResponse assemblyResponse);
 
 
 }
