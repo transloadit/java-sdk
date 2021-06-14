@@ -73,6 +73,8 @@ public class OptionsBuilder {
     /**
      * Adds a Key - Value Pair to the (form) fields section of an Assembly or Template.
      * Already existing Keys will be overwritten.
+     * Also overwrites existing values stored under the key "fields" in options. This happens if the value is not a
+     * instance of {@link JSONObject}
      * @param key {@link String}
      * @param value {@link Object}
      */
@@ -84,7 +86,9 @@ public class OptionsBuilder {
 
     /**
      * Adds multiple Key-Value pairs to the (form) fields section of an Assembly or Template.
-     * Alread existing Keys will be overwritten.
+     * Already existing Keys will be overwritten.
+     * Also overwrites existing values stored under the key "fields" in options. This happens if the value is not a
+     * instance of {@link JSONObject}
      * @param fields
      */
     public void addFields(Map<String, Object> fields) {
