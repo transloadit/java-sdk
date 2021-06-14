@@ -1,5 +1,6 @@
 package com.transloadit.sdk;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,4 +82,30 @@ public class OptionsBuilderTest {
         optionsBuilder.addOption("foo", "bar");
         assertEquals(optionsBuilder.options.get("foo"), "bar");
     }
+
+    /**
+     * This test cheks the functionality of the {@link OptionsBuilder#addField(String, Object)} and
+     * {@link OptionsBuilder#addFields(Map)} method by adding values and verifying their existence.
+     */
+    @Test
+    public void addFieldAndAddFields() {
+        HashMap<String, Object> testWords = new HashMap<>();
+        testWords.put("baz", "qux");
+        testWords.put("needle", "haystack");
+
+        optionsBuilder.addFields(testWords);
+        optionsBuilder.addField("foo", "foo");
+        optionsBuilder.addField("foo", "bar");  // this should overwrite the value
+
+        assertTrue(optionsBuilder.options.containsKey("fields"));
+        assertTrue(optionsBuilder.options.get("fields") instanceof JSONObject);
+
+        JSONObject fields = (JSONObject) optionsBuilder.options.get("fields");
+
+        assertEquals(fields.get("foo"), "bar");  // test overwrite
+        assertEquals(fields.get("baz"), "qux");
+        assertTrue(fields.has("needle"));  // test if older entries are preserved
+        assertFalse(fields.has("haystack"));  // test if key - value are not interchanged
+    }
+
 }

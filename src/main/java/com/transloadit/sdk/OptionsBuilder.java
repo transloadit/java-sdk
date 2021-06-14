@@ -1,5 +1,8 @@
 package com.transloadit.sdk;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -65,5 +68,44 @@ public class OptionsBuilder {
      */
     public Transloadit getClient() {
         return transloadit;
+    }
+
+    /**
+     * Adds a Key - Value Pair to the (form) fields section of an Assembly or Template.
+     * Already existing Keys will be overwritten.
+     * @param key {@link String}
+     * @param value {@link Object}
+     */
+    public void addField(String key, Object value) {
+        HashMap<String, Object> fields = new HashMap<String, Object>();
+        fields.put(key, value);
+        addFields(fields);
+    }
+
+    /**
+     * Adds multiple Key-Value pairs to the (form) fields section of an Assembly or Template.
+     * Alread existing Keys will be overwritten.
+     * @param fields
+     */
+    public void addFields(Map<String, Object> fields) {
+
+        // Construct JSONObject with all field key-value pairs
+        JSONObject fieldValues = new JSONObject();
+        for (String key:fields.keySet()) {
+            fieldValues.put(key, fields.get(key));
+        }
+
+        // Add JSONObject to key "fields"
+        if (options.containsKey("fields") && (options.get("fields") instanceof JSONObject)) {
+            JSONObject existingField = (JSONObject) options.get("fields");
+            for (String key: fieldValues.keySet()) {
+                existingField.put(key, fieldValues.get(key));
+            }
+            options.put("fields", existingField);
+
+        } else {
+            options.put("fields", fieldValues);  // This overwrites other "fields" entries
+        }
+
     }
 }
