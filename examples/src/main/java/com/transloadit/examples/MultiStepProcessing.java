@@ -115,7 +115,7 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
                 System.out.println("File uploaded: " + fileName);
             }
 

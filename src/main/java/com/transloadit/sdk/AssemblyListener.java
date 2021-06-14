@@ -37,8 +37,9 @@ public interface AssemblyListener {
     /**
      * Callback to be executed if one of the Assembly's files has been uploaded.
      * @param fileName Name of the file, which has been successfully uploaded.
+     * @param uploadInformation {@link JSONObject}, which holds information about the uploaded file as Key-Value pairs.
      */
-    void onFileUploadFinished(String fileName);
+    void onFileUploadFinished(String fileName, JSONObject uploadInformation);
 
     /**
      * Callback to be executed if there is an Assembly result.

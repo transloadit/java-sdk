@@ -250,7 +250,7 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
             }
 
