@@ -68,7 +68,7 @@ public final class ImageResizer {
             }
 
             @Override
-            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
             }
 

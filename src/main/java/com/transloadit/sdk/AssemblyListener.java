@@ -1,6 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONObject;
 
 /**
  * Interface for a Listener, which tracks the progress in Assembly execution.
@@ -41,9 +42,10 @@ public interface AssemblyListener {
 
     /**
      * Callback to be executed if there is an Assembly result.
-     * @param assemblyResponse {@link AssemblyResponse}, which contains status Information about the result.
+     * @param stepName name of the step, the result is part of
+     * @param result {@link JSONObject} which holds information about the result as Key-Value pairs.
      */
-    void onAssemblyResultFinished(AssemblyResponse assemblyResponse);
+    void onAssemblyResultFinished(String stepName, JSONObject result);
 
 
 }

@@ -499,13 +499,9 @@ public class Assembly extends OptionsBuilder {
 
 
         Emitter.Listener onAssemblyResultFinished = args -> {
-            try {
-                getAssemblyListener().onAssemblyResultFinished(transloadit.getAssemblyByUrl(assemblyUrl));
-            } catch (RequestException e) {
-                e.printStackTrace();
-            } catch (LocalOperationException e) {
-                e.printStackTrace();
-            }
+            String stepName = (String) args[0];
+            JSONObject result = (JSONObject) args[1];
+            getAssemblyListener().onAssemblyResultFinished(stepName, result);
         };
 
         //Hands over Filename of recently uploaded file to the callback in the AssemblyListener

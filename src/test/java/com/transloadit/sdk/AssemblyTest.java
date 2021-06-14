@@ -3,6 +3,7 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -254,9 +255,11 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+
 
             }
+
         });
 
         mockServerClient.when(HttpRequest.request()

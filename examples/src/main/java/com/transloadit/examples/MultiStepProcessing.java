@@ -36,10 +36,11 @@ public final class MultiStepProcessing {
 
         // Step1 Reduce File's Bitrates
         Map<String, Object> step1 = new HashMap<>();
-        step1.put("preset", "mp3");
+        step1.put("preset", "opus");
         step1.put("bitrate", 128000);
 
         assembly.addStep("encode", "/audio/encode", step1);
+
 
         // Step2 Concatenation
             /* Building "use" parameter as JSONObject
@@ -48,26 +49,28 @@ public final class MultiStepProcessing {
                 -   as = audio_<number> defines oder of Concatenation
                 => Needs to be stored under key "steps" as it defines every substep
              */
+
         JSONObject outerJsonObject = new JSONObject();
         outerJsonObject.append(
                 "steps",
                 new JSONObject()
                         .put("name", "encode")
                         .put("fields", "file_1")
-                        .put("as", "audio_1"));
+                        .put("as", "audio_2"));  // invert order of files in the concat for demonstration purpose
 
         outerJsonObject.append(
                 "steps",
                 new JSONObject()
                         .put("name", "encode")
                         .put("fields", "file_2")
-                        .put("as", "audio_2"));
+                        .put("as", "audio_1"));
 
         Map<String, Object> step2 = new HashMap<>();
         step2.put("preset", "mp3");
         step2.put("use", outerJsonObject);
 
         assembly.addStep("concat", "/audio/concat", step2);
+
 
         // Step 3 Waveform
         Map<String, Object> step3 = new HashMap<>();
@@ -83,9 +86,7 @@ public final class MultiStepProcessing {
         assembly.setAssemblyListener(new AssemblyListener() {
             @Override
             public void onAssemblyFinished(AssemblyResponse response) {
-                JSONArray waveformStatus = response.getStepResult("waveform");
-                System.out.println("Result of Operation:");
-                printStatus(waveformStatus);
+                System.out.println("Assembly finished");
             }
 
             public void printStatus(JSONArray status) {
@@ -119,8 +120,13 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onAssemblyResultFinished(AssemblyResponse assemblyResponse) {
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+                System.out.println("\n ---- Step Result for Step: " + stepName + "  ---- ");
+                System.out.println("File: " + result.getString("basename") + "." + result.getString("ext"));
+                System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
             }
+
+
         });
 
 
