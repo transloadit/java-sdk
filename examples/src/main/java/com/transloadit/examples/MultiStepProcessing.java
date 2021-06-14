@@ -121,8 +121,9 @@ public final class MultiStepProcessing {
 
             @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
-                System.out.println("\n ---- Step Result for Step: " + stepName + "  ---- ");
-                System.out.println("File: " + result.getString("basename") + "." + result.getString("ext"));
+                System.out.println("\n ---- Step Result for Step: ---- ");
+                System.out.println("StepName: " + stepName + "\nFile: " + result.getString("basename") + "."
+                        + result.getString("ext"));
                 System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
             }
 
