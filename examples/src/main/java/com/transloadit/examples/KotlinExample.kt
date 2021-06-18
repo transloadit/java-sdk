@@ -6,7 +6,6 @@ import com.transloadit.sdk.response.AssemblyResponse
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.lang.Exception
 
 
 /**
@@ -22,6 +21,7 @@ class KotlinExample {
         fun main(args: Array<String>) {
             // Setup the TransloaditClient and a new Assembly
             val transloadit = Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET")
+
             val assembly: Assembly = transloadit.newAssembly()
             val kotlinExample = KotlinExample()
 
@@ -47,12 +47,13 @@ class KotlinExample {
             // Add Assembly Listener to receive notifications.
             assembly.assemblyListener = object : AssemblyListener {
                 override fun onAssemblyFinished(response: AssemblyResponse?) {
-                    print("Download Results")
+                    println("Download Results")
                     if (response != null) {
                        val resultJson: JSONArray = response.getStepResult("convert_and_text");
                         for ( i in 0 until resultJson.length()){
                             val resultFile: JSONObject = resultJson.getJSONObject(i)
-                            println(resultFile.getString("basename") + " : " + resultFile.getString("ssl_url"))
+                            println(resultFile.getString("basename") + "." + resultFile.get("ext")
+                                    + " : " + resultFile.getString("ssl_url"))
                         }
                     } else {
                         onError(error = NullPointerException())
@@ -62,6 +63,25 @@ class KotlinExample {
                 override fun onError(error: Exception?) {
                     println("Assembly failed!")
                     print(error.toString())
+                }
+
+                override fun onMetadataExtracted() {
+                    println("Metadata_Extracted")
+                }
+
+                override fun onAssemblyUploadFinished() {
+                    println("Assembly uploaded, executing ...")
+                }
+
+                override fun onFileUploadFinished(fileName: String?, uploadInformation: JSONObject?) {
+                    println("File " + fileName + "has been uploaded successfully")
+                }
+
+                override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
+                    println("Step Result available: ")
+                    println(
+                    """StepName: $stepName File: ${result!!.getString("basename")}.${result.getString("ext")}
+                    """.trimIndent())
                 }
             }
 
