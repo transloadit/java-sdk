@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
@@ -32,7 +32,7 @@ public class AssemblyTest extends MockHttpService {
      * MockServer can be run using the MockServerRule.
      */
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
+    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
 
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
