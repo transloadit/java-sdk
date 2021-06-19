@@ -26,7 +26,7 @@ public class RequestTest extends MockHttpService {
      * MockServer can be run using the MockServerRule.
      */
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule( this, true, PORT);
+    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
 
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
