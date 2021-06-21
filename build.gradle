@@ -29,8 +29,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.1'
     implementation 'org.json:json:20210307'
     implementation 'commons-codec:commons-codec:1.15'
-    // implementation 'io.socket:socket.io-client:2.0.1' Check Version
-    implementation 'io.socket:socket.io-client:1.0.0'
+    implementation 'io.socket:socket.io-client:1.0.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mock-server:mockserver-junit-rule:5.11.2'
     testImplementation  'org.mockito:mockito-core:3.11.1'
