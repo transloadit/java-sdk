@@ -1,3 +1,10 @@
+### 0.3.0 / 2021-06-26 ###
+* Updated all dependencies to their most recent, compatible version
+  => minimal requirements for the SDK are now Android 5+ and Java 8+.
+* Add (form) fields to an Assembly or Template with the addField()- and AddFields() - methods
+* Extended support for Assembly progress updates via the Websocket.
+  => Assembly listener interface provides more callback functions now. This should be considered before the update.
+  
 ### 0.2.0 / 2021-05-17 ###
 * Added retry functionality for assemblies in case of reaching the rate limit
 
