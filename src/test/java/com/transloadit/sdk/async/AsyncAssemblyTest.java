@@ -60,6 +60,7 @@ public class AsyncAssemblyTest extends MockHttpService {
      */
     @Before
     public void setUp() throws Exception {
+        mockServerClient.reset();
         listener = new Listener();
         assembly = new MockAsyncAssembly(transloadit, listener);
         uploadFinished = false;
