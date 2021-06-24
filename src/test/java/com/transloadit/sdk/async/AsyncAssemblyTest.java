@@ -83,13 +83,6 @@ public class AsyncAssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
     }
 
-    /**
-     * Resets mockServer after each Test run.
-     */
-    @After
-    public void tearDown() {
-        mockServerClient.reset();
-    }
 
     /**
      * This test verifies the functionality of the {@link Assembly#save()} method under the special
