@@ -6,7 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockserver.client.server.MockServerClient;
+
+import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -23,7 +24,7 @@ public class AssemblyResponseTest extends MockHttpService {
      * MockServer can be run using the MockServerRule.
      */
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(PORT, this, true);
+    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
 
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
