@@ -9,7 +9,6 @@ import com.transloadit.sdk.MockHttpService;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,6 +60,7 @@ public class AsyncAssemblyTest extends MockHttpService {
      */
     @Before
     public void setUp() throws Exception {
+        mockServerClient.reset();
         listener = new Listener();
         assembly = new MockAsyncAssembly(transloadit, listener);
         uploadFinished = false;
@@ -83,13 +83,6 @@ public class AsyncAssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
     }
 
-    /**
-     * Resets mockServer after each Test run.
-     */
-    @After
-    public void tearDown() {
-        mockServerClient.reset();
-    }
 
     /**
      * This test verifies the functionality of the {@link Assembly#save()} method under the special
