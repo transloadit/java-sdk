@@ -1,4 +1,4 @@
-### 0.3.0 / 2021-06-28 ###
+### 0.3.0 / 2021-06-27 ###
 * Updated all dependencies to their most recent, compatible version
   => minimal requirements for the SDK are now Android 5+ and Java 8+.
 * Add (form) fields to an Assembly or Template with the addField()- and addFields() - methods
