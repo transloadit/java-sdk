@@ -15,6 +15,11 @@ public class TusUploadThread extends Thread {
     private TusUpload tusUpload;
     private TusExecutor tusExecutor;
 
+    /**
+     * Constructs an new Instance of the TusUploadThread.
+     * @param tusUploader {@link TusUploader} performs the actual file upload.
+     * @param tusUpload {@link TusUpload} the file to be uploaded.
+     */
     public TusUploadThread(TusUploader tusUploader, TusUpload tusUpload) {
         this.tusUpload = tusUpload;
         this.tusUploader = tusUploader;
@@ -23,6 +28,9 @@ public class TusUploadThread extends Thread {
 
     }
 
+    /**
+     * The method to be started by the Task Executor.
+     */
     public void run() {
         try {
             tusExecutor.makeAttempts();
@@ -34,6 +42,10 @@ public class TusUploadThread extends Thread {
 
     }
 
+    /**
+     * Returns a {@link TusExecutor} instance, which handles upload coordination.
+     * @return {@link TusExecutor}
+     */
     private TusExecutor getTusExecutor() {
         TusExecutor tusExecutor = new TusExecutor() {
             @Override

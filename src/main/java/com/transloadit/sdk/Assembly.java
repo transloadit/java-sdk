@@ -9,7 +9,6 @@ import io.socket.emitter.Emitter;
 import io.socket.engineio.client.transports.WebSocket;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
-import io.tus.java.client.TusExecutor;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
@@ -393,17 +392,18 @@ public class Assembly extends OptionsBuilder {
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
             final TusUploader tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusUploader,tusUpload);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusUploader, tusUpload);
             executor.execute(tusUploadThread);
         }
         executor.shutdown();
-        System.out.println("Uploads Running: " + executor.getActiveCount() + ", in Queue: " + executor.getQueue().size());
+        // todo: 28.06.21 remove before release
+        System.out.println("Uploads Running: " + executor.getActiveCount() + ", in Queue: "
+                + executor.getQueue().size());
         try {
             executor.awaitTermination(60, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Uploads Complete");
     }
 
     /**
