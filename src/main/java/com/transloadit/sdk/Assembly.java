@@ -557,7 +557,7 @@ public class Assembly extends OptionsBuilder {
      * a queue is created and processed piece by piece.
      * @param maxUploads maximum number of uploads, which are performed simultaneously.
      */
-    public void setMaxParallelUploads(int maxUploads){
+    public void setMaxParallelUploads(int maxUploads) {
         this.maxParallelUploads = maxUploads;
     }
 }
