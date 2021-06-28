@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class represents a new assembly being created.
@@ -40,6 +43,7 @@ public class Assembly extends OptionsBuilder {
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
+    protected int maxParallelUploads = 2;
 
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
@@ -385,24 +389,21 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
         while (uploads.size() > 0) {
-            final TusUploader tusUploader = tusClient.resumeOrCreateUpload(uploads.get(0));
-
-            TusExecutor tusExecutor = new TusExecutor() {
-                @Override
-                protected void makeAttempt() throws ProtocolException, IOException {
-                    int uploadedChunk = 0;
-                    while (uploadedChunk > -1) {
-                        uploadedChunk = tusUploader.uploadChunk();
-                    }
-                    tusUploader.finish();
-                }
-            };
-
-            tusExecutor.makeAttempts();
-            // remove upload instance from list
-            uploads.remove(0);
+            final TusUpload  tusUpload = uploads.remove(0);
+            final TusUploader tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusUploader,tusUpload);
+            executor.execute(tusUploadThread);
         }
+        executor.shutdown();
+        System.out.println("Uploads Running: " + executor.getActiveCount() + ", in Queue: " + executor.getQueue().size());
+        try {
+            executor.awaitTermination(60, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Uploads Complete");
     }
 
     /**
