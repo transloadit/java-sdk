@@ -551,4 +551,13 @@ public class Assembly extends OptionsBuilder {
 
         return response;
     }
+
+    /**
+     * This method sets how many uploads are performed simultaneously. If the number of uploads exceeds the set value,
+     * a queue is created and processed piece by piece.
+     * @param maxUploads maximum number of uploads, which are performed simultaneously.
+     */
+    public void setMaxParallelUploads(int maxUploads){
+        this.maxParallelUploads = maxUploads;
+    }
 }

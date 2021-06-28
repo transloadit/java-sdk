@@ -6,6 +6,8 @@ import io.tus.java.client.TusUpload;
 import io.tus.java.client.TusUploader;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
@@ -33,6 +35,12 @@ public class TusUploadThread extends Thread {
      */
     public void run() {
         try {
+            // todo: remove the timestamp debug code
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+            LocalDateTime localDateTime = LocalDateTime.now();
+            String format = fmt.format(localDateTime);
+            System.out.println("Uploadstarted: " +  " Name: " + this.getName() + " Timestamp: " + format);
+
             tusExecutor.makeAttempts();
         } catch (ProtocolException e) {
             e.printStackTrace();
