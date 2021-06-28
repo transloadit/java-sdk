@@ -17,7 +17,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
+// todo: Implement parallel uploads.
+// todo: Invocation bugs
 /**
  * This class represents a new assembly being created.
  * It is similar to {@link Assembly} but provides Asynchronous functionality.
@@ -293,6 +294,7 @@ public class AsyncAssembly extends Assembly {
                 getUploadListener().onUploadFinished();
                 if (!shouldWaitWithSocket() && shouldWaitForCompletion) {
                     try {
+                        // todo: fix issue here => Nullpointer Exception
                         getListener().onAssemblyFinished(watchStatus());
                     } catch (LocalOperationException e) {
                         getListener().onAssemblyStatusUpdateFailed(e);
