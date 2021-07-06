@@ -22,7 +22,7 @@ class TusUploadThread extends Thread {
      * @param tusUploader {@link TusUploader} performs the actual file upload.
      * @param tusUpload {@link TusUpload} the file to be uploaded.
      */
-    public TusUploadThread(TusUploader tusUploader, TusUpload tusUpload) {
+    TusUploadThread(TusUploader tusUploader, TusUpload tusUpload) {
         this.tusUpload = tusUpload;
         this.tusUploader = tusUploader;
         this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
