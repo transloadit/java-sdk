@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
     private TusUpload tusUpload;
     private TusClient tusClient;
     private TusExecutor tusExecutor;
+    private Assembly assembly;
 
     private volatile boolean isRunning = false;
     private volatile boolean isPaused = false;
@@ -24,9 +25,10 @@ import java.time.format.DateTimeFormatter;
      * @param tusClient {@link TusClient} Instance of the current TusClient.
      * @param tusUpload {@link TusUpload} the file to be uploaded.
      */
-    public TusUploadThread(TusClient tusClient, TusUpload tusUpload) throws ProtocolException, IOException {
+    public TusUploadThread(TusClient tusClient, TusUpload tusUpload, Assembly assembly) throws ProtocolException, IOException {
         this.tusClient = tusClient;
         this.tusUpload = tusUpload;
+        this.assembly = assembly;
         this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
         this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
         this.tusExecutor = getTusExecutor();
@@ -51,6 +53,9 @@ import java.time.format.DateTimeFormatter;
             tusExecutor.makeAttempts();
         } catch (ProtocolException | IOException e) {
             e.printStackTrace();
+        } finally {
+            System.out.println("Thread :" +  this.getName() + "Has finished");
+            assembly.removeThreadFromList(this);
         }
     }
 

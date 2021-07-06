@@ -389,7 +389,7 @@ public class Assembly extends OptionsBuilder {
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
             final TusUploader tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, this);
             threadList.add(tusUploadThread);
             executor.execute(tusUploadThread);
         }
@@ -564,5 +564,10 @@ public class Assembly extends OptionsBuilder {
         for (TusUploadThread thread : threadList) {
             thread.setUnPaused();
         }
+    }
+
+    void removeThreadFromList(TusUploadThread tusUploadThread) {
+        threadList.remove(tusUploadThread);
+        System.out.println("test");
     }
 }
