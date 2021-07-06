@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
-public class TusUploadThread extends Thread {
+class TusUploadThread extends Thread {
     private TusUploader tusUploader;
     private TusUpload tusUpload;
     private TusExecutor tusExecutor;
