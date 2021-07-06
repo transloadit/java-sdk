@@ -22,13 +22,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * This class represents a new assembly being created.
@@ -43,6 +38,8 @@ public class Assembly extends OptionsBuilder {
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
     protected int maxParallelUploads = 2;
+
+    protected  ArrayList<TusUploadThread> threadList = new ArrayList<TusUploadThread>();
 
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
@@ -392,18 +389,14 @@ public class Assembly extends OptionsBuilder {
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
             final TusUploader tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusUploader, tusUpload);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload);
+            threadList.add(tusUploadThread);
             executor.execute(tusUploadThread);
         }
         executor.shutdown();
         // todo: 28.06.21 remove before release
         System.out.println("Uploads Running: " + executor.getActiveCount() + ", in Queue: "
                 + executor.getQueue().size());
-        try {
-            executor.awaitTermination(60, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -559,5 +552,17 @@ public class Assembly extends OptionsBuilder {
      */
     public void setMaxParallelUploads(int maxUploads) {
         this.maxParallelUploads = maxUploads;
+    }
+
+    public void pauseUploads() {
+        for (TusUploadThread thread : threadList) {
+            thread.setPaused();
+        }
+    }
+
+    public void resumeUploads() {
+        for (TusUploadThread thread : threadList) {
+            thread.setUnPaused();
+        }
     }
 }
