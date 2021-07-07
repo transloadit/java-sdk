@@ -1,20 +1,36 @@
 package com.transloadit.sdk;
 
-import io.tus.java.client.*;
+import io.tus.java.client.FingerprintNotFoundException;
+import io.tus.java.client.ProtocolException;
+import io.tus.java.client.ResumingNotEnabledException;
+import io.tus.java.client.TusClient;
+import io.tus.java.client.TusExecutor;
+import io.tus.java.client.TusUpload;
+import io.tus.java.client.TusUploader;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
  class TusUploadThread extends Thread {
     private TusUploader tusUploader;
+    private ArrayList<Object> uploadParts;
     private TusUpload tusUpload;
     private TusClient tusClient;
     private TusExecutor tusExecutor;
     private Assembly assembly;
+    private Object inputData;
+    private String fieldName;
+    private String assemblyUrl;
 
     private volatile boolean isRunning = false;
     private volatile boolean isPaused = false;
@@ -23,17 +39,23 @@ import java.time.format.DateTimeFormatter;
     /**
      * Constructs an new Instance of the TusUploadThread.
      * @param tusClient {@link TusClient} Instance of the current TusClient.
-     * @param tusUpload {@link TusUpload} the file to be uploaded.
+     * @param uploadParts ArrayList that holds the File to be uploaded, its fieldName and the Assembly Url
+     * @param assembly Assembly Instance
      */
-    public TusUploadThread(TusClient tusClient, TusUpload tusUpload, Assembly assembly) throws ProtocolException, IOException {
+    TusUploadThread(TusClient tusClient, ArrayList<Object> uploadParts, Assembly assembly)
+            throws ProtocolException, IOException {
         this.tusClient = tusClient;
-        this.tusUpload = tusUpload;
+        this.inputData = uploadParts.get(0);
+        this.fieldName = (String) uploadParts.get(1);
+        this.assemblyUrl = (String) uploadParts.get(2);
+        this.tusUpload = makeNewTusUpload();
         this.assembly = assembly;
         this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
         this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
         this.tusExecutor = getTusExecutor();
         this.lock = new Object();
-        //
+
+        // todo: remove reduced Chunk Size
         tusUploader.setChunkSize(50);
 
     }
@@ -80,22 +102,59 @@ import java.time.format.DateTimeFormatter;
                             uploadedChunk = tusUploader.uploadChunk();
                         } else {
                             synchronized (lock) {
-                               // tusUploader.finish();
+                                tusUploader.finish();
                                 System.out.println(" is Paused");
                                 isRunning = false;
                                 lock.wait();
                             }
                         }
                     }
-                } catch (InterruptedException e) {
-                        e.printStackTrace();
-
+                } catch (InterruptedException ignored) {
                 } finally {
                     tusUploader.finish();
                 }
             }
         };
     }
+
+    private TusUpload makeNewTusUpload() throws IOException {
+        TusUpload upload = getTusUploadInstances(inputData, fieldName, assemblyUrl);
+
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("filename", fieldName);
+        try {
+            File file = (File) inputData;
+            metadata.put("filename", file.getName());
+        } catch (ClassCastException ignored) { }
+        metadata.put("assembly_url", assemblyUrl);
+        metadata.put("fieldname", fieldName);
+        upload.setMetadata(metadata);
+
+        return upload;
+    }
+
+    private TusUpload getTusUploadInstances(Object inputData, String fieldName, String assemblyUrl)
+            throws IOException {
+        TusUpload tusUpload = new TusUpload();
+        InputStream inputStream = null;
+        try {
+            tusUpload.setInputStream((InputStream) inputData);
+            inputStream = (InputStream) inputData;
+        } catch (ClassCastException ignored) {
+        }
+        try {
+            File file = (File) inputData;
+            return new TusUpload(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        tusUpload.setFingerprint(String.format("%s-%d-%s", fieldName, inputStream.available(), assemblyUrl));
+        tusUpload.setSize(inputStream.available());
+
+        return tusUpload;
+    }
+
+
 
     /**
      * Sets {@link #isPaused} {@code = true}.
@@ -111,6 +170,7 @@ import java.time.format.DateTimeFormatter;
      */
     public void setUnPaused() {
             try {
+                this.tusUpload = makeNewTusUpload();
                 this.tusUploader = this.tusClient.resumeUpload(tusUpload);
             } catch (ProtocolException | IOException | FingerprintNotFoundException | ResumingNotEnabledException e) {
                 e.printStackTrace();

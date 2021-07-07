@@ -12,7 +12,6 @@ import io.tus.java.client.TusClient;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
-import io.tus.java.client.TusUploader;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -22,8 +21,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class represents a new assembly being created.
@@ -34,13 +38,15 @@ public class Assembly extends OptionsBuilder {
     protected Map<String, File> files;
     protected Map<String, InputStream> fileStreams;
     protected TusClient tusClient;
-    protected List<TusUpload> uploads;
+    protected ArrayList<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
-    protected int maxParallelUploads = 2;
 
-    protected  ArrayList<TusUploadThread> threadList = new ArrayList<TusUploadThread>();
 
+    private ArrayList<TusUploadThread> threadList = new ArrayList<TusUploadThread>();
+    private int maxParallelUploads = 2;
+    private List<ArrayList<Object>> uploadSpecifications;
+    private ThreadPoolExecutor executor;
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
      * @param transloadit {@link Transloadit} the transloadit client.
@@ -63,7 +69,8 @@ public class Assembly extends OptionsBuilder {
         this.options = options;
         tusClient = new TusClient();
         tusURLStore = new TusURLMemoryStore();
-        uploads = new ArrayList<TusUpload>();
+        uploads = new ArrayList<>();
+        uploadSpecifications = new ArrayList<>();
         fileStreams = new HashMap<String, InputStream>();
         shouldWaitForCompletion = false;
     }
@@ -284,14 +291,37 @@ public class Assembly extends OptionsBuilder {
         tusClient.setUploadCreationURL(new URL(tusUrl));
         tusClient.enableResuming(tusURLStore);
 
-        for (Map.Entry<String, File> entry : files.entrySet()) {
-            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+        if (maxParallelUploads > 1) {
+
+            for (Map.Entry<String, File> entry : files.entrySet()) {
+                ArrayList<Object> upload = new ArrayList<>();
+                upload.add(entry.getValue());
+                upload.add(entry.getKey());
+                upload.add(assemblyUrl);
+                uploadSpecifications.add(upload);
+            }
+
+            for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+                ArrayList<Object> upload = new ArrayList<>();
+                upload.add(entry.getValue());
+                upload.add(entry.getKey());
+                upload.add(assemblyUrl);
+                uploadSpecifications.add(upload);
+            }
+        } else {
+
+            for (Map.Entry<String, File> entry : files.entrySet()) {
+                processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+            }
+
+            for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+                processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+            }
         }
 
-        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
-            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
-        }
     }
+
+
 
     /**
      * Prepares all files added for tus uploads.
@@ -335,6 +365,7 @@ public class Assembly extends OptionsBuilder {
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      */
+
     protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(file);
 
@@ -385,11 +416,10 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        while (uploads.size() > 0) {
-            final TusUpload  tusUpload = uploads.remove(0);
-            final TusUploader tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, this);
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
+        while (uploadSpecifications.size() > 0) {
+            final ArrayList<Object> uploadParts = uploadSpecifications.remove(0);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, uploadParts, this);
             threadList.add(tusUploadThread);
             executor.execute(tusUploadThread);
         }
@@ -554,20 +584,40 @@ public class Assembly extends OptionsBuilder {
         this.maxParallelUploads = maxUploads;
     }
 
+    /**
+     * This Method is used to pause parallel File uploads.
+     */
     public void pauseUploads() {
         for (TusUploadThread thread : threadList) {
             thread.setPaused();
         }
     }
 
+    /**
+     * This Method is used to pause parallel File uploads.
+     */
     public void resumeUploads() {
         for (TusUploadThread thread : threadList) {
             thread.setUnPaused();
         }
     }
 
-    void removeThreadFromList(TusUploadThread tusUploadThread) {
+    /**
+     * This Method is used to abort all parallel File uploads.
+     */
+    public void abortUploads() {
+        executor.shutdownNow();
+    }
+
+    /**
+     * This method removes finished Threads from the ThreadList.
+     * @param tusUploadThread a Upload Thread instance
+     */
+    synchronized void removeThreadFromList(TusUploadThread tusUploadThread) {
         threadList.remove(tusUploadThread);
         System.out.println("test");
     }
+
+
+
 }
