@@ -44,7 +44,7 @@ public class Assembly extends OptionsBuilder {
 
 
     private ArrayList<TusUploadThread> threadList = new ArrayList<TusUploadThread>();
-    private int maxParallelUploads = 2;
+    private int maxParallelUploads = 1;
     private List<ArrayList<Object>> uploadSpecifications;
     private ThreadPoolExecutor executor;
     /**
