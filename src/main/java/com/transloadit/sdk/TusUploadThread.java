@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
- class TusUploadThread extends Thread {
+class TusUploadThread extends Thread {
     private TusUploader tusUploader;
     private ArrayList<Object> uploadParts;
     private TusUpload tusUpload;
