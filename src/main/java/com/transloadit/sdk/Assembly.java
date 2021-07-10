@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class represents a new assembly being created.
@@ -605,7 +604,7 @@ public class Assembly extends OptionsBuilder {
      * This methods sets a customised {@link UploadProgressListener}.
      * @param uploadProgressListener {@link UploadProgressListener}
      */
-    public void setUploadProgressListener(UploadProgressListener uploadProgressListener){
+    public void setUploadProgressListener(UploadProgressListener uploadProgressListener) {
         this.uploadProgressListener = uploadProgressListener;
     }
     /**
@@ -628,12 +627,18 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * This Method is used to abort all parallel File uploads.
+     * It informs the current {@link UploadProgressListener} about the abortion.
      */
     protected void abortUploads() {
         executor.shutdownNow();
         uploadProgressListener.onUploadFailed(new LocalOperationException("Uploads aborted"));
     }
 
+    /**
+     * This Method is used to abort all parallel File uploads.
+     * It informs the current {@link UploadProgressListener} about the abortion.
+     * @param e {@link Exception that lead to the abortion}
+     */
     protected void abortUploads(Exception e) {
         executor.shutdownNow();
         uploadProgressListener.onUploadFailed(e);
