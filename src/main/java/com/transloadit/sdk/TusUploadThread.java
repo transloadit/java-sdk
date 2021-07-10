@@ -95,7 +95,6 @@ class TusUploadThread extends Thread {
                             synchronized (lock) {
                                 // todo: replace with tusUploader.pause();
                                 tusUploader.finish();
-                                System.out.println(" is Paused");
                                 isRunning = false;
                                 lock.wait();
                             }
@@ -105,7 +104,6 @@ class TusUploadThread extends Thread {
                     assembly.threadThrowsLocalOperationException(getName(), e);
                 } finally {
                     tusUploader.finish();
-                    System.out.println("Finally BLock in TUS Exec");
                 }
             }
         };
@@ -138,7 +136,6 @@ class TusUploadThread extends Thread {
             synchronized (lock) {
                 lock.notify();
             }
-            System.out.println(getName() + " is Resuming ");
         }
 }
 

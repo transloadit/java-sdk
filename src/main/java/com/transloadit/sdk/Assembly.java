@@ -645,7 +645,6 @@ public class Assembly extends OptionsBuilder {
      */
     synchronized void removeThreadFromList(TusUploadThread tusUploadThread) {
         threadList.remove(tusUploadThread);
-        System.out.println("test");
     }
 
     /**
@@ -656,7 +655,7 @@ public class Assembly extends OptionsBuilder {
     protected synchronized void updateUploadProgress(long uploadedBytes) {
         this.uploadedBytes += uploadedBytes;
         uploadProgressListener.onUploadProgress(this.uploadedBytes, uploadSize);
-        if (uploadedBytes == uploadSize) {
+        if (this.uploadedBytes == uploadSize) {
             uploadProgressListener.onUploadFinished();
         }
     }
