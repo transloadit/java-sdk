@@ -81,7 +81,7 @@ class TusUploadThread extends Thread {
                             isRunning = true;
                         }
 
-                        if (Thread.currentThread().isInterrupted()){
+                        if (Thread.currentThread().isInterrupted()) {
                             throw new InterruptedException("INTERRUPTED");
                         }
 
@@ -102,7 +102,7 @@ class TusUploadThread extends Thread {
                         }
                     }
                 } catch (InterruptedException e) {
-                    assembly.threadThrowsLocalOperationException(getName(),e);
+                    assembly.threadThrowsLocalOperationException(getName(), e);
                 } finally {
                     tusUploader.finish();
                     System.out.println("Finally BLock in TUS Exec");
