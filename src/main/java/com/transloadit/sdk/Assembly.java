@@ -1,5 +1,6 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -38,15 +39,20 @@ public class Assembly extends OptionsBuilder {
     protected Map<String, File> files;
     protected Map<String, InputStream> fileStreams;
     protected TusClient tusClient;
-    protected ArrayList<TusUpload> uploads;
+    protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
 
 
-    private ArrayList<TusUploadThread> threadList = new ArrayList<TusUploadThread>();
-    private int maxParallelUploads = 1;
-    private List<ArrayList<Object>> uploadSpecifications;
+    private ArrayList<TusUploadThread> threadList;
+    private HashMap<String, Exception> threadExceptions;
+    private int maxParallelUploads = 2;
     private ThreadPoolExecutor executor;
+
+    private long uploadSize;
+    private long uploadedBytes;
+    private UploadProgressListener uploadProgressListener;
+
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
      * @param transloadit {@link Transloadit} the transloadit client.
@@ -69,10 +75,11 @@ public class Assembly extends OptionsBuilder {
         this.options = options;
         tusClient = new TusClient();
         tusURLStore = new TusURLMemoryStore();
-        uploads = new ArrayList<>();
-        uploadSpecifications = new ArrayList<>();
+        uploads = new ArrayList<TusUpload>();
         fileStreams = new HashMap<String, InputStream>();
         shouldWaitForCompletion = false;
+        threadList =  new ArrayList<TusUploadThread>();
+        threadExceptions = new HashMap<String, Exception>();
     }
 
     /**
@@ -291,37 +298,14 @@ public class Assembly extends OptionsBuilder {
         tusClient.setUploadCreationURL(new URL(tusUrl));
         tusClient.enableResuming(tusURLStore);
 
-        if (maxParallelUploads > 1) {
-
-            for (Map.Entry<String, File> entry : files.entrySet()) {
-                ArrayList<Object> upload = new ArrayList<>();
-                upload.add(entry.getValue());
-                upload.add(entry.getKey());
-                upload.add(assemblyUrl);
-                uploadSpecifications.add(upload);
-            }
-
-            for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
-                ArrayList<Object> upload = new ArrayList<>();
-                upload.add(entry.getValue());
-                upload.add(entry.getKey());
-                upload.add(assemblyUrl);
-                uploadSpecifications.add(upload);
-            }
-        } else {
-
-            for (Map.Entry<String, File> entry : files.entrySet()) {
-                processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
-            }
-
-            for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
-                processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
-            }
+        for (Map.Entry<String, File> entry : files.entrySet()) {
+            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
         }
 
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+            processTusFile(entry.getValue(), entry.getKey(), assemblyUrl);
+        }
     }
-
-
 
     /**
      * Prepares all files added for tus uploads.
@@ -410,23 +394,56 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Calculates the expected uploadSize in Bytes.
+     * @return the expected cumulative upload size
+     * @throws IOException Input Streams cannote be read
+     */
+    public long getUploadSize() throws IOException {
+        long totalUploadSize = 0;
+        for (Map.Entry<String, File> entry : files.entrySet()) {
+            totalUploadSize += entry.getValue().length();
+        }
+
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+            totalUploadSize += entry.getValue().available();
+        }
+        return totalUploadSize;
+    }
+
+    /**
      * Does the actual uploading of files (when tus is enabled).
      *
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
+        if (uploadProgressListener == null) {
+            uploadProgressListener = new UploadProgressListener() {
+                @Override
+                public void onUploadFinished() {
+
+                }
+
+                @Override
+                public void onUploadProgress(long uploadedBytes, long totalBytes) {
+
+                }
+
+                @Override
+                public void onUploadFailed(Exception exception) {
+
+                }
+            };
+        }
+        uploadSize = getUploadSize();
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        while (uploadSpecifications.size() > 0) {
-            final ArrayList<Object> uploadParts = uploadSpecifications.remove(0);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, uploadParts, this);
+        while (uploads.size() > 0) {
+            final TusUpload  tusUpload = uploads.remove(0);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, this);
             threadList.add(tusUploadThread);
             executor.execute(tusUploadThread);
         }
         executor.shutdown();
-        // todo: 28.06.21 remove before release
-        System.out.println("Uploads Running: " + executor.getActiveCount() + ", in Queue: "
-                + executor.getQueue().size());
     }
 
     /**
@@ -585,9 +602,16 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * This methods sets a customised {@link UploadProgressListener}.
+     * @param uploadProgressListener {@link UploadProgressListener}
+     */
+    public void setUploadProgressListener(UploadProgressListener uploadProgressListener){
+        this.uploadProgressListener = uploadProgressListener;
+    }
+    /**
      * This Method is used to pause parallel File uploads.
      */
-    public void pauseUploads() {
+    public void pauseUploads() throws LocalOperationException {
         for (TusUploadThread thread : threadList) {
             thread.setPaused();
         }
@@ -596,7 +620,7 @@ public class Assembly extends OptionsBuilder {
     /**
      * This Method is used to pause parallel File uploads.
      */
-    public void resumeUploads() {
+    public void resumeUploads() throws LocalOperationException, RequestException {
         for (TusUploadThread thread : threadList) {
             thread.setUnPaused();
         }
@@ -605,8 +629,14 @@ public class Assembly extends OptionsBuilder {
     /**
      * This Method is used to abort all parallel File uploads.
      */
-    public void abortUploads() {
+    protected void abortUploads() {
         executor.shutdownNow();
+        uploadProgressListener.onUploadFailed(new LocalOperationException("Uploads aborted"));
+    }
+
+    protected void abortUploads(Exception e) {
+        executor.shutdownNow();
+        uploadProgressListener.onUploadFailed(e);
     }
 
     /**
@@ -616,6 +646,42 @@ public class Assembly extends OptionsBuilder {
     synchronized void removeThreadFromList(TusUploadThread tusUploadThread) {
         threadList.remove(tusUploadThread);
         System.out.println("test");
+    }
+
+    /**
+     * Updates the number of Bytes, which have been uploaded already.
+     * Also triggers Upload finished if the uploads has been finished.
+     * @param uploadedBytes Number of bytes uploaded by the calling Thread.
+     */
+    protected synchronized void updateUploadProgress(long uploadedBytes) {
+        this.uploadedBytes += uploadedBytes;
+        uploadProgressListener.onUploadProgress(this.uploadedBytes, uploadSize);
+        if (uploadedBytes == uploadSize) {
+            uploadProgressListener.onUploadFinished();
+        }
+    }
+
+    /**
+     * Takes a {@link LocalOperationException} from a running thread and stores it in {@link #threadExceptions}.
+     * Also stops the uploads and notifies the user.
+     * @param s Thread Name
+     * @param e {@link LocalOperationException}
+     */
+     protected void threadThrowsLocalOperationException(String s, Exception e) {
+        this.threadExceptions.put(s, new LocalOperationException(e));
+         abortUploads(e);
+    }
+
+    /**
+     * /**
+     * Takes a {@link RequestException} from a running thread and stores it in {@link #threadExceptions}.
+     * Also stops the uploads and notifies the user.
+     * @param s Thread Name
+     * @param e {@link RequestException}
+     */
+     protected void threadThrowsRequestException(String s, Exception e) {
+         this.threadExceptions.put(s, new LocalOperationException(e));
+         abortUploads(e);
     }
 
 

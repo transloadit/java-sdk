@@ -1,5 +1,7 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import io.tus.java.client.FingerprintNotFoundException;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.ResumingNotEnabledException;
@@ -8,29 +10,20 @@ import io.tus.java.client.TusExecutor;
 import io.tus.java.client.TusUpload;
 import io.tus.java.client.TusUploader;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
 
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
 class TusUploadThread extends Thread {
     private TusUploader tusUploader;
-    private ArrayList<Object> uploadParts;
     private TusUpload tusUpload;
     private TusClient tusClient;
     private TusExecutor tusExecutor;
     private Assembly assembly;
-    private Object inputData;
-    private String fieldName;
-    private String assemblyUrl;
+
+    private long uploadedBytes = 0;
 
     private volatile boolean isRunning = false;
     private volatile boolean isPaused = false;
@@ -38,43 +31,34 @@ class TusUploadThread extends Thread {
 
     /**
      * Constructs an new Instance of the TusUploadThread.
-     * @param tusClient {@link TusClient} Instance of the current TusClient.
-     * @param uploadParts ArrayList that holds the File to be uploaded, its fieldName and the Assembly Url
-     * @param assembly Assembly Instance
+     * @param tusClient Instance of the current {@link TusClient}.
+     * @param tusUpload The {@link TusUpload} to be uploaded.
+     * @param assembly The calling Assembly instance
      */
-    TusUploadThread(TusClient tusClient, ArrayList<Object> uploadParts, Assembly assembly)
-            throws ProtocolException, IOException {
+    TusUploadThread(TusClient tusClient, TusUpload tusUpload, Assembly assembly) {
         this.tusClient = tusClient;
-        this.inputData = uploadParts.get(0);
-        this.fieldName = (String) uploadParts.get(1);
-        this.assemblyUrl = (String) uploadParts.get(2);
-        this.tusUpload = makeNewTusUpload();
+        this.tusUpload = tusUpload;
         this.assembly = assembly;
-        this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-        this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
-        this.tusExecutor = getTusExecutor();
         this.lock = new Object();
+        this.tusExecutor = getTusExecutor();
 
-        // todo: remove reduced Chunk Size
-        tusUploader.setChunkSize(50);
-
+        this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
     }
 
     /**
      * The method to be started by the Task Executor.
      */
     public void run() {
+        try {
+            this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
+        } catch (ProtocolException | IOException e) {
+            assembly.threadThrowsRequestException(this.getName(), e);
+        }
         this.isRunning = true;
         try {
-            // todo: remove the timestamp debug code
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-            LocalDateTime localDateTime = LocalDateTime.now();
-            String format = fmt.format(localDateTime);
-            System.out.println("Uploadstarted: " +  " Name: " + this.getName() + " Timestamp: "
-                    + format + " ChunkSize: " + tusUploader.getChunkSize());
             tusExecutor.makeAttempts();
         } catch (ProtocolException | IOException e) {
-            e.printStackTrace();
+            assembly.threadThrowsRequestException(this.getName(), e);
         } finally {
             System.out.println("Thread :" +  this.getName() + "Has finished");
             assembly.removeThreadFromList(this);
@@ -93,15 +77,23 @@ class TusUploadThread extends Thread {
                 int uploadedChunk = 0;
                 try {
                     while (uploadedChunk > -1) {
-                        if(!isRunning) {
+                        if (!isRunning) {
                             isRunning = true;
+                        }
+
+                        if (Thread.currentThread().isInterrupted()){
+                            throw new InterruptedException("INTERRUPTED");
                         }
 
                         if (!isPaused) {
                             isRunning = true;
                             uploadedChunk = tusUploader.uploadChunk();
+                            if (uploadedChunk > -1) {
+                                assembly.updateUploadProgress(uploadedChunk);
+                            }
                         } else {
                             synchronized (lock) {
+                                // todo: replace with tusUploader.pause();
                                 tusUploader.finish();
                                 System.out.println(" is Paused");
                                 isRunning = false;
@@ -109,73 +101,39 @@ class TusUploadThread extends Thread {
                             }
                         }
                     }
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
+                    assembly.threadThrowsLocalOperationException(getName(),e);
                 } finally {
                     tusUploader.finish();
+                    System.out.println("Finally BLock in TUS Exec");
                 }
             }
         };
     }
 
-    private TusUpload makeNewTusUpload() throws IOException {
-        TusUpload upload = getTusUploadInstances(inputData, fieldName, assemblyUrl);
-
-        Map<String, String> metadata = new HashMap<String, String>();
-        metadata.put("filename", fieldName);
-        try {
-            File file = (File) inputData;
-            metadata.put("filename", file.getName());
-        } catch (ClassCastException ignored) { }
-        metadata.put("assembly_url", assemblyUrl);
-        metadata.put("fieldname", fieldName);
-        upload.setMetadata(metadata);
-
-        return upload;
-    }
-
-    private TusUpload getTusUploadInstances(Object inputData, String fieldName, String assemblyUrl)
-            throws IOException {
-        TusUpload tusUpload = new TusUpload();
-        InputStream inputStream = null;
-        try {
-            tusUpload.setInputStream((InputStream) inputData);
-            inputStream = (InputStream) inputData;
-        } catch (ClassCastException ignored) {
-        }
-        try {
-            File file = (File) inputData;
-            return new TusUpload(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        tusUpload.setFingerprint(String.format("%s-%d-%s", fieldName, inputStream.available(), assemblyUrl));
-        tusUpload.setSize(inputStream.available());
-
-        return tusUpload;
-    }
-
-
-
     /**
      * Sets {@link #isPaused} {@code = true}.
      * This results in pausing the thread after uploading the current chunk.
      */
-    public void setPaused() {
-            this.isPaused = true;
+    public void setPaused() throws LocalOperationException {
+        if (!tusClient.resumingEnabled()) {
+            throw new LocalOperationException("Resuming has been disabled");
+        }
+        this.isPaused = true;
     }
 
     /**
      * Sets {@link #isPaused} {@code = false}.
      * This results in resuming the upload with the next chunk.
      */
-    public void setUnPaused() {
-            try {
-                this.tusUpload = makeNewTusUpload();
-                this.tusUploader = this.tusClient.resumeUpload(tusUpload);
-            } catch (ProtocolException | IOException | FingerprintNotFoundException | ResumingNotEnabledException e) {
-                e.printStackTrace();
-            }
-
+    public void setUnPaused() throws LocalOperationException, RequestException {
+        try {
+            this.tusUploader = this.tusClient.resumeUpload(tusUpload);
+        } catch (FingerprintNotFoundException | ResumingNotEnabledException e) {
+            throw new LocalOperationException(e);
+        } catch (ProtocolException | IOException e) {
+            throw new RequestException(e);
+        }
         this.isPaused = false;
             synchronized (lock) {
                 lock.notify();
@@ -183,3 +141,4 @@ class TusUploadThread extends Thread {
             System.out.println(getName() + " is Resuming ");
         }
 }
+
