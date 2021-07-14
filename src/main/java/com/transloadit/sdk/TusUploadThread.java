@@ -24,6 +24,7 @@ class TusUploadThread extends Thread {
     private Assembly assembly;
 
     private long uploadedBytes = 0;
+    private int uploadChunkSize;
 
     private volatile boolean isRunning = false;
     private volatile boolean isPaused = false;
@@ -34,13 +35,15 @@ class TusUploadThread extends Thread {
      * @param tusClient Instance of the current {@link TusClient}.
      * @param tusUpload The {@link TusUpload} to be uploaded.
      * @param assembly The calling Assembly instance
+     * @param uploadChunkSize The size of an uploadable chunk
      */
-    TusUploadThread(TusClient tusClient, TusUpload tusUpload, Assembly assembly) {
+    TusUploadThread(TusClient tusClient, TusUpload tusUpload, int uploadChunkSize, Assembly assembly) {
         this.tusClient = tusClient;
         this.tusUpload = tusUpload;
         this.assembly = assembly;
-        this.lock = new Object();
+        this.uploadChunkSize = uploadChunkSize;
         this.tusExecutor = getTusExecutor();
+        this.lock = new Object();
 
         this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
     }
@@ -51,6 +54,9 @@ class TusUploadThread extends Thread {
     public void run() {
         try {
             this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
+            if (uploadChunkSize > 0) {
+                tusUploader.setChunkSize(uploadChunkSize);
+            }
         } catch (ProtocolException | IOException e) {
             assembly.threadThrowsRequestException(this.getName(), e);
         }
@@ -103,6 +109,7 @@ class TusUploadThread extends Thread {
                 } catch (InterruptedException e) {
                     assembly.threadThrowsLocalOperationException(getName(), e);
                 } finally {
+                    isRunning = false;
                     tusUploader.finish();
                 }
             }
@@ -127,6 +134,9 @@ class TusUploadThread extends Thread {
     public void setUnPaused() throws LocalOperationException, RequestException {
         try {
             this.tusUploader = this.tusClient.resumeUpload(tusUpload);
+            if (uploadChunkSize > 0) {
+                tusUploader.setChunkSize(uploadChunkSize);
+            }
         } catch (FingerprintNotFoundException | ResumingNotEnabledException e) {
             throw new LocalOperationException(e);
         } catch (ProtocolException | IOException e) {

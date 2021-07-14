@@ -27,7 +27,7 @@ public class AsyncAssembly extends Assembly {
     private long uploadedBytes;
     private long totalUploadSize;
     private TusUploader lastTusUploader;
-    private int uploadChunkSize;
+
     @Nullable private String url;
     enum State {
         INIT,
@@ -144,27 +144,6 @@ public class AsyncAssembly extends Assembly {
      */
     synchronized void setState(State state) {
         this.state = state;
-    }
-
-    /**
-     * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered.
-     *
-     * @return uploadChunkSize
-     */
-    public int getUploadChunkSize() {
-        return uploadChunkSize;
-    }
-
-    /**
-     * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered. If not set,
-     * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
-     *
-     * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
-     */
-    public void setUploadChunkSize(int uploadChunkSize) {
-        this.uploadChunkSize = uploadChunkSize;
     }
 
     /**

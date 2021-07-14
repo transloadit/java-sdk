@@ -29,6 +29,10 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+// CHECKSTYLE:OFF
+import io.tus.java.client.TusUploader;
+// CHECKTYLE:ON
+
 /**
  * This class represents a new assembly being created.
  */
@@ -51,6 +55,7 @@ public class Assembly extends OptionsBuilder {
     private long uploadSize;
     private long uploadedBytes;
     private UploadProgressListener uploadProgressListener;
+    protected int uploadChunkSize = 0;
 
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
@@ -438,7 +443,7 @@ public class Assembly extends OptionsBuilder {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, this);
+            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, uploadChunkSize, this);
             threadList.add(tusUploadThread);
             executor.execute(tusUploadThread);
         }
@@ -589,6 +594,27 @@ public class Assembly extends OptionsBuilder {
         }
 
         return response;
+    }
+
+    /**
+     * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
+     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered.
+     *
+     * @return uploadChunkSize
+     */
+    public int getUploadChunkSize() {
+        return uploadChunkSize;
+    }
+
+    /**
+     * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
+     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered. If not set,
+     * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
+     *
+     * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
+     */
+    public void setUploadChunkSize(int uploadChunkSize) {
+        this.uploadChunkSize = uploadChunkSize;
     }
 
     /**
