@@ -25,4 +25,23 @@ public interface UploadProgressListener {
      * @param exception the error that causes the failure.
      */
     void onUploadFailed(Exception exception);
+
+    /**
+     * Callback to be executed if parallel uploads are starting.
+     * @param parallelUploads Inidcates how many files are uploaded in parallel
+     * @param uploadNumber  Indicates how many files are in the upload Queue;
+     */
+    void onParallelUploadsStarting(int parallelUploads, int uploadNumber);
+
+    /**
+     * Callback to be executed if an already running, parallel upload gets paused.
+     * @param name Name of the upload Thread, which gets paused.
+     */
+    void onParallelUploadsPaused(String name);
+
+    /**
+     * Callback to be executed if an already running, parallel upload gets paused.
+     * @param name Name of the upload Thread, which gets paused.
+     */
+    void onParallelUploadsResumed(String name);
 }

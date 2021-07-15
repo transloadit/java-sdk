@@ -66,7 +66,6 @@ class TusUploadThread extends Thread {
         } catch (ProtocolException | IOException e) {
             assembly.threadThrowsRequestException(this.getName(), e);
         } finally {
-            System.out.println("Thread :" +  this.getName() + "Has finished");
             assembly.removeThreadFromList(this);
         }
     }
@@ -99,9 +98,9 @@ class TusUploadThread extends Thread {
                             }
                         } else {
                             synchronized (lock) {
-                                // todo: replace with tusUploader.pause();
-                                tusUploader.finish();
+                               // todo: tusUploader.finish(false);
                                 isRunning = false;
+                                assembly.getUploadProgressListener().onParallelUploadsPaused(getName());
                                 lock.wait();
                             }
                         }
@@ -146,6 +145,7 @@ class TusUploadThread extends Thread {
             synchronized (lock) {
                 lock.notify();
             }
+        assembly.getUploadProgressListener().onParallelUploadsResumed(this.getName());
         }
 }
 

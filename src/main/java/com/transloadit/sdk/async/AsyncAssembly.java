@@ -89,7 +89,22 @@ public class AsyncAssembly extends Assembly {
             public void onUploadFailed(Exception exception) {
                 listener.onUploadFailed(exception);
             }
-        };
+
+           @Override
+           public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
+           }
+
+           @Override
+           public void onParallelUploadsPaused(String name) {
+
+           }
+
+           @Override
+           public void onParallelUploadsResumed(String name) {
+
+           }
+       };
     }
 
     /**

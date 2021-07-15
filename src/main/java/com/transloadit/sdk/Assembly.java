@@ -437,10 +437,26 @@ public class Assembly extends OptionsBuilder {
                 public void onUploadFailed(Exception exception) {
 
                 }
+
+                @Override
+                public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
+                }
+
+                @Override
+                public void onParallelUploadsPaused(String name) {
+
+                }
+
+                @Override
+                public void onParallelUploadsResumed(String name) {
+
+                }
             };
         }
         uploadSize = getUploadSize();
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
+        uploadProgressListener.onParallelUploadsStarting(maxParallelUploads,uploads.size());
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
             TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, uploadChunkSize, this);
@@ -624,6 +640,15 @@ public class Assembly extends OptionsBuilder {
      */
     public void setMaxParallelUploads(int maxUploads) {
         this.maxParallelUploads = maxUploads;
+    }
+
+
+    /**
+     * Returns current UploadProgressListener.
+     * @return {@link UploadProgressListener}
+     */
+    public UploadProgressListener getUploadProgressListener() {
+        return uploadProgressListener;
     }
 
     /**
