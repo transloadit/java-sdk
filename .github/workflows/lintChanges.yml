@@ -7,7 +7,6 @@ on:
     types:
       - opened
       - synchronize
-      - labeled
       - unlabeled
 jobs:
   Lint_Java:
