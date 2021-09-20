@@ -33,6 +33,7 @@ import java.util.Map;
  */
 public class Assembly extends OptionsBuilder {
     private TusURLStore tusURLStore;
+    private String assemblyId;
 
     protected Map<String, File> files;
     protected Map<String, InputStream> fileStreams;
@@ -223,7 +224,7 @@ public class Assembly extends OptionsBuilder {
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
             response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions, null, null), true);
+                    request.post(obtainRequestUrlSuffix(), options, tusOptions, null, null), true);
 
             // check if the assembly returned an error
             if (response.hasError()) {
@@ -242,7 +243,7 @@ public class Assembly extends OptionsBuilder {
                 throw new RequestException(e);
             }
         } else {
-            response = new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
+            response = new AssemblyResponse(request.post(obtainRequestUrlSuffix(), options, null, files, fileStreams));
             if (shouldWaitWithSocket() && !response.isFinished()) {
                 listenToSocket(response);
             }
@@ -549,5 +550,31 @@ public class Assembly extends OptionsBuilder {
         }
 
         return response;
+    }
+
+    /**
+     * Obtains the URL suffix for requests
+     * @return URL for requests
+     */
+    protected String obtainRequestUrlSuffix() {
+        if (assemblyId == null) {
+            return "/assemblies";
+        } else {
+            return "/assemblies/"  + assemblyId;
+        }
+    }
+
+    /**
+     * @param assemblyId
+     */
+    public void setAssemblyId(String assemblyId) {
+        // undocumented debug option
+        // not safe for production use
+        if (assemblyId.matches("[a-zA-Z0-9]{32}")) { //Check ID Format
+            this.assemblyId = assemblyId.toLowerCase();
+        } else {
+            System.err.println("Provided Assembly ID doesn't match expectations");
+            assemblyId = null;
+        }
     }
 }

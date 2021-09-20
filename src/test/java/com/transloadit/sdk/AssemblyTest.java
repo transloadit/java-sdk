@@ -359,4 +359,33 @@ public class AssemblyTest extends MockHttpService {
         // check if assembly was successfully retried
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
     }
+
+    /**
+     * Tests URL creation in case of user definition.
+     */
+    @Test
+    public void obtainRequestUrlSuffix() {
+        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
+        String uuid = "6859bd25474d40b8bf7a294cfce4aba5";
+        assembly.setAssemblyId(uuid);
+        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies/" + uuid);
+    }
+
+    /**
+     * Tests the integrity check of AssemblyID setting.
+     */
+    @Test
+    public void setAssemblyId() {
+        String uuid = "6859bd25474d40b8bf7a294cfce4aba5";
+        String uuidShort = "6859bd25474d";
+        String uuidLong = "6859bd25474d40b8bf7a294cfce4aba56859bd25474d40b8bf7a294cfce4aba5";
+        String uuidWrongChar = "6859bd25474d40b8bf-a294cfce4aba5";
+        assembly.setAssemblyId(uuidShort);
+        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
+        assembly.setAssemblyId(uuidWrongChar);
+        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
+        assembly.setAssemblyId(uuid);
+        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies/" + uuid);
+    }
+
 }
