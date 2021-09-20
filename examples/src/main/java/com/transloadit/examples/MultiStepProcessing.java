@@ -3,14 +3,18 @@ package com.transloadit.examples;
 import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.AssemblyListener;
 import com.transloadit.sdk.Transloadit;
+import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -24,15 +28,15 @@ public final class MultiStepProcessing {
      * Runs a multistep Transloadit assembly.
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
 
         // New Transloadit Instance
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit("2ffcb91ab9bb40cfb070f39a0111c772", "93f887154b5b5eb35a80e02de2588a3086d97a78");
         Assembly assembly = transloadit.newAssembly();
 
         // Add Files and define Field name
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/dutch-anthem.mp3").getFile()), "file_1");
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/german-anthem-0.mp3").getFile()), "file_2");
+        assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource("/dutch-anthem.mp3")).getFile()), "file_1");
+        assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource("/german-anthem-0.mp3")).getFile()), "file_2");
 
         // Step1 Reduce File's Bitrates
         Map<String, Object> step1 = new HashMap<>();
@@ -134,7 +138,56 @@ public final class MultiStepProcessing {
 
         try {
             System.out.println("Processing... ");
-            assembly.save();
+            UploadProgressListener uploadProgressListener = new UploadProgressListener() {
+                @Override
+                public void onUploadFinished() {
+                    System.out.println("All file uploads have been finished.");
+
+                }
+
+                @Override
+                public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                   // System.out.println("Upload: " + uploadedBytes + " from: " + totalBytes);
+                }
+
+                @Override
+                public void onUploadFailed(Exception exception) {
+                    System.out.println("Upload Failed");
+                    exception.printStackTrace();
+                }
+
+                @Override
+                public void onParallelUploadsStarting(int ParallelUploads, int uploadNumber) {
+                    System.out.println("New Uploads: Max:" + ParallelUploads + " Number in Queue: " + uploadNumber);
+                }
+
+                @Override
+                public void onParallelUploadsPaused(String name) {
+                    System.out.println("Paused: " + name);
+
+                }
+
+                @Override
+                public void onParallelUploadsResumed(String name) {
+                    System.out.println("Resumed: " + name);
+
+                }
+            };
+            assembly.setUploadProgressListener(uploadProgressListener);
+            assembly.setMaxParallelUploads(2); // todo: backward Compability
+            assembly.setUploadChunkSize(50);
+            assembly.save(true);
+            /**
+            Thread.sleep(50);
+            assembly.pauseUploads();
+            Thread.sleep(3000);
+            assembly.resumeUploads();
+            **/
+
+         //   assembly.pauseUploads();
+            // assembly.abortUploads();
+           // assembly.resumeUploads();
+
          } catch (LocalOperationException | RequestException e) {
             e.printStackTrace();
         }

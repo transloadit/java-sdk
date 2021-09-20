@@ -12,6 +12,7 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.VerificationTimes;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -358,5 +359,47 @@ public class AssemblyTest extends MockHttpService {
         AssemblyResponse savedAssembly = assembly.save(false);
         // check if assembly was successfully retried
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
+    }
+
+    @Test
+    public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
+        MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
+        assembly.addFile(new File("LICENSE"), "file_name");
+        assembly.addFile(new File("LICENSE"), "file_name2");
+        assembly.setMaxParallelUploads(2);
+
+        String uploadSize = "1077";
+        mockServerClient.when(HttpRequest.request()
+                        .withPath("/assemblies").withMethod("POST"))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
+
+        AssemblyResponse response = assembly.save(true);
+
+        mockServerClient.when(
+                HttpRequest.request()
+                        .withPath("/resumable/files").withMethod("POST"),Times.exactly(1)).respond(
+                                new HttpResponse()
+                                        .withStatusCode(201)
+                                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/2"));
+        mockServerClient.when(
+                HttpRequest.request()
+                        .withPath("/resumable/files").withMethod("POST"),Times.exactly(1)).respond(
+                new HttpResponse()
+                        .withStatusCode(201)
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/1"));
+
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files/1").withMethod("PATCH").withHeader("Upload-Length")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Upload-Offset", uploadSize));
+
+
+
+
+        assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
     }
 }

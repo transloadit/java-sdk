@@ -327,13 +327,13 @@ public class Assembly extends OptionsBuilder {
     /**
      * Prepares a file for tus upload.
      *
-     * @param inptStream {@link InputStream}
+     * @param inputStream {@link InputStream}
      * @param fieldName the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with reading the input stream.
      */
-    protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
-        TusUpload upload = getTusUploadInstance(inptStream, fieldName, assemblyUrl);
+    protected void processTusFile(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload upload = getTusUploadInstance(inputStream, fieldName, assemblyUrl);
 
         Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("filename", fieldName);
