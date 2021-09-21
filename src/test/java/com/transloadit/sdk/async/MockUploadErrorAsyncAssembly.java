@@ -22,6 +22,7 @@ public class MockUploadErrorAsyncAssembly extends AsyncAssembly {
     public MockUploadErrorAsyncAssembly(Transloadit transloadit, UploadProgressListener listener) {
         super(transloadit, listener);
         tusClient = new MockTusClient();
+        assemblyId = "";
     }
 
     /**
@@ -32,6 +33,7 @@ public class MockUploadErrorAsyncAssembly extends AsyncAssembly {
     public MockUploadErrorAsyncAssembly(Transloadit transloadit, AssemblyProgressListener listener) {
         super(transloadit, listener);
         tusClient = new MockTusClient();
+        assemblyId = "";
     }
 
     /**

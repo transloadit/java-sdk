@@ -3,7 +3,7 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -54,7 +55,7 @@ public class AssemblyTest extends MockHttpService {
      */
     @Before
     public void setUp() throws Exception {
-        assembly = new Assembly(transloadit);
+        assembly = newAssemblyWithoutID();
         assemblyFinished = false;
         mockServerClient.reset();
     }
@@ -250,12 +251,12 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(String fileName, HashMap uploadInformation) {
 
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyResultFinished(String stepName, HashMap result) {
 
 
             }
@@ -361,31 +362,55 @@ public class AssemblyTest extends MockHttpService {
     }
 
     /**
-     * Tests URL creation in case of user definition.
+     * Tests the integrity check of {@link Assembly#setAssemblyId(String)}.
      */
     @Test
-    public void obtainRequestUrlSuffix() {
-        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
-        String uuid = "6859bd25474d40b8bf7a294cfce4aba5";
-        assembly.setAssemblyId(uuid);
-        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies/" + uuid);
-    }
-
-    /**
-     * Tests the integrity check of AssemblyID setting.
-     */
-    @Test
-    public void setAssemblyId() {
+    public void setAssemblyId() throws LocalOperationException {
         String uuid = "6859bd25474d40b8bf7a294cfce4aba5";
         String uuidShort = "6859bd25474d";
         String uuidLong = "6859bd25474d40b8bf7a294cfce4aba56859bd25474d40b8bf7a294cfce4aba5";
         String uuidWrongChar = "6859bd25474d40b8bf-a294cfce4aba5";
-        assembly.setAssemblyId(uuidShort);
-        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
-        assembly.setAssemblyId(uuidWrongChar);
-        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies");
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidShort); });
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidWrongChar); });
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidLong); });
         assembly.setAssemblyId(uuid);
-        assertEquals(assembly.obtainRequestUrlSuffix(), "/assemblies/" + uuid);
+        assertEquals(assembly.getAssemblyID(), uuid);
     }
 
+    /**
+     * Tests the functionality of {@link Assembly#getAssemblyID()}.
+     */
+    @Test
+    public void getAssemblyId() throws LocalOperationException {
+        assembly.setAssemblyId("68fffff5474d40b8bf7a294cfce4aba5");
+        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getAssemblyID());
+    }
+
+    /**
+     * Tests the functionality of {@link Assembly#generateAssemblyID()}.
+     * Test succeeds if a certain pattern is generated and every run generates a different String.
+     */
+    @Test
+    public void generateAssemblyID() throws LocalOperationException {
+        String assemblyID1 = assembly.generateAssemblyID();
+        String assemblyID2 = assembly.generateAssemblyID();
+
+        assertTrue(assemblyID1.matches("[a-f0-9]{32}"));
+        assertTrue(assemblyID2.matches("[a-f0-9]{32}"));
+        assertFalse(assemblyID1.equals(assemblyID2));
+    }
+
+    /**
+     * Tests whether the upload Url suffixes are generated correctly.
+     */
+    @Test
+    public void obtainUploadUrlSuffix() throws LocalOperationException {
+        assertEquals("/assemblies", assembly.obtainUploadUrlSuffix());
+        String assemblyID = assembly.generateAssemblyID();
+        assembly.setAssemblyId(assemblyID);
+        assertEquals("/assemblies/" + assemblyID, assembly.obtainUploadUrlSuffix());
+    }
 }

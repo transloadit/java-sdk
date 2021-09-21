@@ -73,14 +73,14 @@ class KotlinExample {
                     println("Assembly uploaded, executing ...")
                 }
 
-                override fun onFileUploadFinished(fileName: String?, uploadInformation: JSONObject?) {
+                override fun onFileUploadFinished(fileName: String?, uploadInformation: HashMap<String, Any>?) {
                     println("File " + fileName + "has been uploaded successfully")
                 }
 
-                override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
+                override fun onAssemblyResultFinished(stepName: String?, result: HashMap<String, Any>?) {
                     println("Step Result available: ")
                     println(
-                    """StepName: $stepName File: ${result!!.getString("basename")}.${result.getString("ext")}
+                    """StepName: $stepName File: ${result!!["basename"]}.${result["ext"]}
                     """.trimIndent())
                 }
             }
