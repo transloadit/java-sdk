@@ -16,7 +16,7 @@ public class MockHttpService {
     //CHECKSTYLE:ON
 
     /**
-     * Provides an Assembly object without Assembly ID
+     * Provides an Assembly object without Assembly ID.
      * @return Assembly object without Assembly ID
      */
     protected Assembly newAssemblyWithoutID() {

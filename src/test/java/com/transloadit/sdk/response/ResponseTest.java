@@ -1,6 +1,5 @@
 package com.transloadit.sdk.response;
 
-import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.MockHttpService;
 import org.junit.Before;
 import org.junit.Rule;

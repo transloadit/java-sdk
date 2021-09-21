@@ -586,7 +586,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the assembly ID generated on client side to allow early logging.
+     * Returns the assembly ID generated on client side to allow early logging. Be aware the Assembly ID will change if
+     * you use the {@link Assembly#wipeAssemblyID()} method.
      * @return {@link String}AssemblyID
      */
     public String getAssemblyID() {
@@ -603,8 +604,10 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Wipes the client side generated Assembly-ID. As a result, the assembly id is assigned by the API after upload.
+     * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
+     * obtained by {@link Assembly#getAssemblyID()} would be invalid.
      */
-    public void wipeAssemblyID() {
+    protected void wipeAssemblyID() {
         this.assemblyId = "";
     }
 
