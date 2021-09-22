@@ -63,12 +63,12 @@ public final class ImageResizer {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(String fileName, HashMap uploadInformation) {
                 System.out.println("File uploaded: " + fileName);
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyResultFinished(String stepName, HashMap result) {
 
             }
 

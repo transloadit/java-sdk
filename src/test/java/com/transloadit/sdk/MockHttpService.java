@@ -14,6 +14,16 @@ public class MockHttpService {
     protected final Transloadit transloadit = new Transloadit("KEY", "SECRET",
             "http://localhost:" + PORT);
     //CHECKSTYLE:ON
+
+    /**
+     * Provides an Assembly object without Assembly ID.
+     * @return Assembly object without Assembly ID
+     */
+    protected Assembly newAssemblyWithoutID() {
+        Assembly assembly = new Assembly(transloadit);
+        assembly.wipeAssemblyID();
+        return assembly;
+    }
     /**
      * Loads test resources from src/test/resources/__files/ with the specified name and provides them as a JSON String.
      * @param name name of test resource.

@@ -115,16 +115,16 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(String fileName, HashMap uploadInformation) {
                 System.out.println("File uploaded: " + fileName);
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyResultFinished(String stepName, HashMap result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("StepName: " + stepName + "\nFile: " + result.getString("basename") + "."
-                        + result.getString("ext"));
-                System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
+                System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
+                        + result.get("ext"));
+                System.out.println("Downlaodlink: " + result.get("ssl_url") + "\n");
             }
 
 
@@ -134,7 +134,8 @@ public final class MultiStepProcessing {
 
         try {
             System.out.println("Processing... ");
-            assembly.save();
+            System.out.println("Assembly ID: " + assembly.getAssemblyID());
+            assembly.save(true);
          } catch (LocalOperationException | RequestException e) {
             e.printStackTrace();
         }
