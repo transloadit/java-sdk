@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -37,7 +38,12 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
-    private int retryAttemptsLeft;
+    private int retryAttemptsRateLimitLeft;
+    private int retryAttemptsRequestExceptionLeft;
+    private ArrayList<String> qualifiedErrorsForRetry;
+
+    enum RequestType { GET, POST, PUT, DELETE }
+    private RequestType requestType;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -45,7 +51,9 @@ public class Request {
      */
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-        retryAttemptsLeft = transloadit.getRetryAttempts();
+        retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
+        retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
+        qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
         Properties prop = new Properties();
         InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
         try {
@@ -69,7 +77,7 @@ public class Request {
      */
     okhttp3.Response get(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-
+        requestType = RequestType.GET;
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
@@ -79,7 +87,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                Object[] args = {url, params};
+                return retryAfterSpecificErrors(args);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -110,6 +123,7 @@ public class Request {
                           @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
             throws RequestException, LocalOperationException {
 
+        requestType = RequestType.POST;
         Map<String, String> payload = toPayload(params);
         if (extraData != null) {
             payload.putAll(extraData);
@@ -123,13 +137,18 @@ public class Request {
         try {
             Response response = httpClient.newCall(request).execute();
             // Intercept Rate Limit Errors
-                if (response.code() == 413 && retryAttemptsLeft > 0) {
-                    return retry(response, url, params, extraData, files, fileStreams);
+                if (response.code() == 413 && retryAttemptsRateLimitLeft > 0) {
+                    return retryRateLimit(response, url, params, extraData, files, fileStreams);
                 }
 
             return response;
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                Object[] args = {url, params, extraData, files, fileStreams};
+                return retryAfterSpecificErrors(args);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -157,6 +176,7 @@ public class Request {
      */
     okhttp3.Response delete(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
+        requestType = RequestType.DELETE;
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
@@ -166,7 +186,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                Object[] args = {url, params};
+                return retryAfterSpecificErrors(args);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -182,6 +207,7 @@ public class Request {
     okhttp3.Response put(String url, Map<String, Object> data)
             throws RequestException, LocalOperationException {
 
+        requestType = RequestType.PUT;
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
@@ -191,7 +217,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                Object[] args = {url, data};
+                return retryAfterSpecificErrors(args);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -357,9 +388,9 @@ public class Request {
     }
 
     /**
-     * Helper method, which performs a retry action if a POST request has hit the servers rate limit.
+     * Helper method, which performs a retryRateLimit action if a POST request has hit the servers rate limit.
      * All parameters of the failed POST request should be provided to this method.
-     * @param response response to retry
+     * @param response response to retryRateLimit
      * @param url url to make request to
      * @param params data to add to params field
      * @param extraData data to send along with request body, outside of params field.
@@ -367,16 +398,17 @@ public class Request {
      * @param fileStreams filestreams to be uploaded along with the request.
      * @return {@link okhttp3.Response}
      */
-    private okhttp3.Response retry(Response response, String url, Map<String, Object> params,
-                                   @Nullable Map<String, String> extraData,
-                                   @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
+    private okhttp3.Response retryRateLimit(Response response, String url, Map<String, Object> params,
+                                            @Nullable Map<String, String> extraData,
+                                            @Nullable Map<String, File> files,
+                                            @Nullable Map<String, InputStream> fileStreams)
             throws IOException, LocalOperationException, RequestException {
-        retryAttemptsLeft--;
+        retryAttemptsRateLimitLeft--;
         long timeToWait = 60000; // default server cooldown
 
         JSONObject json = new JSONObject(response.body().string());
 
-        // Use server provided retry time if available
+        // Use server provided retryRateLimit time if available
         if (json.has("info") && json.getJSONObject("info").has("retryIn")) {
             String retryIn = json.getJSONObject("info").get("retryIn").toString();
             if (!retryIn.isEmpty()) {
@@ -390,5 +422,73 @@ public class Request {
             throw new LocalOperationException(e);
         }
         return this.post(url, params, extraData, files, fileStreams);
+    }
+
+    protected okhttp3.Response retryAfterSpecificErrors(Object[] args) throws LocalOperationException, RequestException {
+        okhttp3.Response response = null;
+        retryAttemptsRequestExceptionLeft--;
+        System.out.println("Retry " + requestType.toString() + " , Attempts left: "
+                + retryAttemptsRequestExceptionLeft);
+
+        try {
+            int timeToWait = new Random().nextInt(1000) + 1000;
+            Thread.sleep(timeToWait);
+        } catch (InterruptedException e) {
+            throw new LocalOperationException(e);
+        }
+
+        switch (requestType) {
+            case GET: response = get((String) args[0], (Map) args[1]);
+                        break;
+
+            case POST: String url = (String) args[0];
+                        Map<String, Object> params = (Map<String, Object>) args[1];
+                        Map<String, String> extraData;
+
+                        if (args[2] != null) {
+                            extraData = (Map<String, String>) args[2];
+                        } else {
+                            extraData = null;
+                        }
+
+                        Map<String, File> files;
+                        if (args[3] != null) {
+                            files = (Map<String, File>) args[3];
+                        } else {
+                            files = null;
+                        }
+
+                        Map<String, InputStream> fileStreams;
+                        if (args[4] != null) {
+                            fileStreams = (Map<String, InputStream>) args[4];
+                        } else {
+                            fileStreams = null;
+                        }
+                        response = post(url, params, extraData, files, fileStreams);
+                        break;
+
+            case PUT: response = put((String) args[0], (Map<String, Object>) args[1]);
+                        break;
+            case DELETE: response = delete((String) args[0], (Map<String, Object>) args[1]);
+            default: break;
+        }
+        return response;
+    }
+
+    /**
+     * Determines whether the thrown Exception Qualifies for a retry Attempt.
+     * @param e Thrown Exception
+     * @return true / false
+     */
+    protected boolean qualifiedForRetry(Exception e) {
+        String fullInformation = e.toString();
+        for (String s : qualifiedErrorsForRetry) {
+            if (fullInformation.contains(s)) {
+                if (retryAttemptsRequestExceptionLeft > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
