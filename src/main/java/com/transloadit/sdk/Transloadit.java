@@ -10,6 +10,8 @@ import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +29,9 @@ public class Transloadit {
     long duration;
     private String hostUrl;
     boolean shouldSignRequest;
-    protected int retryAttempts = 3;  // default value
+    protected int retryAttemptsRateLimit = 3;  // default value
+    protected int retryAttemptsRequestException = 0; // default value
+    protected ArrayList<String> qualifiedErrorsForRetry;
 
     /**
      * A new instance to transloadit client.
@@ -43,8 +47,8 @@ public class Transloadit {
         this.duration = duration;
         this.hostUrl = hostUrl;
         shouldSignRequest = secret != null;
+        qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
     }
-
     /**
      * A new instance to transloadit client.
      *
@@ -94,14 +98,14 @@ public class Transloadit {
      * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
      * during assembly processing.
      * Default value for every Transloadit instance is 3 retries.
-     * @param retryAttempts number of retry attempts
+     * @param retryAttemptsRateLimit number of retry attempts
      * @throws LocalOperationException if provided number is negative
      */
-    public void setRetryAttempts(int retryAttempts) throws LocalOperationException {
-        if (retryAttempts < 0) {
+    public void setRetryAttemptsRateLimit(int retryAttemptsRateLimit) throws LocalOperationException {
+        if (retryAttemptsRateLimit < 0) {
             throw new LocalOperationException("No negative number of retry Attempts possible.");
         } else {
-            this.retryAttempts = retryAttempts;
+            this.retryAttemptsRateLimit = retryAttemptsRateLimit;
         }
     }
 
@@ -110,8 +114,37 @@ public class Transloadit {
      * during assembly processing.
      * @return number of retry attempts
      */
-    public int getRetryAttempts() {
-        return retryAttempts;
+    public int getRetryAttemptsRateLimit() {
+        return retryAttemptsRateLimit;
+    }
+
+
+    /**
+     *  <h1>This is an experimental debugging feature and should therefore best not be turned on at all or only with
+     *  the utmost caution.</h1>
+     * This method adjusts number of retry attempts that should be taken if specific "REQUEST_EXCEPTION" are
+     * occuring during assembly processing.
+     * The Default value for every Transloadit instance is 0 extra retries.
+     * All retry attempts are made in addition to those made by the HTTP library. As a result the effective number
+     * of retries can be higher. Also this value should be handled with care as fast failing could be a wanted
+     * behaviour.
+     * @param retryAttemptsRequestException Number of extra retry attempts
+     */
+    public void setRetryAttemptsRequestException(int retryAttemptsRequestException) {
+        if (retryAttemptsRequestException > 0) {
+            this.retryAttemptsRequestException = retryAttemptsRequestException;
+        } else {
+            this.retryAttemptsRequestException = 0;
+        }
+    }
+
+    /**
+     * Returns number of retry attempts that should be taken in case of a "REQUEST_EXCEPTION" appears caused by timeout
+     * during assembly processing.
+     * @return number of retry attempts
+     */
+    public int getRetryAttemptsRequestException() {
+        return retryAttemptsRequestException;
     }
 
     /**
@@ -319,4 +352,25 @@ public class Transloadit {
         Request request = new Request(this);
         return new Response(request.get("/bill/" + year + String.format("-%02d", month)));
     }
+
+    /**
+     * Returns Array List of String encoded Exceptions, which should be qualified for a retry attempt.
+     * {@code "java.net.SocketTimeoutException" } is added by default
+     * @return Array List of String encoded Exceptions
+     */
+    public ArrayList<String> getQualifiedErrorsForRetry() {
+        return qualifiedErrorsForRetry;
+    }
+
+    /**
+     * Array List of String encoded Exceptions, which should be qualified for a retry attempt.
+     * !! This is a debugging feature, do not use by default.
+     * {@code "java.net.SocketTimeoutException" } is added by default, but can be overwritten.
+     * @param qualifiedErrorsForRetry String encoded Exception e.g. "java.net.SocketTimeoutException"
+     */
+    public void setQualifiedErrorsForRetry(ArrayList<String> qualifiedErrorsForRetry) {
+        this.qualifiedErrorsForRetry = qualifiedErrorsForRetry;
+    }
+
+
 }

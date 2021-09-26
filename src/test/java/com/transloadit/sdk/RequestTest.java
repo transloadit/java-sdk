@@ -1,16 +1,26 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.HttpError.error;
 //CHECKSTYLE:ON
 
 /**
@@ -99,6 +109,77 @@ public class RequestTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo").withMethod("PUT"));
     }
+
+    /**
+     * Tests if the method {@link Request#qualifiedForRetry(Exception)} determines correctly if a retry attempt after an
+     * exception should be performed.
+     * Special test environment needed as it could interfere with other tests.
+     */
+    @Test
+    public void qualifiedForRetry() {
+        Transloadit transloadit2 = new Transloadit("KEY", "SECRET",
+                "http://localhost:" + 9040);
+        transloadit2.setRetryAttemptsRequestException(5);
+        Request newRequest = new Request(transloadit2);
+        Exception e = new SocketTimeoutException("connect timed out");
+        assertTrue(newRequest.qualifiedForRetry(e));
+
+        Exception e2 = new ArrayStoreException("foo bar");
+        assertFalse(newRequest.qualifiedForRetry(e2));
+
+        transloadit2.setRetryAttemptsRequestException(0);
+        newRequest = new Request(transloadit2);
+        assertFalse(newRequest.qualifiedForRetry(e));
+    }
+
+    /**
+     * Tests if {@link Request#retryAfterSpecificErrors(Object[])} retries correctly after an exception.
+     * Also need special settings for each test.
+     * With one retry set you will have 3 attempts per request (1x Initial, 1 retry by OkHttp, 1x Retry by function)
+     */
+    @Test
+    public void retryAfterSpecificErrors() throws LocalOperationException, RequestException {
+        Transloadit transloadit2 = new Transloadit("KEY", "SECRET",
+                "http://localhost:" + 9040);
+
+        ArrayList<String> errors = transloadit2.getQualifiedErrorsForRetry();
+        errors.add("java.io.IOException: unexpected end of stream on http://localhost:9040/");
+        transloadit2.setQualifiedErrorsForRetry(errors);
+        transloadit2.setRetryAttemptsRequestException(1);
+
+        // GET REQUESTS
+        Request testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+              .withPath("/foo").withMethod("GET"), Times.exactly(3)).error(
+               error().withDropConnection(true));
+        testRequest.get("/foo");
+
+        //mockServerClient.verify(HttpRequest.request("/foo").withMethod("GET"));
+
+
+        // POST REQUESTS
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("POST"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.post("/foo", new HashMap<String, Object>());
+
+        // PUT REQUEST
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("PUT"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.put("/foo", new HashMap<String, Object>());
+
+        // DELETE REQUEST
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("DELETE"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.delete("/foo", new HashMap<String, Object>());
+
+    }
+
 
 }
 

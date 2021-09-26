@@ -343,7 +343,7 @@ public class AssemblyTest extends MockHttpService {
      * @throws Exception if Test resources are missing or the request cannot be built.
      */
     @Test
-    public void testRetry() throws Exception {
+    public void testRetryRateLimit() throws Exception {
         int retries = 2;
         // let it retry twice
         mockServerClient.when(HttpRequest.request()
