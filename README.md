@@ -29,7 +29,7 @@ implementation 'com.transloadit.sdk:transloadit:0.3.0'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
