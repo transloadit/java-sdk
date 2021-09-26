@@ -439,8 +439,8 @@ public class Request {
             throws LocalOperationException, RequestException {
         okhttp3.Response response = null;
         retryAttemptsRequestExceptionLeft--;
-        System.out.println("Retry " + requestType.toString() + " , Attempts left: "
-                + retryAttemptsRequestExceptionLeft);
+        //System.out.println("Retry " + requestType.toString() + " , Attempts left: "
+        //        + retryAttemptsRequestExceptionLeft);
 
         try {
             int timeToWait = new Random().nextInt(1000) + 1000;
