@@ -17,9 +17,11 @@ import java.io.IOException;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
+import java.util.ArrayList;
 //CHECKSTYLE:ON
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
@@ -218,5 +220,32 @@ public class TransloaditTest extends MockHttpService {
 
         Response bill = transloadit.getBill(9, 2016);
         assertEquals(bill.json().get("invoice_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+    }
+
+    /**
+     * Tests if the methods {@link Transloadit#getQualifiedErrorsForRetry()} and
+     * {@link Transloadit#setQualifiedErrorsForRetry(ArrayList)} are working as supposed.
+     */
+    @Test
+    public void getAndsetqualifiedErrorsForRetry() {
+        ArrayList<String> exceptionTemplate = new ArrayList<String>();
+        exceptionTemplate.add("java.net.SocketTimeoutException");
+        exceptionTemplate.add("Socket.blah.Exception");
+
+        assertTrue(transloadit.getQualifiedErrorsForRetry().size() == 1);
+        ArrayList<String> exceptionsSet = transloadit.getQualifiedErrorsForRetry();
+        exceptionsSet.add("Socket.blah.Exception");
+
+        transloadit.setQualifiedErrorsForRetry(exceptionsSet);
+
+        exceptionsSet = transloadit.getQualifiedErrorsForRetry();
+
+        for (int i = 0; i < exceptionsSet.size(); i++) {
+            assertEquals(exceptionTemplate.get(i), exceptionsSet.get(i));
+        }
+
+
+
+
     }
 }

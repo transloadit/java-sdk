@@ -424,7 +424,19 @@ public class Request {
         return this.post(url, params, extraData, files, fileStreams);
     }
 
-    protected okhttp3.Response retryAfterSpecificErrors(Object[] args) throws LocalOperationException, RequestException {
+    /**
+     * This method is intended to provide a retry functionality in the case of some specific errors are appearing
+     * during request execution. Those retries are performed after the retries made by the HTTP library.
+     * The number of retries is determined by {@link Transloadit#retryAttemptsRequestException}.
+     * This method can retry all the GET, PUT, POST, DELETE requests done by the SDK directly.
+     * @param originalParameters Original Parameters of the request
+     * @return {@link Response} of the HTTP Request
+     * @throws LocalOperationException if something goes wrong on client side
+     * @throws RequestException if something goes wrong during the HTTP Request
+     */
+    @SuppressWarnings("unchecked")
+    protected okhttp3.Response retryAfterSpecificErrors(Object[] originalParameters)
+            throws LocalOperationException, RequestException {
         okhttp3.Response response = null;
         retryAttemptsRequestExceptionLeft--;
         System.out.println("Retry " + requestType.toString() + " , Attempts left: "
@@ -438,38 +450,40 @@ public class Request {
         }
 
         switch (requestType) {
-            case GET: response = get((String) args[0], (Map) args[1]);
+
+            case GET:
+                response = get((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
                         break;
 
-            case POST: String url = (String) args[0];
-                        Map<String, Object> params = (Map<String, Object>) args[1];
+            case POST: String url = (String) originalParameters[0];
+                        Map<String, Object> params = (Map<String, Object>) originalParameters[1];
                         Map<String, String> extraData;
 
-                        if (args[2] != null) {
-                            extraData = (Map<String, String>) args[2];
+                        if (originalParameters[2] != null) {
+                            extraData = (Map<String, String>) originalParameters[2];
                         } else {
                             extraData = null;
                         }
 
                         Map<String, File> files;
-                        if (args[3] != null) {
-                            files = (Map<String, File>) args[3];
+                        if (originalParameters[3] != null) {
+                            files = (Map<String, File>) originalParameters[3];
                         } else {
                             files = null;
                         }
 
                         Map<String, InputStream> fileStreams;
-                        if (args[4] != null) {
-                            fileStreams = (Map<String, InputStream>) args[4];
+                        if (originalParameters[4] != null) {
+                            fileStreams = (Map<String, InputStream>) originalParameters[4];
                         } else {
                             fileStreams = null;
                         }
                         response = post(url, params, extraData, files, fileStreams);
                         break;
 
-            case PUT: response = put((String) args[0], (Map<String, Object>) args[1]);
+            case PUT: response = put((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
                         break;
-            case DELETE: response = delete((String) args[0], (Map<String, Object>) args[1]);
+            case DELETE: response = delete((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
             default: break;
         }
         return response;

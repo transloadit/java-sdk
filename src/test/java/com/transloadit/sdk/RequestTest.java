@@ -9,12 +9,8 @@ import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.RequestDefinition;
 
-import javax.validation.constraints.AssertTrue;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -139,6 +135,7 @@ public class RequestTest extends MockHttpService {
     /**
      * Tests if {@link Request#retryAfterSpecificErrors(Object[])} retries correctly after an exception.
      * Also need special settings for each test.
+     * With one retry set you will have 3 attempts per request (1x Initial, 1 retry by OkHttp, 1x Retry by function)
      */
     @Test
     public void retryAfterSpecificErrors() throws LocalOperationException, RequestException {
@@ -153,28 +150,31 @@ public class RequestTest extends MockHttpService {
         // GET REQUESTS
         Request testRequest = new Request(transloadit2);
         mockServerClient.when(HttpRequest.request()
-                .withPath("/foo").withMethod("GET"), Times.exactly(2)).error(
-                error().withDropConnection(true));
-            testRequest.get("/foo");
+              .withPath("/foo").withMethod("GET"), Times.exactly(3)).error(
+               error().withDropConnection(true));
+        testRequest.get("/foo");
+
+        //mockServerClient.verify(HttpRequest.request("/foo").withMethod("GET"));
+
 
         // POST REQUESTS
         testRequest = new Request(transloadit2);
         mockServerClient.when(HttpRequest.request()
-                .withPath("/foo").withMethod("POST"), Times.exactly(2)).error(
+                .withPath("/foo").withMethod("POST"), Times.exactly(3)).error(
                 error().withDropConnection(true));
         testRequest.post("/foo", new HashMap<String, Object>());
 
         // PUT REQUEST
         testRequest = new Request(transloadit2);
         mockServerClient.when(HttpRequest.request()
-                .withPath("/foo").withMethod("PUT"), Times.exactly(2)).error(
+                .withPath("/foo").withMethod("PUT"), Times.exactly(3)).error(
                 error().withDropConnection(true));
         testRequest.put("/foo", new HashMap<String, Object>());
 
         // DELETE REQUEST
         testRequest = new Request(transloadit2);
         mockServerClient.when(HttpRequest.request()
-                .withPath("/foo").withMethod("DELETE"), Times.exactly(2)).error(
+                .withPath("/foo").withMethod("DELETE"), Times.exactly(3)).error(
                 error().withDropConnection(true));
         testRequest.delete("/foo", new HashMap<String, Object>());
 
