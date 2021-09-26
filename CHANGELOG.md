@@ -1,3 +1,6 @@
+### 0.4.1 / 2021-09-26 ###
+* Added debugging features regarding HTTP-requests, which should not be used in production without contacting Transloadit support.
+
 ### 0.4.0 / 2021-09-26 ###
 * Added support for client-side Assembly IDs. You can obtain the ID of an Assembly now before even uploading/saving it. You can achieve this with the brand-new Assembly#getAssemblyID() method.
 * Added debugging features regarding AssemblyIDs, which should not be used in production without contacting Transloadit support.
