@@ -13,7 +13,6 @@ import org.mockserver.model.HttpRequest;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
