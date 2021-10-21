@@ -386,7 +386,7 @@ public class Transloadit {
      * Sets the timeout in milliseconds, which is applied in additon to a random component of 0 - 1000 ms in cases
      * of request retry.
      * @param timeout in ms
-     * @throws LocalOperationException if provided timeout is < 0
+     * @throws LocalOperationException if provided timeout is smaller than 0
      */
     public void setTimeoutRetry(int timeout) throws LocalOperationException {
         if (timeout < 0) {
