@@ -13,13 +13,12 @@ import org.mockserver.model.HttpRequest;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
-import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockserver.model.HttpError.error;
 //CHECKSTYLE:ON
 
@@ -119,12 +118,13 @@ public class RequestTest extends MockHttpService {
     public void qualifiedForRetry() {
         Transloadit transloadit2 = new Transloadit("KEY", "SECRET",
                 "http://localhost:" + 9040);
-        transloadit2.setRetryAttemptsRequestException(5);
+        transloadit2.setRetryAttemptsRequestException(5); // Test if it works with defined errors
         Request newRequest = new Request(transloadit2);
         Exception e = new SocketTimeoutException("connect timed out");
         assertTrue(newRequest.qualifiedForRetry(e));
+        assertEquals(4, newRequest.retryAttemptsRequestExceptionLeft); // tests counting logic
 
-        Exception e2 = new ArrayStoreException("foo bar");
+        Exception e2 = new ArrayStoreException("foo bar"); // shouldn't work here
         assertFalse(newRequest.qualifiedForRetry(e2));
 
         transloadit2.setRetryAttemptsRequestException(0);
@@ -133,7 +133,7 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
-     * Tests if {@link Request#retryAfterSpecificErrors(Object[])} retries correctly after an exception.
+     * Tests if {@link Request} retries correctly after an exception.
      * Also need special settings for each test.
      * With one retry set you will have 3 attempts per request (1x Initial, 1 retry by OkHttp, 1x Retry by function)
      */
@@ -177,8 +177,24 @@ public class RequestTest extends MockHttpService {
                 .withPath("/foo").withMethod("DELETE"), Times.exactly(3)).error(
                 error().withDropConnection(true));
         testRequest.delete("/foo", new HashMap<String, Object>());
+    }
+
+    /**
+     * Tests if {@link Request#timeoutBeforeRetry()} works.
+     * @throws LocalOperationException
+     */
+    @Test
+    public void timeoutBeforeRetry() throws LocalOperationException {
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        int timeout = request.timeoutBeforeRetry();
+        endTime = System.currentTimeMillis();
+        int delta = (int) (endTime - startTime);
+        assertTrue(delta >= timeout);
 
     }
+
 
 
 }
