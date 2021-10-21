@@ -115,16 +115,16 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, HashMap uploadInformation) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
                 System.out.println("File uploaded: " + fileName);
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, HashMap result) {
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
                         + result.get("ext"));
-                System.out.println("Downlaodlink: " + result.get("ssl_url") + "\n");
+                System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
             }
 
 
