@@ -407,10 +407,10 @@ public class AssemblyTest extends MockHttpService {
      * Tests whether the upload Url suffixes are generated correctly.
      */
     @Test
-    public void UploadUrlSuffix() throws LocalOperationException {
-        assertEquals("/assemblies", assembly.UploadUrlSuffix());
+    public void obtainUploadUrlSuffix() throws LocalOperationException {
+        assertEquals("/assemblies", assembly.obtainUploadUrlSuffix());
         String assemblyID = assembly.generateAssemblyID();
         assembly.setAssemblyId(assemblyID);
-        assertEquals("/assemblies/" + assemblyID, assembly.UploadUrlSuffix());
+        assertEquals("/assemblies/" + assemblyID, assembly.obtainUploadUrlSuffix());
     }
 }
