@@ -19,7 +19,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -408,10 +407,10 @@ public class AssemblyTest extends MockHttpService {
      * Tests whether the upload Url suffixes are generated correctly.
      */
     @Test
-    public void obtainUploadUrlSuffix() throws LocalOperationException {
-        assertEquals("/assemblies", assembly.obtainUploadUrlSuffix());
+    public void UploadUrlSuffix() throws LocalOperationException {
+        assertEquals("/assemblies", assembly.UploadUrlSuffix());
         String assemblyID = assembly.generateAssemblyID();
         assembly.setAssemblyId(assemblyID);
-        assertEquals("/assemblies/" + assemblyID, assembly.obtainUploadUrlSuffix());
+        assertEquals("/assemblies/" + assemblyID, assembly.UploadUrlSuffix());
     }
 }
