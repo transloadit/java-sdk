@@ -502,29 +502,16 @@ public class Assembly extends OptionsBuilder {
             getAssemblyListener().onMetadataExtracted();
         };
 
-
         Emitter.Listener onAssemblyResultFinished = args -> {
-            HashMap<String, Object> result = new HashMap<>();
             String stepName = (String) args[0];
-            JSONObject jsonResult = (JSONObject) args[1];
-            if (!jsonResult.isEmpty()) {
-                for (String key : jsonResult.keySet()) {
-                    result.put(key, jsonResult.get(key));
-                }
-            }
+            JSONObject result = (JSONObject) args[1];
             getAssemblyListener().onAssemblyResultFinished(stepName, result);
         };
 
         //Hands over Filename of recently uploaded file to the callback in the AssemblyListener
         Emitter.Listener onFileUploadFinished = args -> {
-            HashMap<String, Object> uploadInformation = new HashMap<>();
             String name = ((JSONObject) args[0]).getString("name");
-            JSONObject jsonUploadInformation = (JSONObject) args[0];
-            if (!jsonUploadInformation.isEmpty()) {
-                for (String key : jsonUploadInformation.keySet()) {
-                    uploadInformation.put(key, jsonUploadInformation.get(key));
-                }
-            }
+            JSONObject uploadInformation = (JSONObject) args[0];
             getAssemblyListener().onFileUploadFinished(name, uploadInformation);
         };
 

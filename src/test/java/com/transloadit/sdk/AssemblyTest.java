@@ -3,6 +3,7 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -18,7 +19,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -251,12 +251,12 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, HashMap uploadInformation) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, HashMap result) {
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
 
             }
