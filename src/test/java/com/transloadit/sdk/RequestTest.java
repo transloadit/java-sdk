@@ -179,15 +179,15 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
-     * Tests if {@link Request#timeoutBeforeRetry()} works.
+     * Tests if {@link Request#delayBeforeRetry()} works.
      * @throws LocalOperationException
      */
     @Test
-    public void timeoutBeforeRetry() throws LocalOperationException {
+    public void delayBeforeRetry() throws LocalOperationException {
         long startTime;
         long endTime;
         startTime = System.currentTimeMillis();
-        int timeout = request.timeoutBeforeRetry();
+        int timeout = request.delayBeforeRetry();
         endTime = System.currentTimeMillis();
         int delta = (int) (endTime - startTime);
         assertTrue(delta >= timeout);

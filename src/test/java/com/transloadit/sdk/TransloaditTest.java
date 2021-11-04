@@ -259,12 +259,12 @@ public class TransloaditTest extends MockHttpService {
      */
     @Test
     public void getAndsetTimeoutRetry() throws LocalOperationException {
-        assertEquals(0, transloadit.getTimeoutRetry());
-        transloadit.setTimeoutRetry(5);
-        assertEquals(5, transloadit.getTimeoutRetry());
+        assertEquals(0, transloadit.getRetryDelay());
+        transloadit.setRetryDelay(5);
+        assertEquals(5, transloadit.getRetryDelay());
         Exception exception = new Exception();
         try {
-            transloadit.setTimeoutRetry(-5);
+            transloadit.setRetryDelay(-5);
         } catch (LocalOperationException e) {
             exception = e;
         }

@@ -41,7 +41,7 @@ public class Request {
     private int retryAttemptsRateLimitLeft;
     protected int retryAttemptsRequestExceptionLeft;
     private ArrayList<String> qualifiedErrorsForRetry;
-    private int timeoutRetry;
+    private int retryDelay;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -52,7 +52,7 @@ public class Request {
         retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
         retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
         qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
-        timeoutRetry = transloadit.getTimeoutRetry();
+        retryDelay = transloadit.getRetryDelay();
         Properties prop = new Properties();
         InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
         try {
@@ -86,7 +86,7 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                timeoutBeforeRetry();
+                delayBeforeRetry();
                 return get(url, params);
             } else {
                 throw new RequestException(e);
@@ -141,7 +141,7 @@ public class Request {
             return response;
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-               timeoutBeforeRetry();
+               delayBeforeRetry();
                 return post(url, params, extraData, files, fileStreams);
             } else {
                 throw new RequestException(e);
@@ -183,7 +183,7 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                timeoutBeforeRetry();
+             delayBeforeRetry();
                 return delete(url, params);
             } else {
                 throw new RequestException(e);
@@ -213,7 +213,7 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                timeoutBeforeRetry();
+                delayBeforeRetry();
                 return put(url, data);
             } else {
                 throw new RequestException(e);
@@ -439,13 +439,13 @@ public class Request {
     }
 
     /**
-     * Method to let the current thread sleep for the length of the defined timeout plus a random value
-     * from 0 - 1000 ms. Default value of the defined timeout is 0.
+     * Method to let the current thread sleep for the length of the defined delay plus a random value
+     * from 0 - 1000 ms. Default value of the defined delay is 0 ms.
      * @return Time in ms, which the current Thread has been sleeping.
      * @throws LocalOperationException if something went wrong whilst the Thread slept.
      */
-    protected int timeoutBeforeRetry() throws LocalOperationException {
-        int timeToWait = new Random().nextInt(1000) + timeoutRetry;
+    protected int delayBeforeRetry() throws LocalOperationException {
+        int timeToWait = new Random().nextInt(1000) + retryDelay;
         try {
             Thread.sleep(timeToWait);
         } catch (InterruptedException e) {
