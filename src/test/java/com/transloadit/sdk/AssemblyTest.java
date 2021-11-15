@@ -377,16 +377,16 @@ public class AssemblyTest extends MockHttpService {
         Assert.assertThrows(LocalOperationException.class, () ->  {
             assembly.setAssemblyId(uuidLong); });
         assembly.setAssemblyId(uuid);
-        assertEquals(assembly.getAssemblyID(), uuid);
+        assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
     }
 
     /**
-     * Tests the functionality of {@link Assembly#getAssemblyID()}.
+     * Tests the functionality of {@link Assembly#getClientSideGeneratedAssemblyID()}.
      */
     @Test
     public void getAssemblyId() throws LocalOperationException {
         assembly.setAssemblyId("68fffff5474d40b8bf7a294cfce4aba5");
-        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getAssemblyID());
+        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getClientSideGeneratedAssemblyID());
     }
 
     /**

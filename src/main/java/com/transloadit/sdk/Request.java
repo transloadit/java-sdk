@@ -39,11 +39,9 @@ public class Request {
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
     private int retryAttemptsRateLimitLeft;
-    private int retryAttemptsRequestExceptionLeft;
+    protected int retryAttemptsRequestExceptionLeft;
     private ArrayList<String> qualifiedErrorsForRetry;
-
-    enum RequestType { GET, POST, PUT, DELETE }
-    private RequestType requestType;
+    private int retryDelay;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -54,6 +52,7 @@ public class Request {
         retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
         retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
         qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
+        retryDelay = transloadit.getRetryDelay();
         Properties prop = new Properties();
         InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
         try {
@@ -77,7 +76,6 @@ public class Request {
      */
     okhttp3.Response get(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-        requestType = RequestType.GET;
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
@@ -88,8 +86,8 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                Object[] args = {url, params};
-                return retryAfterSpecificErrors(args);
+                delayBeforeRetry();
+                return get(url, params);
             } else {
                 throw new RequestException(e);
             }
@@ -123,7 +121,6 @@ public class Request {
                           @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
             throws RequestException, LocalOperationException {
 
-        requestType = RequestType.POST;
         Map<String, String> payload = toPayload(params);
         if (extraData != null) {
             payload.putAll(extraData);
@@ -144,8 +141,8 @@ public class Request {
             return response;
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                Object[] args = {url, params, extraData, files, fileStreams};
-                return retryAfterSpecificErrors(args);
+               delayBeforeRetry();
+                return post(url, params, extraData, files, fileStreams);
             } else {
                 throw new RequestException(e);
             }
@@ -176,7 +173,6 @@ public class Request {
      */
     okhttp3.Response delete(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-        requestType = RequestType.DELETE;
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
@@ -187,8 +183,8 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                Object[] args = {url, params};
-                return retryAfterSpecificErrors(args);
+             delayBeforeRetry();
+                return delete(url, params);
             } else {
                 throw new RequestException(e);
             }
@@ -207,7 +203,6 @@ public class Request {
     okhttp3.Response put(String url, Map<String, Object> data)
             throws RequestException, LocalOperationException {
 
-        requestType = RequestType.PUT;
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
@@ -218,8 +213,8 @@ public class Request {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
             if (qualifiedForRetry(e)) {
-                Object[] args = {url, data};
-                return retryAfterSpecificErrors(args);
+                delayBeforeRetry();
+                return put(url, data);
             } else {
                 throw new RequestException(e);
             }
@@ -425,72 +420,8 @@ public class Request {
     }
 
     /**
-     * This method is intended to provide a retry functionality in the case of some specific errors are appearing
-     * during request execution. Those retries are performed after the retries made by the HTTP library.
-     * The number of retries is determined by {@link Transloadit#retryAttemptsRequestException}.
-     * This method can retry all the GET, PUT, POST, DELETE requests done by the SDK directly.
-     * @param originalParameters Original Parameters of the request
-     * @return {@link Response} of the HTTP Request
-     * @throws LocalOperationException if something goes wrong on client side
-     * @throws RequestException if something goes wrong during the HTTP Request
-     */
-    @SuppressWarnings("unchecked")
-    protected okhttp3.Response retryAfterSpecificErrors(Object[] originalParameters)
-            throws LocalOperationException, RequestException {
-        okhttp3.Response response = null;
-        retryAttemptsRequestExceptionLeft--;
-        //System.out.println("Retry " + requestType.toString() + " , Attempts left: "
-        //        + retryAttemptsRequestExceptionLeft);
-
-        try {
-            int timeToWait = new Random().nextInt(1000) + 1000;
-            Thread.sleep(timeToWait);
-        } catch (InterruptedException e) {
-            throw new LocalOperationException(e);
-        }
-
-        switch (requestType) {
-
-            case GET:
-                response = get((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
-                        break;
-
-            case POST: String url = (String) originalParameters[0];
-                        Map<String, Object> params = (Map<String, Object>) originalParameters[1];
-                        Map<String, String> extraData;
-
-                        if (originalParameters[2] != null) {
-                            extraData = (Map<String, String>) originalParameters[2];
-                        } else {
-                            extraData = null;
-                        }
-
-                        Map<String, File> files;
-                        if (originalParameters[3] != null) {
-                            files = (Map<String, File>) originalParameters[3];
-                        } else {
-                            files = null;
-                        }
-
-                        Map<String, InputStream> fileStreams;
-                        if (originalParameters[4] != null) {
-                            fileStreams = (Map<String, InputStream>) originalParameters[4];
-                        } else {
-                            fileStreams = null;
-                        }
-                        response = post(url, params, extraData, files, fileStreams);
-                        break;
-
-            case PUT: response = put((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
-                        break;
-            case DELETE: response = delete((String) originalParameters[0], (Map<String, Object>) originalParameters[1]);
-            default: break;
-        }
-        return response;
-    }
-
-    /**
-     * Determines whether the thrown Exception Qualifies for a retry Attempt.
+     * Determines whether the thrown Exception Qualifies for a retry Attempt. And reduces counter of remaining
+     * retry attempts.
      * @param e Thrown Exception
      * @return true / false
      */
@@ -499,10 +430,27 @@ public class Request {
         for (String s : qualifiedErrorsForRetry) {
             if (fullInformation.contains(s)) {
                 if (retryAttemptsRequestExceptionLeft > 0) {
+                    retryAttemptsRequestExceptionLeft--; // reduces left over retry Attempts
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Method to let the current thread sleep for the length of the defined delay plus a random value
+     * from 0 - 1000 ms. Default value of the defined delay is 0 ms.
+     * @return Time in ms, which the current Thread has been sleeping.
+     * @throws LocalOperationException if something went wrong whilst the Thread slept.
+     */
+    protected int delayBeforeRetry() throws LocalOperationException {
+        int timeToWait = new Random().nextInt(1000) + retryDelay;
+        try {
+            Thread.sleep(timeToWait);
+        } catch (InterruptedException e) {
+            throw new LocalOperationException(e);
+        }
+        return timeToWait;
     }
 }

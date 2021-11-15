@@ -285,7 +285,7 @@ public class Assembly extends OptionsBuilder {
      * @param tusUrl the tus url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      */
-    protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException, ProtocolException {
+    protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException {
         tusClient.setUploadCreationURL(new URL(tusUrl));
         tusClient.enableResuming(tusURLStore);
 
@@ -559,7 +559,8 @@ public class Assembly extends OptionsBuilder {
     /**
      * Undocumented debug option, which is not intended for production use.
      * Providing custom Assembly IDs could lead to a security risk.
-     * @param assemblyId
+     * @param assemblyId custom Assembly ID
+     * @throws LocalOperationException if the provided id doesn't match the expected pattern.
      */
     @TestOnly
     public void setAssemblyId(String assemblyId) throws LocalOperationException {
@@ -577,7 +578,7 @@ public class Assembly extends OptionsBuilder {
      * you use the {@link Assembly#wipeAssemblyID()} method.
      * @return {@link String}AssemblyID
      */
-    public String getAssemblyID() {
+    public String getClientSideGeneratedAssemblyID() {
         return assemblyId;
     }
 
@@ -592,7 +593,7 @@ public class Assembly extends OptionsBuilder {
     /**
      * Wipes the client side generated Assembly-ID. As a result, the assembly id is assigned by the API after upload.
      * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
-     * obtained by {@link Assembly#getAssemblyID()} would be invalid.
+     * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be invalid.
      */
     protected void wipeAssemblyID() {
         this.assemblyId = "";

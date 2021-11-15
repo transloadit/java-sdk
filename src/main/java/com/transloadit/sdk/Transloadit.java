@@ -32,6 +32,7 @@ public class Transloadit {
     protected int retryAttemptsRateLimit = 3;  // default value
     protected int retryAttemptsRequestException = 0; // default value
     protected ArrayList<String> qualifiedErrorsForRetry;
+    protected int retryDelay = 0; // default value
 
     /**
      * A new instance to transloadit client.
@@ -370,6 +371,29 @@ public class Transloadit {
      */
     public void setQualifiedErrorsForRetry(ArrayList<String> qualifiedErrorsForRetry) {
         this.qualifiedErrorsForRetry = qualifiedErrorsForRetry;
+    }
+
+    /**
+     * Returns the retry delay in milliseconds, which is applied in addition to a random component of 0 - 1000 ms in
+     * cases of request retry.
+     * @return Timeout in ms
+     */
+    public int getRetryDelay() {
+        return retryDelay;
+    }
+
+    /**
+     * Sets the retry delay in milliseconds, which is applied in addition to a random component of 0 - 1000 ms in cases
+     * of request retry.
+     * @param delay in ms
+     * @throws LocalOperationException if provided timeout is smaller than 0
+     */
+    public void setRetryDelay(int delay) throws LocalOperationException {
+        if (delay < 0) {
+            throw new LocalOperationException("Timeout invalid. Values > 0 are expected");
+        } else {
+            this.retryDelay = delay;
+        }
     }
 
 
