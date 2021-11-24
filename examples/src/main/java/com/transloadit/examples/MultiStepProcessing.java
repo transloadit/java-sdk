@@ -31,16 +31,20 @@ public final class MultiStepProcessing {
         // New Transloadit Instance
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
         Assembly assembly = transloadit.newAssembly();
+
         // Add Files and define Field name
         assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource(
                 "/dutch-anthem.mp3")).getFile()), "file_1");
         assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource(
                 "/german-anthem-0.mp3")).getFile()), "file_2");
+
         // Step1 Reduce File's Bitrates
         Map<String, Object> step1 = new HashMap<>();
         step1.put("preset", "opus");
         step1.put("bitrate", 128000);
+
         assembly.addStep("encode", "/audio/encode", step1);
+
         // Step2 Concatenation
             /* Building "use" parameter as JSONObject
                 -   name = Name of previous step
@@ -64,9 +68,12 @@ public final class MultiStepProcessing {
                         .put("as", "audio_1"));
 
         Map<String, Object> step2 = new HashMap<>();
+
         step2.put("preset", "mp3");
         step2.put("use", outerJsonObject);
+
         assembly.addStep("concat", "/audio/concat", step2);
+
         // Step 3 Waveform
         Map<String, Object> step3 = new HashMap<>();
         step3.put("use", "concat");
@@ -74,6 +81,7 @@ public final class MultiStepProcessing {
         step3.put("height", 720);
         step3.put("outer_color", "ff00c7ff");
         assembly.addStep("waveform", "/audio/waveform", step3);
+
         // Register AssemblyListener => Informs User on Assembly completion
         assembly.setAssemblyListener(new AssemblyListener() {
             @Override
@@ -115,7 +123,7 @@ public final class MultiStepProcessing {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
                         + result.get("ext"));
-                System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
+                System.out.println("Downloadlink: " + result.getString("ssl_url") + "\n");
             }
         });
         try {
@@ -159,18 +167,18 @@ public final class MultiStepProcessing {
             assembly.setMaxParallelUploads(2); // todo: backward Compability
             assembly.setUploadChunkSize(50);
             assembly.save(true);
-            /*
+
             Thread.sleep(50);  // todo: adjust for new modules
             assembly.pauseUploads();
             Thread.sleep(3000);
             assembly.resumeUploads();
-            */
+
             // assembly.pauseUploads();
             // assembly.abortUploads();
            // assembly.resumeUploads();
             System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
-            assembly.save(true);
-         } catch (LocalOperationException | RequestException e) {
+           // assembly.save(true);
+         } catch (LocalOperationException | RequestException | InterruptedException e) {
             e.printStackTrace();
         }
     }
