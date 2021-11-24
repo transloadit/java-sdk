@@ -1,16 +1,24 @@
 package com.transloadit.sdk;
 
+import com.transloadit.sdk.exceptions.LocalOperationException;
+import com.transloadit.sdk.exceptions.RequestException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
+
+import static org.junit.Assert.*;
+import static org.mockserver.model.HttpError.error;
 //CHECKSTYLE:ON
 
 /**
@@ -56,7 +64,7 @@ public class RequestTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo")
                 .withMethod("GET")
-                .withHeader("Transloadit-Client", "java-sdk:0.3.0"));
+                .withHeader("Transloadit-Client", "java-sdk:0.4.1"));
 
     }
 
@@ -99,6 +107,94 @@ public class RequestTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo").withMethod("PUT"));
     }
+
+    /**
+     * Tests if the method {@link Request#qualifiedForRetry(Exception)} determines correctly if a retry attempt after an
+     * exception should be performed.
+     * Special test environment needed as it could interfere with other tests.
+     */
+    @Test
+    public void qualifiedForRetry() {
+        Transloadit transloadit2 = new Transloadit("KEY", "SECRET",
+                "http://localhost:" + 9040);
+        transloadit2.setRetryAttemptsRequestException(5); // Test if it works with defined errors
+        Request newRequest = new Request(transloadit2);
+        Exception e = new SocketTimeoutException("connect timed out");
+        assertTrue(newRequest.qualifiedForRetry(e));
+        assertEquals(4, newRequest.retryAttemptsRequestExceptionLeft); // tests counting logic
+
+        Exception e2 = new ArrayStoreException("foo bar"); // shouldn't work here
+        assertFalse(newRequest.qualifiedForRetry(e2));
+
+        transloadit2.setRetryAttemptsRequestException(0);
+        newRequest = new Request(transloadit2);
+        assertFalse(newRequest.qualifiedForRetry(e));
+    }
+
+    /**
+     * Tests if {@link Request} retries correctly after an exception.
+     * Also need special settings for each test.
+     * With one retry set you will have 3 attempts per request (1x Initial, 1 retry by OkHttp, 1x Retry by function)
+     */
+    @Test
+    public void retryAfterSpecificErrors() throws LocalOperationException, RequestException {
+        Transloadit transloadit2 = new Transloadit("KEY", "SECRET",
+                "http://localhost:" + 9040);
+
+        ArrayList<String> errors = transloadit2.getQualifiedErrorsForRetry();
+        errors.add("java.io.IOException: unexpected end of stream on http://localhost:9040/");
+        transloadit2.setQualifiedErrorsForRetry(errors);
+        transloadit2.setRetryAttemptsRequestException(1);
+
+        // GET REQUESTS
+        Request testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+              .withPath("/foo").withMethod("GET"), Times.exactly(3)).error(
+               error().withDropConnection(true));
+        testRequest.get("/foo");
+
+        //mockServerClient.verify(HttpRequest.request("/foo").withMethod("GET"));
+
+
+        // POST REQUESTS
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("POST"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.post("/foo", new HashMap<String, Object>());
+
+        // PUT REQUEST
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("PUT"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.put("/foo", new HashMap<String, Object>());
+
+        // DELETE REQUEST
+        testRequest = new Request(transloadit2);
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/foo").withMethod("DELETE"), Times.exactly(3)).error(
+                error().withDropConnection(true));
+        testRequest.delete("/foo", new HashMap<String, Object>());
+    }
+
+    /**
+     * Tests if {@link Request#delayBeforeRetry()} works.
+     * @throws LocalOperationException
+     */
+    @Test
+    public void delayBeforeRetry() throws LocalOperationException {
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        int timeout = request.delayBeforeRetry();
+        endTime = System.currentTimeMillis();
+        int delta = (int) (endTime - startTime);
+        assertTrue(delta >= timeout);
+
+    }
+
+
 
 }
 

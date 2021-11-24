@@ -4,6 +4,7 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class AssemblyTest extends MockHttpService {
      */
     @Before
     public void setUp() throws Exception {
-        assembly = new Assembly(transloadit);
+        assembly = newAssemblyWithoutID();
         assemblyFinished = false;
         mockServerClient.reset();
     }
@@ -343,7 +344,7 @@ public class AssemblyTest extends MockHttpService {
      * @throws Exception if Test resources are missing or the request cannot be built.
      */
     @Test
-    public void testRetry() throws Exception {
+    public void testRetryRateLimit() throws Exception {
         int retries = 2;
         // let it retry twice
         mockServerClient.when(HttpRequest.request()
@@ -377,13 +378,13 @@ public class AssemblyTest extends MockHttpService {
 
         mockServerClient.when(
                 HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"),Times.exactly(1)).respond(
-                                new HttpResponse()
-                                        .withStatusCode(201)
-                                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/2"));
+                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
+                new HttpResponse()
+                        .withStatusCode(201)
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/2"));
         mockServerClient.when(
                 HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"),Times.exactly(1)).respond(
+                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
                 new HttpResponse()
                         .withStatusCode(201)
                         .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/1"));
@@ -397,9 +398,60 @@ public class AssemblyTest extends MockHttpService {
                         .withHeader("Upload-Offset", uploadSize));
 
 
-
-
         assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
         assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+    }
+
+    /**
+     * Tests the integrity check of {@link Assembly#setAssemblyId(String)}.
+     */
+    @Test
+    public void setAssemblyId() throws LocalOperationException {
+        String uuid = "6859bd25474d40b8bf7a294cfce4aba5";
+        String uuidShort = "6859bd25474d";
+        String uuidLong = "6859bd25474d40b8bf7a294cfce4aba56859bd25474d40b8bf7a294cfce4aba5";
+        String uuidWrongChar = "6859bd25474d40b8bf-a294cfce4aba5";
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidShort); });
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidWrongChar); });
+        Assert.assertThrows(LocalOperationException.class, () ->  {
+            assembly.setAssemblyId(uuidLong); });
+        assembly.setAssemblyId(uuid);
+        assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
+    }
+
+    /**
+     * Tests the functionality of {@link Assembly#getClientSideGeneratedAssemblyID()}.
+     */
+    @Test
+    public void getAssemblyId() throws LocalOperationException {
+        assembly.setAssemblyId("68fffff5474d40b8bf7a294cfce4aba5");
+        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getClientSideGeneratedAssemblyID());
+    }
+
+    /**
+     * Tests the functionality of {@link Assembly#generateAssemblyID()}.
+     * Test succeeds if a certain pattern is generated and every run generates a different String.
+     */
+    @Test
+    public void generateAssemblyID() throws LocalOperationException {
+        String assemblyID1 = assembly.generateAssemblyID();
+        String assemblyID2 = assembly.generateAssemblyID();
+
+        assertTrue(assemblyID1.matches("[a-f0-9]{32}"));
+        assertTrue(assemblyID2.matches("[a-f0-9]{32}"));
+        assertFalse(assemblyID1.equals(assemblyID2));
+    }
+
+    /**
+     * Tests whether the upload Url suffixes are generated correctly.
+     */
+    @Test
+    public void obtainUploadUrlSuffix() throws LocalOperationException {
+        assertEquals("/assemblies", assembly.obtainUploadUrlSuffix());
+        String assemblyID = assembly.generateAssemblyID();
+        assembly.setAssemblyId(assemblyID);
+        assertEquals("/assemblies/" + assemblyID, assembly.obtainUploadUrlSuffix());
     }
 }

@@ -31,7 +31,7 @@ public final class MultiStepProcessing {
     public static void main(String[] args) throws FileNotFoundException {
 
         // New Transloadit Instance
-        Transloadit transloadit = new Transloadit("2ffcb91ab9bb40cfb070f39a0111c772", "93f887154b5b5eb35a80e02de2588a3086d97a78");
+        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
         Assembly assembly = transloadit.newAssembly();
 
         // Add Files and define Field name
@@ -126,8 +126,8 @@ public final class MultiStepProcessing {
             @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("StepName: " + stepName + "\nFile: " + result.getString("basename") + "."
-                        + result.getString("ext"));
+                System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
+                        + result.get("ext"));
                 System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
             }
 
@@ -187,7 +187,8 @@ public final class MultiStepProcessing {
          //   assembly.pauseUploads();
             // assembly.abortUploads();
            // assembly.resumeUploads();
-
+            System.out.println("Assembly ID: " + assembly.getAssemblyID());
+            assembly.save(true);
          } catch (LocalOperationException | RequestException e) {
             e.printStackTrace();
         }

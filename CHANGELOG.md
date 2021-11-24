@@ -1,3 +1,11 @@
+### 0.4.1 / 2021-09-26 ###
+* Added debugging features regarding HTTP-requests, which should not be used in production without contacting Transloadit support.
+
+### 0.4.0 / 2021-09-26 ###
+* Added support for client-side Assembly IDs. You can obtain the ID of an Assembly now before even uploading/saving it. You can achieve this with the brand-new Assembly#getAssemblyID() method.
+* Added debugging features regarding AssemblyIDs, which should not be used in production without contacting Transloadit support.
+* Also updated the AssemblyListener interface to provide HashMaps instead of JSONObjects.
+
 ### 0.3.0 / 2021-06-27 ###
 * Updated all dependencies to their most recent, compatible version
   => minimal requirements for the SDK are now Android 5+ and Java 8+.

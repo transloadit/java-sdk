@@ -28,6 +28,7 @@ public class MockTusAssembly extends Assembly {
     public MockTusAssembly(Transloadit transloadit) {
         super(transloadit);
         emitted = new HashMap<String, Object>();
+        assemblyId = "";
     }
 
     @Override

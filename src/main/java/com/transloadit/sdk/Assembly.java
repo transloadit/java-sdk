@@ -13,6 +13,8 @@ import io.tus.java.client.TusClient;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
+import io.tus.java.client.TusUploader;
+import org.jetbrains.annotations.TestOnly;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -28,16 +30,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-
+import java.util.UUID;
 // CHECKSTYLE:OFF
 import io.tus.java.client.TusUploader;
 // CHECKTYLE:ON
+
 
 /**
  * This class represents a new assembly being created.
  */
 public class Assembly extends OptionsBuilder {
     private TusURLStore tusURLStore;
+    protected String assemblyId;
 
     protected Map<String, File> files;
     protected Map<String, InputStream> fileStreams;
@@ -84,6 +88,7 @@ public class Assembly extends OptionsBuilder {
         shouldWaitForCompletion = false;
         threadList =  new ArrayList<TusUploadThread>();
         threadExceptions = new HashMap<String, Exception>();
+        assemblyId = generateAssemblyID();
     }
 
     /**
@@ -241,7 +246,7 @@ public class Assembly extends OptionsBuilder {
             tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
 
             response = new AssemblyResponse(
-                    request.post("/assemblies", options, tusOptions, null, null), true);
+                    request.post(obtainUploadUrlSuffix(), options, tusOptions, null, null), true);
 
             // check if the assembly returned an error
             if (response.hasError()) {
@@ -260,7 +265,7 @@ public class Assembly extends OptionsBuilder {
                 throw new RequestException(e);
             }
         } else {
-            response = new AssemblyResponse(request.post("/assemblies", options, null, files, fileStreams));
+            response = new AssemblyResponse(request.post(obtainUploadUrlSuffix(), options, null, files, fileStreams));
             if (shouldWaitWithSocket() && !response.isFinished()) {
                 listenToSocket(response);
             }
@@ -298,7 +303,7 @@ public class Assembly extends OptionsBuilder {
      * @param tusUrl the tus url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      */
-    protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException, ProtocolException {
+    protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException {
         tusClient.setUploadCreationURL(new URL(tusUrl));
         tusClient.enableResuming(tusURLStore);
 
@@ -558,7 +563,6 @@ public class Assembly extends OptionsBuilder {
             getAssemblyListener().onMetadataExtracted();
         };
 
-
         Emitter.Listener onAssemblyResultFinished = args -> {
             String stepName = (String) args[0];
             JSONObject result = (JSONObject) args[1];
@@ -567,9 +571,9 @@ public class Assembly extends OptionsBuilder {
 
         //Hands over Filename of recently uploaded file to the callback in the AssemblyListener
         Emitter.Listener onFileUploadFinished = args -> {
-                   String name = ((JSONObject) args[0]).getString("name");
-                   JSONObject uploadInformation = (JSONObject) args[0];
-                   getAssemblyListener().onFileUploadFinished(name, uploadInformation);
+            String name = ((JSONObject) args[0]).getString("name");
+            JSONObject uploadInformation = (JSONObject) args[0];
+            getAssemblyListener().onFileUploadFinished(name, uploadInformation);
         };
 
         // Triggers callback in the {@link Assembly#assemblyListener} if the Assembly instructions have been uploaded.
@@ -677,6 +681,23 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Undocumented debug option, which is not intended for production use.
+     * Providing custom Assembly IDs could lead to a security risk.
+     * @param assemblyId custom Assembly ID
+     * @throws LocalOperationException if the provided id doesn't match the expected pattern.
+     */
+    @TestOnly
+    public void setAssemblyId(String assemblyId) throws LocalOperationException {
+        String id = assemblyId.toLowerCase();
+        if (id.matches("[a-f0-9]{32}")) { //Check ID Format
+            this.assemblyId = id;
+        } else {
+            throw new LocalOperationException("The provided Assembly ID doesn't match the expected pattern of "
+                    + "\"[a-f0-9]{32}\"");
+        }
+    }
+
+    /**
      * This Method is used to abort all parallel File uploads.
      * It informs the current {@link UploadProgressListener} about the abortion.
      */
@@ -739,6 +760,41 @@ public class Assembly extends OptionsBuilder {
          abortUploads(e);
     }
 
+    /**
+     * Returns the assembly ID generated on client side to allow early logging. Be aware the Assembly ID will change if
+     * you use the {@link Assembly#wipeAssemblyID()} method.
+     * @return {@link String}AssemblyID
+     */
+    public String getClientSideGeneratedAssemblyID() {
+        return assemblyId;
+    }
 
+    /**
+     * Derives a new AssemblyID from an UUIDv4, without assigning it to the current assembly.
+     * @return {@link String} Assembly ID
+     */
+    protected String generateAssemblyID() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
+    }
 
+    /**
+     * Wipes the client side generated Assembly-ID. As a result, the assembly id is assigned by the API after upload.
+     * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
+     * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be invalid.
+     */
+    protected void wipeAssemblyID() {
+        this.assemblyId = "";
+    }
+
+    /**
+     * Obtains the suffix of the upload url depending on if a custom or client side assembly ID has been set.
+     * @return upload url suffix
+     */
+    protected String obtainUploadUrlSuffix() {
+        if (assemblyId == null || assemblyId.isEmpty()) {
+            return "/assemblies";
+        } else {
+            return "/assemblies/" + assemblyId;
+        }
+    }
 }

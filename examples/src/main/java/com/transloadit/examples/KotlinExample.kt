@@ -80,7 +80,7 @@ class KotlinExample {
                 override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
                     println("Step Result available: ")
                     println(
-                    """StepName: $stepName File: ${result!!.getString("basename")}.${result.getString("ext")}
+                        """StepName: $stepName File: ${result!!.getString("basename")}.${result.getString("ext")}
                     """.trimIndent())
                 }
             }

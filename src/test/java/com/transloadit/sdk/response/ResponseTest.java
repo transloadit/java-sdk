@@ -1,6 +1,5 @@
 package com.transloadit.sdk.response;
 
-import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.MockHttpService;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,7 +47,7 @@ public class ResponseTest extends MockHttpService {
                 .withPath("/assemblies").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
-        AssemblyResponse response = new Assembly(transloadit).save(false);
+        AssemblyResponse response = newAssemblyWithoutID().save(false);
         assertEquals(response.json().getString("ok"), "ASSEMBLY_COMPLETED");
     }
 
@@ -62,7 +61,7 @@ public class ResponseTest extends MockHttpService {
                 .withPath("/assemblies").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
-        AssemblyResponse response = new Assembly(transloadit).save(false);
+        AssemblyResponse response = newAssemblyWithoutID().save(false);
         assertEquals(response.status(), 200);
     }
 

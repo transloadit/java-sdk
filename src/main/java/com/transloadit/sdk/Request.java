@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -37,7 +38,10 @@ public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
     private String version;
-    private int retryAttemptsLeft;
+    private int retryAttemptsRateLimitLeft;
+    protected int retryAttemptsRequestExceptionLeft;
+    private ArrayList<String> qualifiedErrorsForRetry;
+    private int retryDelay;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -45,7 +49,10 @@ public class Request {
      */
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-        retryAttemptsLeft = transloadit.getRetryAttempts();
+        retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
+        retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
+        qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
+        retryDelay = transloadit.getRetryDelay();
         Properties prop = new Properties();
         InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
         try {
@@ -69,7 +76,6 @@ public class Request {
      */
     okhttp3.Response get(String url, Map<String, Object> params)
             throws RequestException, LocalOperationException {
-
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
@@ -79,7 +85,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                delayBeforeRetry();
+                return get(url, params);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -123,13 +134,18 @@ public class Request {
         try {
             Response response = httpClient.newCall(request).execute();
             // Intercept Rate Limit Errors
-                if (response.code() == 413 && retryAttemptsLeft > 0) {
-                    return retry(response, url, params, extraData, files, fileStreams);
+                if (response.code() == 413 && retryAttemptsRateLimitLeft > 0) {
+                    return retryRateLimit(response, url, params, extraData, files, fileStreams);
                 }
 
             return response;
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+               delayBeforeRetry();
+                return post(url, params, extraData, files, fileStreams);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -166,7 +182,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+             delayBeforeRetry();
+                return delete(url, params);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -191,7 +212,12 @@ public class Request {
         try {
             return httpClient.newCall(request).execute();
         } catch (IOException e) {
-            throw new RequestException(e);
+            if (qualifiedForRetry(e)) {
+                delayBeforeRetry();
+                return put(url, data);
+            } else {
+                throw new RequestException(e);
+            }
         }
     }
 
@@ -357,9 +383,9 @@ public class Request {
     }
 
     /**
-     * Helper method, which performs a retry action if a POST request has hit the servers rate limit.
+     * Helper method, which performs a retryRateLimit action if a POST request has hit the servers rate limit.
      * All parameters of the failed POST request should be provided to this method.
-     * @param response response to retry
+     * @param response response to retryRateLimit
      * @param url url to make request to
      * @param params data to add to params field
      * @param extraData data to send along with request body, outside of params field.
@@ -367,16 +393,17 @@ public class Request {
      * @param fileStreams filestreams to be uploaded along with the request.
      * @return {@link okhttp3.Response}
      */
-    private okhttp3.Response retry(Response response, String url, Map<String, Object> params,
-                                   @Nullable Map<String, String> extraData,
-                                   @Nullable Map<String, File> files, @Nullable Map<String, InputStream> fileStreams)
+    private okhttp3.Response retryRateLimit(Response response, String url, Map<String, Object> params,
+                                            @Nullable Map<String, String> extraData,
+                                            @Nullable Map<String, File> files,
+                                            @Nullable Map<String, InputStream> fileStreams)
             throws IOException, LocalOperationException, RequestException {
-        retryAttemptsLeft--;
+        retryAttemptsRateLimitLeft--;
         long timeToWait = 60000; // default server cooldown
 
         JSONObject json = new JSONObject(response.body().string());
 
-        // Use server provided retry time if available
+        // Use server provided retryRateLimit time if available
         if (json.has("info") && json.getJSONObject("info").has("retryIn")) {
             String retryIn = json.getJSONObject("info").get("retryIn").toString();
             if (!retryIn.isEmpty()) {
@@ -390,5 +417,40 @@ public class Request {
             throw new LocalOperationException(e);
         }
         return this.post(url, params, extraData, files, fileStreams);
+    }
+
+    /**
+     * Determines whether the thrown Exception Qualifies for a retry Attempt. And reduces counter of remaining
+     * retry attempts.
+     * @param e Thrown Exception
+     * @return true / false
+     */
+    protected boolean qualifiedForRetry(Exception e) {
+        String fullInformation = e.toString();
+        for (String s : qualifiedErrorsForRetry) {
+            if (fullInformation.contains(s)) {
+                if (retryAttemptsRequestExceptionLeft > 0) {
+                    retryAttemptsRequestExceptionLeft--; // reduces left over retry Attempts
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Method to let the current thread sleep for the length of the defined delay plus a random value
+     * from 0 - 1000 ms. Default value of the defined delay is 0 ms.
+     * @return Time in ms, which the current Thread has been sleeping.
+     * @throws LocalOperationException if something went wrong whilst the Thread slept.
+     */
+    protected int delayBeforeRetry() throws LocalOperationException {
+        int timeToWait = new Random().nextInt(1000) + retryDelay;
+        try {
+            Thread.sleep(timeToWait);
+        } catch (InterruptedException e) {
+            throw new LocalOperationException(e);
+        }
+        return timeToWait;
     }
 }

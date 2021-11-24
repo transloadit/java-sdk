@@ -1,6 +1,5 @@
 package com.transloadit.sdk.response;
 
-import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.MockHttpService;
 import org.junit.After;
 import org.junit.Before;
@@ -36,7 +35,6 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     private AssemblyResponse response;
 
-
     /**
      * Instantiates a new {@link AssemblyResponse} instance by mocking an Assembly execution and resets the MockServer
      * before each test.
@@ -47,8 +45,7 @@ public class AssemblyResponseTest extends MockHttpService {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
-
-        response = new Assembly(transloadit).save(false);
+        response = newAssemblyWithoutID().save();
         mockServerClient.reset();
     }
 
@@ -118,7 +115,7 @@ public class AssemblyResponseTest extends MockHttpService {
                                 + "\"assembly_url\":\"foo\",\n"
                                 + "\"assembly_ssl_url\":\"bar\"}"));
 
-        AssemblyResponse abortedResponse = new Assembly(transloadit).save(false);
+        AssemblyResponse abortedResponse = newAssemblyWithoutID().save(false);
 
         assertTrue(abortedResponse.isAborted());
         assertFalse(response.isAborted());
@@ -139,7 +136,7 @@ public class AssemblyResponseTest extends MockHttpService {
                                 + "\"assembly_url\":\"foo\",\n"
                                 + "\"assembly_ssl_url\":\"bar\"}"));
 
-        AssemblyResponse cancelledResponse = new Assembly(transloadit).save(false);
+        AssemblyResponse cancelledResponse = newAssemblyWithoutID().save(false);
 
         assertTrue(cancelledResponse.isCanceled());
         assertFalse(response.isCanceled());
@@ -160,7 +157,7 @@ public class AssemblyResponseTest extends MockHttpService {
                                 + "\"assembly_url\":\"foo\",\n"
                                 + "\"assembly_ssl_url\":\"bar\"}"));
 
-        AssemblyResponse executingResponse = new Assembly(transloadit).save(false);
+        AssemblyResponse executingResponse = newAssemblyWithoutID().save(false);
 
         assertTrue(executingResponse.isExecuting());
         assertFalse(response.isExecuting());
@@ -180,7 +177,8 @@ public class AssemblyResponseTest extends MockHttpService {
                                 + "\"assembly_url\":\"foo\",\n"
                                 + "\"assembly_ssl_url\":\"bar\"}"));
 
-        AssemblyResponse executingResponse = new Assembly(transloadit).save(false);
+
+        AssemblyResponse executingResponse = newAssemblyWithoutID().save(false);
 
         assertFalse(executingResponse.isFinished());
         assertTrue(response.isFinished());
