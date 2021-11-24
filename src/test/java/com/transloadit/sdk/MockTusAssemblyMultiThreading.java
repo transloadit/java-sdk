@@ -19,7 +19,7 @@ public class MockTusAssemblyMultiThreading extends MockTusAssembly {
     }
 
     /**
-     * Processes a tus upload for multi threading
+     * Processes a tus upload for multi threading.
      * @param file
      * @param fieldName
      * @param assemblyUrl
@@ -40,7 +40,7 @@ public class MockTusAssemblyMultiThreading extends MockTusAssembly {
     }
 
     /**
-     * Processes a file input stream
+     * Processes a file input stream.
      * @param inputStream
      * @param fieldName
      * @param assemblyUrl
