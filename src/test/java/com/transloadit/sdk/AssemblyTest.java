@@ -13,8 +13,6 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.verify.VerificationTimes;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -362,6 +360,12 @@ public class AssemblyTest extends MockHttpService {
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
     }
 
+    /**
+     * Saves a multithreaded upload and verifies that the requests are sent.
+     * @throws IOException
+     * @throws LocalOperationException
+     * @throws RequestException
+     */
     @Test
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
         MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
@@ -381,17 +385,20 @@ public class AssemblyTest extends MockHttpService {
                         .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
                 new HttpResponse()
                         .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/2"));
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
+                                "Location", "http://localhost:9040/resumable/files/2"));
         mockServerClient.when(
                 HttpRequest.request()
                         .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
                 new HttpResponse()
                         .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader("Location", "http://localhost:9040/resumable/files/1"));
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
+                                "Location", "http://localhost:9040/resumable/files/1"));
 
 
         mockServerClient.when(HttpRequest.request()
-                .withPath("/resumable/files/1").withMethod("PATCH").withHeader("Upload-Length")).respond(
+                .withPath("/resumable/files/1").withMethod("PATCH").withHeader(
+                        "Upload-Length")).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")

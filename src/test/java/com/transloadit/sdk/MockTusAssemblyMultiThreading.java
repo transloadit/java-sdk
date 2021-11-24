@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MockTusAssemblyMultiThreading extends MockTusAssembly{
+public class MockTusAssemblyMultiThreading extends MockTusAssembly {
     /**
      * Constructs a new instance of {@link MockTusAssembly}.
      *
@@ -18,6 +18,13 @@ public class MockTusAssemblyMultiThreading extends MockTusAssembly{
         super(transloadit);
     }
 
+    /**
+     * Processes a tus upload for multi threading
+     * @param file
+     * @param fieldName
+     * @param assemblyUrl
+     * @throws IOException
+     */
     @Override
     protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(file);
@@ -32,6 +39,13 @@ public class MockTusAssemblyMultiThreading extends MockTusAssembly{
         uploads.add(upload);
     }
 
+    /**
+     * Processes a file input stream
+     * @param inputStream
+     * @param fieldName
+     * @param assemblyUrl
+     * @throws IOException
+     */
     @Override
     protected void processTusFile(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(inputStream, fieldName, assemblyUrl);

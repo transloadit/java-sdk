@@ -13,7 +13,6 @@ import io.tus.java.client.TusClient;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
-import io.tus.java.client.TusUploader;
 import org.jetbrains.annotations.TestOnly;
 import org.json.JSONObject;
 
