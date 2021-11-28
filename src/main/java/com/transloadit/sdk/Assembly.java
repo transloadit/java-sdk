@@ -16,10 +16,7 @@ import io.tus.java.client.TusUpload;
 import org.jetbrains.annotations.TestOnly;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -48,6 +45,7 @@ public class Assembly extends OptionsBuilder {
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
+    protected Socket socket;
 
 
     private ArrayList<TusUploadThread> threadList;
@@ -526,7 +524,7 @@ public class Assembly extends OptionsBuilder {
         final String assemblyUrl = response.getSslUrl();
         final String assemblyId = response.getId();
 
-        final Socket socket = getSocket(response.getWebsocketUrl());
+        socket = getSocket(response.getWebsocketUrl());
         Emitter.Listener onFinished = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -701,8 +699,7 @@ public class Assembly extends OptionsBuilder {
      * It informs the current {@link UploadProgressListener} about the abortion.
      */
     protected void abortUploads() {
-        executor.shutdownNow();
-        uploadProgressListener.onUploadFailed(new LocalOperationException("Uploads aborted"));
+        abortUploads(new LocalOperationException("Uploads aborted"));
     }
 
     /**
@@ -713,6 +710,10 @@ public class Assembly extends OptionsBuilder {
     protected void abortUploads(Exception e) {
         executor.shutdownNow();
         uploadProgressListener.onUploadFailed(e);
+        Thread.currentThread().interrupt();
+        if (socket != null) {
+            socket.disconnect();
+        }
     }
 
     /**

@@ -235,7 +235,7 @@ public class TransloaditTest extends MockHttpService {
      * {@link Transloadit#setQualifiedErrorsForRetry(ArrayList)} are working as supposed.
      */
     @Test
-    public void getAndsetqualifiedErrorsForRetry() {
+    public void getAndSetQualifiedErrorsForRetry() {
         ArrayList<String> exceptionTemplate = new ArrayList<String>();
         exceptionTemplate.add("java.net.SocketTimeoutException");
         exceptionTemplate.add("Socket.blah.Exception");

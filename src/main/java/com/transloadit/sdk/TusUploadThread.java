@@ -56,6 +56,7 @@ class TusUploadThread extends Thread {
             this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
             if (uploadChunkSize > 0) {
                 tusUploader.setChunkSize(uploadChunkSize);
+                throw new ProtocolException("Blah");
             }
         } catch (ProtocolException | IOException e) {
             assembly.threadThrowsRequestException(this.getName(), e);
