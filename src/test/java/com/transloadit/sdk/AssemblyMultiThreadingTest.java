@@ -3,7 +3,6 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Unit test for the multi threading features of {@link Assembly Assembly.class}.
  */
-public class AssemblyMultiThreadingTest extends MockHttpService{
+public class AssemblyMultiThreadingTest extends MockHttpService {
     /**
      * MockServer can be run using the MockServerRule.
      */
@@ -43,7 +42,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService{
     private boolean assemblyFinished;
 
     /**
-     * Assings a new {@link Assembly} instance to the {@link AssemblyMultiThreadingTest#assembly} variable before each individual test
+     * Assigns a new {@link Assembly} instance to the {@link AssemblyMultiThreadingTest#assembly} variable before each
+     * individual test
      * and resets the mockServerClient. Also sets {@link AssemblyMultiThreadingTest#assemblyFinished} {@code = false}.
      */
     @Before
