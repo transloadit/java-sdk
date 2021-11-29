@@ -7,6 +7,7 @@ import com.transloadit.sdk.response.AssemblyResponse;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.MockServerRule;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
@@ -66,39 +68,52 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     @Test
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
         MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
+        assembly.wipeAssemblyID();
 
 
-        assembly.addFile(new File("LICENSE"), "file_name2");
+        assembly.addFile(new File("LICENSE"), "file_name1");
+        assembly.addFile(new File("README.md"), "file_name2");
         assembly.setMaxParallelUploads(2);
-
         String uploadSize = "1077";
         mockServerClient.when(HttpRequest.request()
                         .withPath("/assemblies").withMethod("POST"))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
-        mockServerClient.when(
-                HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
-                new HttpResponse()
-                        .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
-                                "Location", "http://localhost:9040/resumable/files/2"));
-        mockServerClient.when(
-                HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
-                new HttpResponse()
-                        .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
-                                "Location", "http://localhost:9040/resumable/files/1"));
 
+
+        mockServerClient.when(
+                HttpRequest.request()
+                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
+                new HttpResponse()
+                        .withStatusCode(201)
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
+                                "Location", "http://localhost:9040/resumable/files/one"));
+
+        mockServerClient.when(
+                HttpRequest.request()
+                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
+                new HttpResponse()
+                        .withStatusCode(201)
+                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
+                                "Location", "http://localhost:9040/resumable/files/two"));
+
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/resumable/files/one").withMethod("PATCH"));
 
         mockServerClient.when(HttpRequest.request()
-                .withPath("/resumable/files/1").withMethod("PATCH").withHeader(
-                        "Upload-Length")).respond(
+                .withPath("/resumable/files/one").withMethod("PATCH").withHeader(
+                        "Tus-Resumable", "1.0.0")
+                .withHeader("Upload-Offset", "0")).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")
                         .withHeader("Upload-Offset", uploadSize));
+
+
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/resumable/files/two").withMethod("PATCH").withHeader(
+                "Tus-Resumable", "1.0.0")
+                .withHeader("Upload-Offset", "0"));
 
         AssemblyResponse response = assembly.save(true);
 
@@ -149,17 +164,23 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
     /**
      * Verifies, that {@link Assembly#abortUploads()} gets called in case of an upload error.
+     * And if the {@link UploadProgressListener} gets notified.
      * @throws LocalOperationException
      * @throws RequestException
      * @throws IOException
      */
     @Test
     public void abortUploads() throws LocalOperationException, RequestException, IOException {
+        UploadProgressListener listener = getEmptyUploadProgressListener();
+        UploadProgressListener spyListener = Mockito.spy(listener);
+
         MockProtocolExceptionAssembly exceptionAssembly = new MockProtocolExceptionAssembly(transloadit);
         exceptionAssembly.wipeAssemblyID();
         exceptionAssembly.setMaxParallelUploads(2);
         exceptionAssembly.addFile(new File(getClass().getResource("/__files/assembly_executing.json").getFile()));
+
         Assembly assemblySpy = Mockito.spy(exceptionAssembly);
+        assemblySpy.setUploadProgressListener(spyListener);
 
         mockServerClient.when(HttpRequest.request()
                         .withPath("/assemblies")
@@ -167,9 +188,16 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
                         .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1"
                                 + "\\r\\n\\r\\n1[\\w\\W]*")))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
-        assemblySpy.setUploadProgressListener(getEmptyUploadProgressListener());
         assemblySpy.save(true);
+
+        ArgumentCaptor<LocalOperationException> exceptionArgumentCaptor =
+                ArgumentCaptor.forClass(LocalOperationException.class);
+
         Mockito.verify(assemblySpy).abortUploads();
+        Mockito.verify(spyListener).onUploadFailed(exceptionArgumentCaptor.capture());
+        String errorMessage = "Uploads aborted";
+        String exceptionMessage = exceptionArgumentCaptor.getValue().getMessage();
+        assertEquals(exceptionMessage, errorMessage);
     }
 
     /**
@@ -180,6 +208,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
      */
     @Test
     public void pauseUploads() throws IOException, LocalOperationException, RequestException {
+        // todo: proper testing as files must be processed in order to receive an upload thread
+        // todo: resume upload in the same manner
         mockServerClient.when(HttpRequest.request()
                         .withPath("/assemblies")
                         .withMethod("POST")
@@ -190,10 +220,6 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         assembly.setMaxParallelUploads(2);
         assembly.save(true);
         assembly.pauseUploads();
-
-       // assertTrue(assembly.getThreadList().get(0).isPaused);
-        //assertTrue(assembly.getThreadList().get(1).isPaused);
-
     }
 
     /**

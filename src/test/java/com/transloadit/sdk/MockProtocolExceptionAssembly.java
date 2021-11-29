@@ -113,7 +113,7 @@ class MockTusUploadRunnable extends TusUploadRunnable {
         try {
             throw new ProtocolException("AbortUpload");
         } catch (ProtocolException e) {
-            assembly.threadThrowsRequestException(this.name, e);
+            assembly.threadThrowsLocalOperationException(this.name, e);
         }
     }
 }

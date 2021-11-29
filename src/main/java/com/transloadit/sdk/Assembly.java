@@ -762,7 +762,7 @@ public class Assembly extends OptionsBuilder {
      * @param e {@link RequestException}
      */
      protected void threadThrowsRequestException(String s, Exception e) {
-         this.threadExceptions.put(s, new LocalOperationException(e));
+         this.threadExceptions.put(s, new RequestException(e));
          abortUploads(e);
     }
 
