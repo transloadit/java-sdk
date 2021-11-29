@@ -51,7 +51,7 @@ public class Assembly extends OptionsBuilder {
     protected Socket socket;
 
 
-    private ArrayList<TusUploadThread> threadList;
+    protected ArrayList<TusUploadRunnable> threadList;
     private HashMap<String, Exception> threadExceptions;
     private int maxParallelUploads = 2;
     private ThreadPoolExecutor executor;
@@ -86,7 +86,7 @@ public class Assembly extends OptionsBuilder {
         uploads = new ArrayList<TusUpload>();
         fileStreams = new HashMap<String, InputStream>();
         shouldWaitForCompletion = false;
-        threadList =  new ArrayList<TusUploadThread>();
+        threadList =  new ArrayList<TusUploadRunnable>();
         threadExceptions = new HashMap<String, Exception>();
         assemblyId = generateAssemblyID();
     }
@@ -211,7 +211,7 @@ public class Assembly extends OptionsBuilder {
      *
      * @return the number of files that have been added for upload.
      */
-    public int getFilesCount() {
+    public int getNumberOfFiles() {
         return files.size() + fileStreams.size();
     }
 
@@ -241,9 +241,9 @@ public class Assembly extends OptionsBuilder {
 
         AssemblyResponse response;
         // only do tus uploads if files will be uploaded
-        if (isResumable && getFilesCount() > 0) {
+        if (isResumable && getNumberOfFiles() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
-            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
+            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getNumberOfFiles()));
 
             response = new AssemblyResponse(
                     request.post(obtainUploadUrlSuffix(), options, tusOptions, null, null), true);
@@ -464,9 +464,9 @@ public class Assembly extends OptionsBuilder {
         uploadProgressListener.onParallelUploadsStarting(maxParallelUploads,uploads.size());
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
-            TusUploadThread tusUploadThread = new TusUploadThread(tusClient, tusUpload, uploadChunkSize, this);
-            threadList.add(tusUploadThread);
-            executor.execute(tusUploadThread);
+            TusUploadRunnable tusUploadRunnable = new TusUploadRunnable(tusClient, tusUpload, uploadChunkSize, this);
+            threadList.add(tusUploadRunnable);
+            executor.execute(tusUploadRunnable);
         }
         executor.shutdown();
     }
@@ -663,10 +663,11 @@ public class Assembly extends OptionsBuilder {
         this.uploadProgressListener = uploadProgressListener;
     }
     /**
-     * This Method is used to pause parallel File uploads.
+     * This Method is used to pause running parallel File uploads.
      */
     public void pauseUploads() throws LocalOperationException {
-        for (TusUploadThread thread : threadList) {
+        for (TusUploadRunnable thread : threadList) {
+            int index = threadList.indexOf(thread);
             thread.setPaused();
         }
     }
@@ -675,7 +676,7 @@ public class Assembly extends OptionsBuilder {
      * This Method is used to pause parallel File uploads.
      */
     public void resumeUploads() throws LocalOperationException, RequestException {
-        for (TusUploadThread thread : threadList) {
+        for (TusUploadRunnable thread : threadList) {
             thread.setUnPaused();
         }
     }
@@ -701,7 +702,7 @@ public class Assembly extends OptionsBuilder {
      * This Method is used to abort all parallel File uploads.
      * It informs the current {@link UploadProgressListener} about the abortion.
      */
-    protected void abortUploads() {
+    public void abortUploads() {
         abortUploads(new LocalOperationException("Uploads aborted"));
     }
 
@@ -711,19 +712,21 @@ public class Assembly extends OptionsBuilder {
      * @param e {@link Exception that lead to the abortion}
      */
     protected void abortUploads(Exception e) {
-        executor.shutdownNow();
+        if (executor != null) {
+            executor.shutdownNow();
+        }
         uploadProgressListener.onUploadFailed(e);
-        Thread.currentThread().interrupt();
         if (socket != null) {
             socket.disconnect();
         }
     }
 
+
     /**
      * This method removes finished Threads from the ThreadList.
      * @param tusUploadThread a Upload Thread instance
      */
-    synchronized void removeThreadFromList(TusUploadThread tusUploadThread) {
+    synchronized void removeThreadFromList(TusUploadRunnable tusUploadThread) {
         threadList.remove(tusUploadThread);
     }
 
@@ -785,7 +788,7 @@ public class Assembly extends OptionsBuilder {
      * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
      * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be invalid.
      */
-    protected void wipeAssemblyID() {
+    public void wipeAssemblyID() {
         this.assemblyId = "";
     }
 
@@ -799,5 +802,13 @@ public class Assembly extends OptionsBuilder {
         } else {
             return "/assemblies/" + assemblyId;
         }
+    }
+
+    /**
+     * Returns the current Thread List
+     * @return List<TusUploadRunnable>
+     */
+     protected ArrayList<TusUploadRunnable> getThreadList() {
+        return threadList;
     }
 }

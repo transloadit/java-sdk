@@ -17,10 +17,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+
 /**
  * This class represents a new assembly being created.
  * It is similar to {@link Assembly} but provides Asynchronous functionality.
  */
+@Deprecated
 public class AsyncAssembly extends Assembly {
     private AssemblyProgressListener progressListener;
     private UploadProgressListener uploadListener;

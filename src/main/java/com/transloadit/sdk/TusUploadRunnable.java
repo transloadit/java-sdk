@@ -16,19 +16,23 @@ import java.io.IOException;
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
-class TusUploadThread extends Thread {
-    private TusUploader tusUploader;
-    private TusUpload tusUpload;
-    private TusClient tusClient;
-    private TusExecutor tusExecutor;
-    private Assembly assembly;
+public class TusUploadRunnable implements Runnable {
+    protected TusUploader tusUploader;
+    protected TusUpload tusUpload;
+    protected TusClient tusClient;
+    protected TusExecutor tusExecutor;
+    protected Assembly assembly;
 
-    private long uploadedBytes = 0;
-    private int uploadChunkSize;
+    protected long uploadedBytes = 0;
+    protected int uploadChunkSize;
+    protected String name;
 
-    private volatile boolean isRunning = false;
-    private volatile boolean isPaused = false;
-    private Object lock;
+    protected volatile boolean isStarted = false;
+    protected volatile boolean isRunning = false;
+    protected volatile boolean isPaused = false;
+    protected volatile boolean isFinishedPermanentely = false;
+    protected Object lock;
+
 
     /**
      * Constructs an new Instance of the TusUploadThread.
@@ -37,7 +41,7 @@ class TusUploadThread extends Thread {
      * @param assembly The calling Assembly instance
      * @param uploadChunkSize The size of an uploadable chunk
      */
-    TusUploadThread(TusClient tusClient, TusUpload tusUpload, int uploadChunkSize, Assembly assembly) {
+   public TusUploadRunnable(TusClient tusClient, TusUpload tusUpload, int uploadChunkSize, Assembly assembly) {
         this.tusClient = tusClient;
         this.tusUpload = tusUpload;
         this.assembly = assembly;
@@ -45,7 +49,7 @@ class TusUploadThread extends Thread {
         this.tusExecutor = getTusExecutor();
         this.lock = new Object();
 
-        this.setName("Upload - " + tusUpload.getMetadata().get("filename"));
+        this.name = "Upload - " + tusUpload.getMetadata().get("filename");
     }
 
     /**
@@ -54,18 +58,18 @@ class TusUploadThread extends Thread {
     public void run() {
         try {
             this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
+            this.isStarted = true;
             if (uploadChunkSize > 0) {
                 tusUploader.setChunkSize(uploadChunkSize);
-                throw new ProtocolException("Blah");
             }
         } catch (ProtocolException | IOException e) {
-            assembly.threadThrowsRequestException(this.getName(), e);
+            assembly.threadThrowsRequestException(this.name, e);
         }
         this.isRunning = true;
         try {
             tusExecutor.makeAttempts();
         } catch (ProtocolException | IOException e) {
-            assembly.threadThrowsRequestException(this.getName(), e);
+            assembly.threadThrowsRequestException(this.name, e);
         } finally {
             assembly.removeThreadFromList(this);
         }
@@ -98,18 +102,25 @@ class TusUploadThread extends Thread {
                                 assembly.updateUploadProgress(uploadedChunk);
                             }
                         } else {
-                            synchronized (lock) {
-                               // todo: tusUploader.finish(false);
-                                isRunning = false;
-                                assembly.getUploadProgressListener().onParallelUploadsPaused(getName());
+                            if (isStarted) {
+                                synchronized (lock) {
+                                    tusUploader.finish(false);
+                                    isRunning = false;
+                                    assembly.getUploadProgressListener().onParallelUploadsPaused(name);
+                                    lock.wait();
+                                }
+                            } else {
+                                // pauses the Thread even if it has not started the upload.
+                                assembly.getUploadProgressListener().onParallelUploadsPaused(name);
                                 lock.wait();
                             }
                         }
                     }
                 } catch (InterruptedException e) {
-                    assembly.threadThrowsLocalOperationException(getName(), e);
+                    assembly.threadThrowsLocalOperationException(name, e);
                 } finally {
                     isRunning = false;
+                    isFinishedPermanentely = true;
                     tusUploader.finish();
                 }
             }
@@ -124,7 +135,7 @@ class TusUploadThread extends Thread {
         if (!tusClient.resumingEnabled()) {
             throw new LocalOperationException("Resuming has been disabled");
         }
-        this.isPaused = true;
+            this.isPaused = true;
     }
 
     /**
@@ -132,21 +143,30 @@ class TusUploadThread extends Thread {
      * This results in resuming the upload with the next chunk.
      */
     public void setUnPaused() throws LocalOperationException, RequestException {
-        try {
-            this.tusUploader = this.tusClient.resumeUpload(tusUpload);
-            if (uploadChunkSize > 0) {
-                tusUploader.setChunkSize(uploadChunkSize);
+        if (isStarted && !isFinishedPermanentely) {  // prohibits an attempt of resuming a finished upload.
+            try {
+                this.tusUploader = this.tusClient.resumeUpload(tusUpload);
+                if (uploadChunkSize > 0) {
+                    tusUploader.setChunkSize(uploadChunkSize);
+                }
+            } catch (FingerprintNotFoundException | ResumingNotEnabledException e) {
+                throw new LocalOperationException(e);
+            } catch (ProtocolException | IOException e) {
+                throw new RequestException(name + " " + e.getMessage());
             }
-        } catch (FingerprintNotFoundException | ResumingNotEnabledException e) {
-            throw new LocalOperationException(e);
-        } catch (ProtocolException | IOException e) {
-            throw new RequestException(e);
-        }
-        this.isPaused = false;
+            this.isPaused = false;
             synchronized (lock) {
                 lock.notify();
             }
-        assembly.getUploadProgressListener().onParallelUploadsResumed(this.getName());
+            assembly.getUploadProgressListener().onParallelUploadsResumed(this.name);
         }
+        if (!isFinishedPermanentely && isPaused) {
+            this.isPaused = false;
+            synchronized (lock) {
+                lock.notify();
+            }
+            assembly.getUploadProgressListener().onParallelUploadsResumed(this.name);
+        }
+    }
 }
 

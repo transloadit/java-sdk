@@ -2,10 +2,12 @@ package com.transloadit.sdk.async;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 
+
 /**
  * Implementations of this interface are used to handle progress and completion of a background
  * Assembly file upload and execution.
  */
+@Deprecated
 public interface AssemblyProgressListener {
 
     /**
