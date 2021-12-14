@@ -18,15 +18,14 @@ description = "A Java Integration of the Transloadit's (https://transloadit.com)
 allprojects {
     repositories {
         mavenCentral()
-        jcenter()
     }
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:21.0.1'
-    implementation 'io.tus.java.client:tus-java-client:0.4.3'
-    implementation 'joda-time:joda-time:2.10.10'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'org.jetbrains:annotations:22.0.0'
+    implementation 'io.tus.java.client:tus-java-client:0.4.5'
+    implementation 'joda-time:joda-time:2.10.13'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'org.json:json:20210307'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'io.socket:socket.io-client:1.0.1'
