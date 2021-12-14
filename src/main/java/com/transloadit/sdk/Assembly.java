@@ -528,7 +528,7 @@ public class Assembly extends OptionsBuilder {
                 .on("assembly_upload_meta_data_extracted", onMetadataExtracted)
                 .on("assembly_result_finished", onAssemblyResultFinished)
                 .on("assembly_error", onFinished)
-                .on(Socket.EVENT_ERROR, onError);
+                .on(Socket.EVENT_CONNECT_ERROR, onError);
         socket.connect();
     }
 
