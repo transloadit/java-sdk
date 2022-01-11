@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -33,6 +35,7 @@ public class Transloadit {
     protected int retryAttemptsRequestException = 0; // default value
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
+    protected ArrayList<String> additionalTransloaditHeaders;
 
     /**
      * A new instance to transloadit client.
@@ -47,8 +50,9 @@ public class Transloadit {
         this.secret = secret;
         this.duration = duration;
         this.hostUrl = hostUrl;
-        shouldSignRequest = secret != null;
-        qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
+        this.shouldSignRequest = secret != null;
+        this.qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
+        this.additionalTransloaditHeaders = new ArrayList<String>();
     }
     /**
      * A new instance to transloadit client.
@@ -396,5 +400,31 @@ public class Transloadit {
         }
     }
 
+    /**
+     * Returns additional Transloadit Headers, which are sent along with the request.
+     * @return List of additional Transloadit Headers
+     */
+    public ArrayList getAdditionalTransloaditHeaders() {
+        return this.additionalTransloaditHeaders;
+    }
 
+    /**
+     * Adds a Transloadit Header, which will be sent along with the request.
+     * @param sdkName Name of the used extra Software / SDK
+     * @param versionNumber Semantic Version Number of the used SDK
+     * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
+     */
+    public void setAdditionalTransloaditHeaders(String sdkName, String versionNumber) throws LocalOperationException {
+        Pattern illegalChars = Pattern.compile("[.:,;\"'+]", Pattern.CASE_INSENSITIVE);
+        Pattern semanticVersion = Pattern.compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)",Pattern.CASE_INSENSITIVE);
+
+        Matcher charMatcher = illegalChars.matcher(sdkName);
+        Matcher versionMatcher = semanticVersion.matcher(versionNumber);
+        if (charMatcher.find() || !versionMatcher.matches()) {
+            throw new LocalOperationException("Provided version number does not match expected format of"
+                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+        }
+        String header = sdkName + ":" + versionNumber;
+        additionalTransloaditHeaders.add(header);
+    }
 }
