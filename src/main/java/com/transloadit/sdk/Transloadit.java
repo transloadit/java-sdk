@@ -415,14 +415,14 @@ public class Transloadit {
      * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
      */
     public void setAdditionalTransloaditHeaders(String sdkName, String versionNumber) throws LocalOperationException {
-        Pattern illegalChars = Pattern.compile("[.:,;\"'+]", Pattern.CASE_INSENSITIVE);
-        Pattern semanticVersion = Pattern.compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)",Pattern.CASE_INSENSITIVE);
+        Pattern illegalChars = Pattern.compile("[.:,;\"'\\+]", Pattern.CASE_INSENSITIVE);
+        Pattern semanticVersion = Pattern.compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)", Pattern.CASE_INSENSITIVE);
 
         Matcher charMatcher = illegalChars.matcher(sdkName);
         Matcher versionMatcher = semanticVersion.matcher(versionNumber);
         if (charMatcher.find() || !versionMatcher.matches()) {
             throw new LocalOperationException("Provided version number does not match expected format of"
-                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName conains  [.:,;\"'\\+]");
         }
         String header = sdkName + ":" + versionNumber;
         additionalTransloaditHeaders.add(header);
