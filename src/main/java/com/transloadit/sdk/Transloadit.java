@@ -422,7 +422,7 @@ public class Transloadit {
         Matcher versionMatcher = semanticVersion.matcher(versionNumber);
         if (charMatcher.find() || !versionMatcher.matches()) {
             throw new LocalOperationException("Provided version number does not match expected format of"
-                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName conains  [.:,;\"'\\+]");
+                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName contains  [.:,;\"'\\+]");
         }
         String header = sdkName + ":" + versionNumber;
         additionalTransloaditHeaders.add(header);
