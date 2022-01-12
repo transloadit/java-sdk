@@ -53,17 +53,6 @@ public class Request {
         retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
         qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
         retryDelay = transloadit.getRetryDelay();
-        Properties prop = new Properties();
-        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
-        try {
-            prop.load(in);
-            version = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
-            in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (NullPointerException npe) {
-            version = "java-sdk:unknown";
-        }
     }
 
     /**

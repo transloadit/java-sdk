@@ -18,6 +18,8 @@ import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 //CHECKSTYLE:ON
 
 import static org.junit.Assert.assertEquals;
@@ -273,7 +275,9 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
-     * Test if AdditionalTransloaditHeaders are working properly.
+     * Test if AdditionalTransloaditHeaders are working properly. This concerns
+     * {@link Transloadit#getAdditionalTransloaditClientHeaderContent()} and
+     * {@link Transloadit#setAdditionalTransloaditClientHeaderContent(String, String)}
      */
     @Test
     public void getAndSetdditionalTransloaditClientHeaderContent() throws LocalOperationException {
@@ -300,5 +304,33 @@ public class TransloaditTest extends MockHttpService {
         assertTrue(ex1 instanceof LocalOperationException);
         assertTrue(ex2 instanceof LocalOperationException);
     }
+
+    /**
+     * Tests if the version Info is obtained correctly with {@link Transloadit#loadVersionInfo()}
+     */
+    @Test
+    public void loadVersionInfo() {
+        String info = transloadit.loadVersionInfo();
+        Pattern versionPattern = Pattern.compile(
+                "^[a-z-]*[:]([0-9]+)\\.([0-9]+)\\.([0-9]+)$", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = versionPattern.matcher(info);
+        assertTrue(matcher.matches());
+    }
+
+    /**
+     * This test checks if the Tranlsoadit-CLient Header string is built with
+     * {@link Transloadit#getTransloaditClientHeader()}.
+     */
+    @Test
+    public void getTransloaditClientHeader() throws LocalOperationException {
+        Transloadit testTransloadit = new Transloadit("Key", "Secret");
+        String info = testTransloadit.loadVersionInfo();
+        testTransloadit.setAdditionalTransloaditClientHeaderContent("android-sdk", "2.2.2");
+        testTransloadit.setAdditionalTransloaditClientHeaderContent("Uppy", "11.0.123");
+
+        String comparisonString = info + ", android-sdk:2.2.2, Uppy:11.0.123";
+        assertEquals(comparisonString, testTransloadit.getTransloaditClientHeader());
+    }
+
 }
 

@@ -10,10 +10,9 @@ import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +35,7 @@ public class Transloadit {
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
     protected ArrayList<String> additionalTransloaditClientHeaderContent;
+    protected String versionInfo;
 
     /**
      * A new instance to transloadit client.
@@ -53,6 +53,7 @@ public class Transloadit {
         this.shouldSignRequest = secret != null;
         this.qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
         this.additionalTransloaditClientHeaderContent = new ArrayList<String>();
+        this.versionInfo = loadVersionInfo();
     }
     /**
      * A new instance to transloadit client.
@@ -97,6 +98,72 @@ public class Transloadit {
         } else {
             shouldSignRequest = flag;
         }
+    }
+
+    /**
+     * Loads the current version from the 'version.properties' File and builds an Info String for the
+     * "Transloadit-Client" header.
+     * @return String with content: "java-sdk:<version>"
+     */
+    protected String loadVersionInfo() {
+        Properties prop = new Properties();
+        String versionInfo;
+        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
+        try {
+            prop.load(in);
+            versionInfo = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
+            in.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NullPointerException npe) {
+            versionInfo = "java-sdk:unknown";
+        }
+        return versionInfo;
+    }
+
+    /**
+     * Returns additional Information which will be sent alongside with the request in the Transloadit-Client Header.
+     * @return List of additional Transloadit Headers
+     */
+    public ArrayList getAdditionalTransloaditClientHeaderContent() {
+        return this.additionalTransloaditClientHeaderContent;
+    }
+
+    /**
+     * Adds Information, which will be sent alongside with the request in the Transloadit-Client Header.
+     * @param sdkName Name of the used extra Software / SDK
+     * @param versionNumber Semantic Version Number of the used SDK
+     * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
+     */
+    public void setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber) throws LocalOperationException {
+        versionNumber = versionNumber.replaceAll("\\s+", "");
+        sdkName = sdkName.replaceAll("\\s+", "");
+        Pattern illegalChars = Pattern.compile("[.:,;\"'\\+]", Pattern.CASE_INSENSITIVE);
+        Pattern semanticVersion = Pattern.compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)", Pattern.CASE_INSENSITIVE);
+
+        Matcher charMatcher = illegalChars.matcher(sdkName);
+        Matcher versionMatcher = semanticVersion.matcher(versionNumber);
+        if (charMatcher.find() || !versionMatcher.matches()) {
+            throw new LocalOperationException("Provided version number does not match expected format of"
+                    + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName contains  [.:,;\"'\\+]");
+        }
+        String header = sdkName + ":" + versionNumber;
+        additionalTransloaditClientHeaderContent.add(header);
+    }
+
+    /**
+     * This method builds the String for the Transloadit Client Header, including the SDK Information and all the contens
+     * of {@link Transloadit#additionalTransloaditClientHeaderContent}.
+     * @return String
+     */
+    protected String getTransloaditClientHeader() {
+        StringBuilder clientHeader = new StringBuilder(this.versionInfo);
+        if (!this.additionalTransloaditClientHeaderContent.isEmpty()) {
+            for (String str : additionalTransloaditClientHeaderContent) {
+                clientHeader.append(", ").append(str);
+            }
+        }
+        return clientHeader.toString();
     }
 
     /**
@@ -398,35 +465,5 @@ public class Transloadit {
         } else {
             this.retryDelay = delay;
         }
-    }
-
-    /**
-     * Returns additional Information which will be sent alongside with the request in the Transloadit-Client Header.
-     * @return List of additional Transloadit Headers
-     */
-    public ArrayList getAdditionalTransloaditClientHeaderContent() {
-        return this.additionalTransloaditClientHeaderContent;
-    }
-
-    /**
-     * Adds Information, which will be sent alongside with the request in the Transloadit-Client Header.
-     * @param sdkName Name of the used extra Software / SDK
-     * @param versionNumber Semantic Version Number of the used SDK
-     * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
-     */
-    public void setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber) throws LocalOperationException {
-        versionNumber = versionNumber.replaceAll("\\s+", "");
-        sdkName = sdkName.replaceAll("\\s+", "");
-        Pattern illegalChars = Pattern.compile("[.:,;\"'\\+]", Pattern.CASE_INSENSITIVE);
-        Pattern semanticVersion = Pattern.compile("^([0-9]+)\\.([0-9]+)\\.([0-9]+)", Pattern.CASE_INSENSITIVE);
-
-        Matcher charMatcher = illegalChars.matcher(sdkName);
-        Matcher versionMatcher = semanticVersion.matcher(versionNumber);
-        if (charMatcher.find() || !versionMatcher.matches()) {
-            throw new LocalOperationException("Provided version number does not match expected format of"
-                   + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName contains  [.:,;\"'\\+]");
-        }
-        String header = sdkName + ":" + versionNumber;
-        additionalTransloaditClientHeaderContent.add(header);
     }
 }
