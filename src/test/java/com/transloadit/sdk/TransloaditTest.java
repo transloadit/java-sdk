@@ -13,6 +13,7 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import javax.validation.constraints.AssertTrue;
 import java.io.IOException;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
@@ -235,7 +236,7 @@ public class TransloaditTest extends MockHttpService {
      * {@link Transloadit#setQualifiedErrorsForRetry(ArrayList)} are working as supposed.
      */
     @Test
-    public void getAndsetqualifiedErrorsForRetry() {
+    public void getAndSetqualifiedErrorsForRetry() {
         ArrayList<String> exceptionTemplate = new ArrayList<String>();
         exceptionTemplate.add("java.net.SocketTimeoutException");
         exceptionTemplate.add("Socket.blah.Exception");
@@ -258,7 +259,7 @@ public class TransloaditTest extends MockHttpService {
      * @throws LocalOperationException
      */
     @Test
-    public void getAndsetTimeoutRetry() throws LocalOperationException {
+    public void getAndSetTimeoutRetry() throws LocalOperationException {
         assertEquals(0, transloadit.getRetryDelay());
         transloadit.setRetryDelay(5);
         assertEquals(5, transloadit.getRetryDelay());
@@ -270,6 +271,35 @@ public class TransloaditTest extends MockHttpService {
         }
       assertTrue(exception instanceof LocalOperationException);
 
+    }
+
+    /**
+     * Test if AdditionalTransloaditHeaders are working properly.
+     */
+    @Test
+    public void getAndSetAdditionalTransloaditHeaders() throws LocalOperationException {
+        Transloadit testTransloadit = new Transloadit("key", "secret");
+        testTransloadit.setAdditionalTransloaditHeaders(" Test-SDK ", "0.0.1");
+        ArrayList<String> headerList = testTransloadit.getAdditionalTransloaditHeaders();
+        String header = headerList.get(0);
+        assertEquals("Test-SDK:0.0.1", header);
+
+        // Test if exceptions are thrown
+        Exception ex1 = new Exception();
+        try {
+            testTransloadit.setAdditionalTransloaditHeaders("Android-SDK", "3.3.3.4");
+        } catch (Exception e) {
+            ex1 = e;
+        }
+
+        Exception ex2 = new Exception();
+        try {
+            testTransloadit.setAdditionalTransloaditHeaders("Android,SDK", "3.3.3");
+        } catch (Exception e) {
+            ex2 = e;
+        }
+        assertTrue(ex1 instanceof LocalOperationException);
+        assertTrue(ex2 instanceof LocalOperationException);
     }
 }
 
