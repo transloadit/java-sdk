@@ -12,7 +12,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +55,8 @@ public class Transloadit {
         this.duration = duration;
         this.hostUrl = hostUrl;
         this.shouldSignRequest = secret != null;
-        this.qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
+        this.qualifiedErrorsForRetry = new ArrayList<String>(
+                Collections.singletonList("java.net.SocketTimeoutException"));
         this.additionalTransloaditClientHeaderContent = new ArrayList<String>();
         this.versionInfo = loadVersionInfo();
     }
@@ -101,9 +106,9 @@ public class Transloadit {
     }
 
     /**
-     * Loads the current version from the 'version.properties' File and builds an Info String for the
-     * "Transloadit-Client" header.
-     * @return String with content: "java-sdk:<version>"
+     * Loads the current version from the version.properties File and builds an Info String for the
+     * Transloadit-Client header.
+     * @return String with content: java-sdk:version
      */
     protected String loadVersionInfo() {
         Properties prop = new Properties();
@@ -133,9 +138,11 @@ public class Transloadit {
      * Adds Information, which will be sent alongside with the request in the Transloadit-Client Header.
      * @param sdkName Name of the used extra Software / SDK
      * @param versionNumber Semantic Version Number of the used SDK
-     * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
+     * @throws LocalOperationException if version number has a wrong input format or
+     * the sdkName contains illegal characters
      */
-    public void setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber) throws LocalOperationException {
+    public void setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber)
+            throws LocalOperationException {
         versionNumber = versionNumber.replaceAll("\\s+", "");
         sdkName = sdkName.replaceAll("\\s+", "");
         Pattern illegalChars = Pattern.compile("[.:,;\"'\\+]", Pattern.CASE_INSENSITIVE);
@@ -152,7 +159,8 @@ public class Transloadit {
     }
 
     /**
-     * This method builds the String for the Transloadit Client Header, including the SDK Information and all the contens
+     * This method builds the String for the Transloadit Client Header,
+     * including the SDK Information and all the contents.
      * of {@link Transloadit#additionalTransloaditClientHeaderContent}.
      * @return String
      */
@@ -192,8 +200,8 @@ public class Transloadit {
 
 
     /**
-     *  <h1>This is an experimental debugging feature and should therefore best not be turned on at all or only with
-     *  the utmost caution.</h1>
+     *  This is an experimental debugging feature and should therefore best not be turned on at all or only with
+     *  the utmost caution.
      * This method adjusts number of retry attempts that should be taken if specific "REQUEST_EXCEPTION" are
      * occuring during assembly processing.
      * The Default value for every Transloadit instance is 0 extra retries.

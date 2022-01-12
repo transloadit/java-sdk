@@ -37,11 +37,11 @@ import java.util.Random;
 public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
-    private String version;
     private int retryAttemptsRateLimitLeft;
     protected int retryAttemptsRequestExceptionLeft;
     private ArrayList<String> qualifiedErrorsForRetry;
     private int retryDelay;
+    private String transloaditClientHeader;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -49,10 +49,11 @@ public class Request {
      */
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-        retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
-        retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
-        qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
-        retryDelay = transloadit.getRetryDelay();
+        this.transloaditClientHeader = transloadit.getTransloaditClientHeader();
+        this.retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
+        this.retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
+        this.qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
+        this.retryDelay = transloadit.getRetryDelay();
     }
 
     /**
@@ -68,7 +69,7 @@ public class Request {
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.transloaditClientHeader)
                 .build();
 
         try {
@@ -117,7 +118,7 @@ public class Request {
 
         okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
                 .post(getBody(payload, files, fileStreams))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.transloaditClientHeader)
                 .build();
 
         try {
@@ -165,7 +166,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.transloaditClientHeader)
                 .build();
 
         try {
@@ -195,7 +196,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.transloaditClientHeader)
                 .build();
 
         try {

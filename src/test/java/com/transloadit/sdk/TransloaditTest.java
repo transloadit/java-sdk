@@ -306,7 +306,7 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
-     * Tests if the version Info is obtained correctly with {@link Transloadit#loadVersionInfo()}
+     * Tests if the version Info is obtained correctly with {@link Transloadit#loadVersionInfo()}.
      */
     @Test
     public void loadVersionInfo() {
