@@ -35,7 +35,7 @@ public class Transloadit {
     protected int retryAttemptsRequestException = 0; // default value
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
-    protected ArrayList<String> additionalTransloaditHeaders;
+    protected ArrayList<String> additionalTransloaditClientHeaderContent;
 
     /**
      * A new instance to transloadit client.
@@ -52,7 +52,7 @@ public class Transloadit {
         this.hostUrl = hostUrl;
         this.shouldSignRequest = secret != null;
         this.qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
-        this.additionalTransloaditHeaders = new ArrayList<String>();
+        this.additionalTransloaditClientHeaderContent = new ArrayList<String>();
     }
     /**
      * A new instance to transloadit client.
@@ -401,20 +401,20 @@ public class Transloadit {
     }
 
     /**
-     * Returns additional Transloadit Headers, which are sent along with the request.
+     * Returns additional Information which will be sent alongside with the request in the Transloadit-Client Header.
      * @return List of additional Transloadit Headers
      */
-    public ArrayList getAdditionalTransloaditHeaders() {
-        return this.additionalTransloaditHeaders;
+    public ArrayList getAdditionalTransloaditClientHeaderContent() {
+        return this.additionalTransloaditClientHeaderContent;
     }
 
     /**
-     * Adds a Transloadit Header, which will be sent along with the request.
+     * Adds Information, which will be sent alongside with the request in the Transloadit-Client Header.
      * @param sdkName Name of the used extra Software / SDK
      * @param versionNumber Semantic Version Number of the used SDK
      * @throws LocalOperationException if version number has a wrong input format or the sdkName contains illegal characters
      */
-    public void setAdditionalTransloaditHeaders(String sdkName, String versionNumber) throws LocalOperationException {
+    public void setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber) throws LocalOperationException {
         versionNumber = versionNumber.replaceAll("\\s+", "");
         sdkName = sdkName.replaceAll("\\s+", "");
         Pattern illegalChars = Pattern.compile("[.:,;\"'\\+]", Pattern.CASE_INSENSITIVE);
@@ -427,6 +427,6 @@ public class Transloadit {
                    + "  ^([0-9]+)\\.([0-9]+)\\.([0-9]+)"  + " or sdkName contains  [.:,;\"'\\+]");
         }
         String header = sdkName + ":" + versionNumber;
-        additionalTransloaditHeaders.add(header);
+        additionalTransloaditClientHeaderContent.add(header);
     }
 }

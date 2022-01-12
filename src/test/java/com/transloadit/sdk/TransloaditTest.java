@@ -13,7 +13,6 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import javax.validation.constraints.AssertTrue;
 import java.io.IOException;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
@@ -277,24 +276,24 @@ public class TransloaditTest extends MockHttpService {
      * Test if AdditionalTransloaditHeaders are working properly.
      */
     @Test
-    public void getAndSetAdditionalTransloaditHeaders() throws LocalOperationException {
+    public void getAndSetdditionalTransloaditClientHeaderContent() throws LocalOperationException {
         Transloadit testTransloadit = new Transloadit("key", "secret");
-        testTransloadit.setAdditionalTransloaditHeaders(" Test-SDK ", "0.0.1");
-        ArrayList<String> headerList = testTransloadit.getAdditionalTransloaditHeaders();
-        String header = headerList.get(0);
+        testTransloadit.setAdditionalTransloaditClientHeaderContent(" Test-SDK ", "0.0.1");
+        ArrayList headerList = testTransloadit.getAdditionalTransloaditClientHeaderContent();
+        String header = (String) headerList.get(0);
         assertEquals("Test-SDK:0.0.1", header);
 
         // Test if exceptions are thrown
         Exception ex1 = new Exception();
         try {
-            testTransloadit.setAdditionalTransloaditHeaders("Android-SDK", "3.3.3.4");
+            testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "3.3.3.4");
         } catch (Exception e) {
             ex1 = e;
         }
 
         Exception ex2 = new Exception();
         try {
-            testTransloadit.setAdditionalTransloaditHeaders("Android,SDK", "3.3.3");
+            testTransloadit.setAdditionalTransloaditClientHeaderContent("Android,SDK", "3.3.3");
         } catch (Exception e) {
             ex2 = e;
         }
