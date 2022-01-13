@@ -28,7 +28,7 @@ import static org.mockserver.model.RegexBody.regex;
 /**
  * Unit test for {@link Assembly} class. Api-Responses are simulated by mocking the server's response.
  */
-public class äAssemblyTest extends MockHttpService {
+public class AssemblyTest extends MockHttpService {
     /**
      * MockServer can be run using the MockServerRule.
      */

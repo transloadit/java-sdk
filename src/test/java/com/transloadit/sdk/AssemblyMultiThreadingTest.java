@@ -4,6 +4,8 @@ import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import okhttp3.Response;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,6 +16,9 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.VerificationTimes;
+
+import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -69,53 +74,106 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
         MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
+        assembly.setUploadProgressListener(new UploadProgressListener() {
+            @Override
+            public void onUploadFinished() {
 
+            }
+
+            @Override
+            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
+            public void onUploadFailed(Exception exception) {
+                exception.printStackTrace();
+            }
+
+            @Override
+            public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
+            }
+
+            @Override
+            public void onParallelUploadsPaused(String name) {
+
+            }
+
+            @Override
+            public void onParallelUploadsResumed(String name) {
+
+            }
+        });
 
         assembly.addFile(new File("LICENSE"), "file_name1");
-        assembly.addFile(new File("README.md"), "file_name2");
-        assembly.setMaxParallelUploads(2);
-        String uploadSize = "1077";
+        assembly.addFile(new File("LICENSE"), "file_name2");
+        assembly.addFile(new File("LICENSE"), "file_name3");
+        assembly.setMaxParallelUploads(3);
+        String uploadSize = "" + new File("LICENSE").length();
         mockServerClient.when(HttpRequest.request()
-                        .withPath("/assemblies").withMethod("POST"))
-                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
+                        .withPath("/assemblies")
+                        .withMethod("POST"))
+                        .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
-
-
-        mockServerClient.when(
-                HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
-                new HttpResponse()
-                        .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
-                                "Location", "http://localhost:9040/resumable/files/one"));
-
-        mockServerClient.when(
-                HttpRequest.request()
-                        .withPath("/resumable/files").withMethod("POST"), Times.exactly(1)).respond(
-                new HttpResponse()
-                        .withStatusCode(201)
-                        .withHeader("Tus-Resumable", "1.0.0").withHeader(
-                                "Location", "http://localhost:9040/resumable/files/two"));
-
-        mockServerClient.verify(HttpRequest.request()
-                .withPath("/resumable/files/one").withMethod("PATCH"));
 
         mockServerClient.when(HttpRequest.request()
-                .withPath("/resumable/files/one").withMethod("PATCH").withHeader(
+                .withPath("/resumable/files").withMethod("POST").withHeader(
+                        "Tus-Resumable", "1.0.0")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Location", "/resumable/files/a"));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files").withMethod("POST").withHeader(
+                        "Tus-Resumable", "1.0.0")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Location", "/resumable/files/b"));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files").withMethod("POST").withHeader(
+                        "Tus-Resumable", "1.0.0")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Location", "/resumable/files/c"));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files/a").withMethod("POST").withHeader(
                         "Tus-Resumable", "1.0.0")
-                .withHeader("Upload-Offset", "0")).respond(
+                .withHeader("Upload-Offset", "0")
+                .withHeader("X-HTTP-Method-Override", "PATCH")).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")
                         .withHeader("Upload-Offset", uploadSize));
 
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files/b").withMethod("POST").withHeader(
+                        "Tus-Resumable", "1.0.0")
+                .withHeader("Upload-Offset", "0")
+                .withHeader("X-HTTP-Method-Override", "PATCH")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Upload-Offset", uploadSize));
 
-        mockServerClient.verify(HttpRequest.request()
-                .withPath("/resumable/files/two").withMethod("PATCH").withHeader(
-                "Tus-Resumable", "1.0.0")
-                .withHeader("Upload-Offset", "0"));
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/resumable/files/c").withMethod("POST").withHeader(
+                        "Tus-Resumable", "1.0.0")
+                .withHeader("Upload-Offset", "0")
+                .withHeader("X-HTTP-Method-Override", "PATCH")).respond(
+                new HttpResponse()
+                        .withStatusCode(204)
+                        .withHeader("Tus-Resumable", "1.0.0")
+                        .withHeader("Upload-Offset", uploadSize));
 
         AssemblyResponse response = assembly.save(true);
+        mockServerClient.verify(HttpRequest.request()
+                .withPath("/resumable/files").withMethod("POST"), VerificationTimes.atLeast(3));
 
         assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
         assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");

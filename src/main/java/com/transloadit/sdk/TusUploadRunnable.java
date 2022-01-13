@@ -64,6 +64,7 @@ public class TusUploadRunnable implements Runnable {
             }
         } catch (ProtocolException | IOException e) {
             assembly.threadThrowsRequestException(this.name, e);
+            return;
         }
         this.isRunning = true;
         try {
