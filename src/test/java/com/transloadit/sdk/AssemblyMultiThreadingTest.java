@@ -4,8 +4,6 @@ import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import okhttp3.Response;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,12 +16,10 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.VerificationTimes;
 
-import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
@@ -119,7 +115,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST").withHeader(
-                        "Tus-Resumable", "1.0.0")).respond(
+                        "Tus-Resumable", "1.0.0"), Times.once()).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")
@@ -127,7 +123,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST").withHeader(
-                        "Tus-Resumable", "1.0.0")).respond(
+                        "Tus-Resumable", "1.0.0"), Times.once()).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")
@@ -135,7 +131,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
         mockServerClient.when(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST").withHeader(
-                        "Tus-Resumable", "1.0.0")).respond(
+                        "Tus-Resumable", "1.0.0"), Times.once()).respond(
                 new HttpResponse()
                         .withStatusCode(204)
                         .withHeader("Tus-Resumable", "1.0.0")
