@@ -21,9 +21,8 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 //CHECKSTYLE:ON
+import static org.junit.Assert.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
@@ -303,6 +302,22 @@ public class TransloaditTest extends MockHttpService {
         }
         assertTrue(ex1 instanceof LocalOperationException);
         assertTrue(ex2 instanceof LocalOperationException);
+
+        // Test special cases
+
+        Exception ex3 = new Exception();
+        String str1 = "";
+        String str2 = "";
+        try {
+            str1 = testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "unknown");
+            str2 = testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "0.0.0");
+
+        } catch (LocalOperationException e) {
+            ex3 = e;
+        }
+        assertFalse(ex3 instanceof LocalOperationException);
+        assertTrue(str1.contains("unknown"));
+        assertTrue(str2.contains("unknown"));
     }
 
     /**
