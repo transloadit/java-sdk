@@ -142,7 +142,7 @@ public class Transloadit {
      * the sdkName contains illegal characters
      * @return Header String
      */
-    public String setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber)
+    protected String setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber)
             throws LocalOperationException {
         versionNumber = versionNumber.replaceAll("\\s+", "");
         sdkName = sdkName.replaceAll("\\s+", "");
