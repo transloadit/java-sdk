@@ -140,6 +140,7 @@ public class Transloadit {
      * @param versionNumber Semantic Version Number of the used SDK
      * @throws LocalOperationException if version number has a wrong input format or
      * the sdkName contains illegal characters
+     * @return Header String
      */
     public String setAdditionalTransloaditClientHeaderContent(String sdkName, String versionNumber)
             throws LocalOperationException {
