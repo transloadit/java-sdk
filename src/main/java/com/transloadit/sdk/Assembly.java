@@ -806,7 +806,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Returns the current Thread List
-     * @return List<TusUploadRunnable>
+     * @return List of Type TusUploadRunnable
      */
      protected ArrayList<TusUploadRunnable> getThreadList() {
         return threadList;

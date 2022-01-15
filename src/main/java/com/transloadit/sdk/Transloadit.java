@@ -121,8 +121,8 @@ public class Transloadit {
 
 
     /**
-     *  <h1>This is an experimental debugging feature and should therefore best not be turned on at all or only with
-     *  the utmost caution.</h1>
+     *  This is an experimental debugging feature and should therefore best not be turned on at all or only with
+     *  the utmost caution.
      * This method adjusts number of retry attempts that should be taken if specific "REQUEST_EXCEPTION" are
      * occuring during assembly processing.
      * The Default value for every Transloadit instance is 0 extra retries.
