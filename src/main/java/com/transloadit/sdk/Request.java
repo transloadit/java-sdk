@@ -54,7 +54,7 @@ public class Request {
         qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
         retryDelay = transloadit.getRetryDelay();
         Properties prop = new Properties();
-        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
+        InputStream in = getClass().getClassLoader().getResourceAsStream("java-sdk-version.properties");
         try {
             prop.load(in);
             version = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
