@@ -113,7 +113,7 @@ public class Transloadit {
     protected String loadVersionInfo() {
         Properties prop = new Properties();
         String versionInfo;
-        InputStream in = getClass().getClassLoader().getResourceAsStream("version.properties");
+        InputStream in = getClass().getClassLoader().getResourceAsStream("java-sdk-version.properties");
         try {
             prop.load(in);
             versionInfo = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
