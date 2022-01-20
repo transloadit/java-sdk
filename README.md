@@ -141,7 +141,7 @@ public class Main {
 ### List Assemblies
 
 The method, `listAssemblies`, retrieves an array of assemblies according to the given `options`. Valid `options` can be `page`,
-`pagesize`, `type`, `fromdate` and `todate`. Please consult the [Transloadit API docs](https://transloadit.com/docs/api/#retrieve-assembly-list)
+`pagesize`, `type`, `fromdate` and `todate`. Please consult the [Transloadit API docs](https://transloadit.com/docs/api/assemblies-get/)
 for details.
 
 ```java
