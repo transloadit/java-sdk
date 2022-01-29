@@ -22,7 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 //CHECKSTYLE:ON
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
@@ -276,53 +275,6 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
-     * Test if AdditionalTransloaditHeaders are working properly. This concerns
-     * {@link Transloadit#getAdditionalTransloaditClientHeaderContent()} and
-     * {@link Transloadit#setAdditionalTransloaditClientHeaderContent(String, String)}
-     */
-    @Test
-    public void getAndSetdditionalTransloaditClientHeaderContent() throws LocalOperationException {
-        Transloadit testTransloadit = new Transloadit("key", "secret");
-        testTransloadit.setAdditionalTransloaditClientHeaderContent(" Test-SDK ", "0.0.1");
-        ArrayList headerList = testTransloadit.getAdditionalTransloaditClientHeaderContent();
-        String header = (String) headerList.get(0);
-        assertEquals("Test-SDK:0.0.1", header);
-
-        // Test if exceptions are thrown
-        Exception ex1 = new Exception();
-        try {
-            testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "3.3.3.4");
-        } catch (Exception e) {
-            ex1 = e;
-        }
-
-        Exception ex2 = new Exception();
-        try {
-            testTransloadit.setAdditionalTransloaditClientHeaderContent("Android,SDK", "3.3.3");
-        } catch (Exception e) {
-            ex2 = e;
-        }
-        assertTrue(ex1 instanceof LocalOperationException);
-        assertTrue(ex2 instanceof LocalOperationException);
-
-        // Test special cases
-
-        Exception ex3 = new Exception();
-        String str1 = "";
-        String str2 = "";
-        try {
-            str1 = testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "unknown");
-            str2 = testTransloadit.setAdditionalTransloaditClientHeaderContent("Android-SDK", "0.0.0");
-
-        } catch (LocalOperationException e) {
-            ex3 = e;
-        }
-        assertFalse(ex3 instanceof LocalOperationException);
-        assertTrue(str1.contains("unknown"));
-        assertTrue(str2.contains("unknown"));
-    }
-
-    /**
      * Tests if the version Info is obtained correctly with {@link Transloadit#loadVersionInfo()}.
      */
     @Test
@@ -331,23 +283,7 @@ public class TransloaditTest extends MockHttpService {
         Pattern versionPattern = Pattern.compile(
                 "^[a-z-]*[:]([0-9]+)\\.([0-9]+)\\.([0-9]+)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = versionPattern.matcher(info);
-        assertTrue(matcher.matches());
+        assertTrue(matcher.find());
     }
-
-    /**
-     * This test checks if the Tranlsoadit-CLient Header string is built with
-     * {@link Transloadit#getTransloaditClientHeader()}.
-     */
-    @Test
-    public void getTransloaditClientHeader() throws LocalOperationException {
-        Transloadit testTransloadit = new Transloadit("Key", "Secret");
-        String info = testTransloadit.loadVersionInfo();
-        testTransloadit.setAdditionalTransloaditClientHeaderContent("android-sdk", "2.2.2");
-        testTransloadit.setAdditionalTransloaditClientHeaderContent("Uppy", "11.0.123");
-
-        String comparisonString = info + ", android-sdk:2.2.2, Uppy:11.0.123";
-        assertEquals(comparisonString, testTransloadit.getTransloaditClientHeader());
-    }
-
 }
 
