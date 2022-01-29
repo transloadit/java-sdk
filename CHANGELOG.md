@@ -1,3 +1,7 @@
+### 0.4.2 / 2021-01-29 ###
+* Added possibility for SDKs using this SDK to send their own version number to the server in the Transloadit-Client header as well.
+* Resolved some file-name conflicts with the tus_java_client library.
+
 ### 0.4.1 / 2021-09-26 ###
 * Added debugging features regarding HTTP-requests, which should not be used in production without contacting Transloadit support.
 
