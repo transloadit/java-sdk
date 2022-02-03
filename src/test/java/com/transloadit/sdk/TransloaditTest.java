@@ -18,10 +18,12 @@ import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 //CHECKSTYLE:ON
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 
 /**
  * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
@@ -235,7 +237,7 @@ public class TransloaditTest extends MockHttpService {
      * {@link Transloadit#setQualifiedErrorsForRetry(ArrayList)} are working as supposed.
      */
     @Test
-    public void getAndsetqualifiedErrorsForRetry() {
+    public void getAndSetqualifiedErrorsForRetry() {
         ArrayList<String> exceptionTemplate = new ArrayList<String>();
         exceptionTemplate.add("java.net.SocketTimeoutException");
         exceptionTemplate.add("Socket.blah.Exception");
@@ -258,7 +260,7 @@ public class TransloaditTest extends MockHttpService {
      * @throws LocalOperationException
      */
     @Test
-    public void getAndsetTimeoutRetry() throws LocalOperationException {
+    public void getAndSetTimeoutRetry() throws LocalOperationException {
         assertEquals(0, transloadit.getRetryDelay());
         transloadit.setRetryDelay(5);
         assertEquals(5, transloadit.getRetryDelay());
@@ -270,6 +272,18 @@ public class TransloaditTest extends MockHttpService {
         }
       assertTrue(exception instanceof LocalOperationException);
 
+    }
+
+    /**
+     * Tests if the version Info is obtained correctly with {@link Transloadit#loadVersionInfo()}.
+     */
+    @Test
+    public void loadVersionInfo() {
+        String info = transloadit.loadVersionInfo();
+        Pattern versionPattern = Pattern.compile(
+                "^[a-z-]*[:]([0-9]+)\\.([0-9]+)\\.([0-9]+)$", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = versionPattern.matcher(info);
+        assertTrue(matcher.find());
     }
 }
 

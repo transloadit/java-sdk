@@ -20,7 +20,7 @@ Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog
 **Gradle:**
 
 ```groovy
-implementation 'com.transloadit.sdk:transloadit:0.3.0'
+implementation 'com.transloadit.sdk:transloadit:0.4.2'
 ```
 
 **Maven:**
@@ -29,7 +29,7 @@ implementation 'com.transloadit.sdk:transloadit:0.3.0'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.4.1</version>
+  <version>0.4.2</version>
 </dependency>
 ```
 

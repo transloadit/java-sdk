@@ -10,11 +10,13 @@ import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Properties;
 
 /**
  * This class serves as a client interface to the Transloadit API.
@@ -33,6 +35,7 @@ public class Transloadit {
     protected int retryAttemptsRequestException = 0; // default value
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
+    protected String versionInfo;
 
     /**
      * A new instance to transloadit client.
@@ -47,8 +50,10 @@ public class Transloadit {
         this.secret = secret;
         this.duration = duration;
         this.hostUrl = hostUrl;
-        shouldSignRequest = secret != null;
-        qualifiedErrorsForRetry = new ArrayList<String>(Collections.singletonList("java.net.SocketTimeoutException"));
+        this.shouldSignRequest = secret != null;
+        this.qualifiedErrorsForRetry = new ArrayList<String>(
+                Collections.singletonList("java.net.SocketTimeoutException"));
+        this.versionInfo = loadVersionInfo();
     }
     /**
      * A new instance to transloadit client.
@@ -94,6 +99,36 @@ public class Transloadit {
             shouldSignRequest = flag;
         }
     }
+
+    /**
+     * Loads the current version from the version.properties File and builds an Info String for the
+     * Transloadit-Client header.
+     * @return String with content: java-sdk:version
+     */
+    protected String loadVersionInfo() {
+        Properties prop = new Properties();
+        String versionInfo;
+        InputStream in = getClass().getClassLoader().getResourceAsStream("java-sdk-version/version.properties");
+        try {
+            prop.load(in);
+            versionInfo = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
+            in.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NullPointerException npe) {
+            versionInfo = "java-sdk:unknown";
+        }
+        return versionInfo;
+    }
+
+    /**
+     * Returns a version Info String, which can be sent as header-value with a {@link Request}.
+     * @return Version info as Header-String
+     */
+    String getVersionInfo() {
+        return this.versionInfo;
+    }
+
 
     /**
      * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
@@ -395,6 +430,4 @@ public class Transloadit {
             this.retryDelay = delay;
         }
     }
-
-
 }

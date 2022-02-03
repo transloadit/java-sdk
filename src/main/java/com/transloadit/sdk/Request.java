@@ -28,7 +28,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 
 /**
@@ -37,11 +36,11 @@ import java.util.Random;
 public class Request {
     private Transloadit transloadit;
     private OkHttpClient httpClient = new OkHttpClient();
-    private String version;
     private int retryAttemptsRateLimitLeft;
     protected int retryAttemptsRequestExceptionLeft;
     private ArrayList<String> qualifiedErrorsForRetry;
     private int retryDelay;
+    private String version;
 
     /**
      * Constructs a new instance of the {@link Request} object in to prepare a new HTTP-Request to the Transloadit API.
@@ -49,21 +48,11 @@ public class Request {
      */
     Request(Transloadit transloadit) {
         this.transloadit = transloadit;
-        retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
-        retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
-        qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
-        retryDelay = transloadit.getRetryDelay();
-        Properties prop = new Properties();
-        InputStream in = getClass().getClassLoader().getResourceAsStream("java-sdk-version.properties");
-        try {
-            prop.load(in);
-            version = "java-sdk:" + prop.getProperty("versionNumber").replace("'", "");
-            in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (NullPointerException npe) {
-            version = "java-sdk:unknown";
-        }
+        this.retryAttemptsRateLimitLeft = transloadit.getRetryAttemptsRateLimit();
+        this.retryAttemptsRequestExceptionLeft = transloadit.getRetryAttemptsRequestException();
+        this.qualifiedErrorsForRetry = transloadit.getQualifiedErrorsForRetry();
+        this.retryDelay = transloadit.getRetryDelay();
+        this.version = transloadit.getVersionInfo();
     }
 
     /**
@@ -79,7 +68,7 @@ public class Request {
         String fullUrl = getFullUrl(url);
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(addUrlParams(fullUrl, toPayload(params)))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.version)
                 .build();
 
         try {
@@ -128,7 +117,7 @@ public class Request {
 
         okhttp3.Request request = new okhttp3.Request.Builder().url(getFullUrl(url))
                 .post(getBody(payload, files, fileStreams))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.version)
                 .build();
 
         try {
@@ -176,7 +165,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .delete(getBody(toPayload(params), null))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.version)
                 .build();
 
         try {
@@ -206,7 +195,7 @@ public class Request {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(getFullUrl(url))
                 .put(getBody(toPayload(data), null))
-                .addHeader("Transloadit-Client", version)
+                .addHeader("Transloadit-Client", this.version)
                 .build();
 
         try {
