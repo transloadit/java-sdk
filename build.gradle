@@ -11,7 +11,7 @@ targetCompatibility = 1.8
 
 group 'com.transloadit.sdk'
 
-def config = new ConfigSlurper().parse(new File("${projectDir}/src/main/resources/version.properties").toURI().toURL())
+def config = new ConfigSlurper().parse(new File("${projectDir}/src/main/resources/java-sdk-version/version.properties").toURI().toURL())
 version = config.versionNumber
 description = "A Java Integration of the Transloadit's (https://transloadit.com) file uploading and encoding service."
 
@@ -26,12 +26,13 @@ dependencies {
     implementation 'io.tus.java.client:tus-java-client:0.4.5'
     implementation 'joda-time:joda-time:2.10.13'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    implementation 'org.json:json:20210307'
+    implementation 'org.json:json:20211205'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'io.socket:socket.io-client:1.0.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mock-server:mockserver-junit-rule:5.11.2'
     testImplementation  'org.mockito:mockito-core:3.11.1'
+
 
 
 }

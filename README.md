@@ -20,7 +20,7 @@ Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog
 **Gradle:**
 
 ```groovy
-implementation 'com.transloadit.sdk:transloadit:0.3.0'
+implementation 'com.transloadit.sdk:transloadit:0.4.2'
 ```
 
 **Maven:**
@@ -29,7 +29,7 @@ implementation 'com.transloadit.sdk:transloadit:0.3.0'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.4.1</version>
+  <version>0.4.2</version>
 </dependency>
 ```
 
@@ -141,7 +141,7 @@ public class Main {
 ### List Assemblies
 
 The method, `listAssemblies`, retrieves an array of assemblies according to the given `options`. Valid `options` can be `page`,
-`pagesize`, `type`, `fromdate` and `todate`. Please consult the [Transloadit API docs](https://transloadit.com/docs/api/#retrieve-assembly-list)
+`pagesize`, `type`, `fromdate` and `todate`. Please consult the [Transloadit API docs](https://transloadit.com/docs/api/assemblies-get/)
 for details.
 
 ```java
