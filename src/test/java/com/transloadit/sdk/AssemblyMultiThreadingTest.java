@@ -60,7 +60,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         assemblyFinished = false;
         mockServerClient.reset();
         assembly.addFile(new File(getClass().getResource("/__files/assembly_executing.json").getFile()));
-        assembly.addFile(Files.newInputStream(Paths.get(getClass().getResource("/__files/cancel_assembly.json").getFile())));
+        assembly.addFile(Files.newInputStream(Paths.get(
+                getClass().getResource("/__files/cancel_assembly.json").getFile())));
     }
     /**
      * Saves a multithreaded upload and verifies that the requests are sent.
