@@ -435,7 +435,7 @@ public class AssemblyTest extends MockHttpService {
      * Determines if correct number of upload files is determined.
      * @throws FileNotFoundException
      */
-    @Test void getNumberOfFiles() throws FileNotFoundException {
+    @Test public void getNumberOfFiles() throws FileNotFoundException {
         File file1 = new File(getClass().getResource("/__files/assembly_executing.json").getFile());
         FileInputStream file2 = new FileInputStream(getClass().getResource("/__files/cancel_assembly.json").getFile());
         assembly.addFile(file1);
