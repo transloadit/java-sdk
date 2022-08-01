@@ -227,7 +227,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
      * @throws IOException
      */
     @Test
-    public void abortUploads() throws LocalOperationException, RequestException, IOException {
+    public void abortUploads() throws LocalOperationException, RequestException, IOException, InterruptedException {
         UploadProgressListener listener = getEmptyUploadProgressListener();
         UploadProgressListener spyListener = Mockito.spy(listener);
 
@@ -251,7 +251,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
         assemblySpy.save(true);
 
-        // Thread.sleep(500);
+        Thread.sleep(500);  // This avoids a too fast test completion, before the abortion could take place
         Mockito.verify(assemblySpy).abortUploads();
         Mockito.verify(spyListener).onUploadFailed(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
