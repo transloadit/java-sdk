@@ -227,7 +227,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
      * @throws IOException
      */
     @Test
-    public void abortUploads() throws LocalOperationException, RequestException, IOException {
+    public void abortUploads() throws LocalOperationException, RequestException, IOException, InterruptedException {
         UploadProgressListener listener = getEmptyUploadProgressListener();
         UploadProgressListener spyListener = Mockito.spy(listener);
 
@@ -245,11 +245,13 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
                         .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1"
                                 + "\\r\\n\\r\\n1[\\w\\W]*")))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
-        assemblySpy.save(true);
 
         ArgumentCaptor<LocalOperationException> exceptionArgumentCaptor =
                 ArgumentCaptor.forClass(LocalOperationException.class);
 
+        assemblySpy.save(true);
+
+        Thread.sleep(500);
         Mockito.verify(assemblySpy).abortUploads();
         Mockito.verify(spyListener).onUploadFailed(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
