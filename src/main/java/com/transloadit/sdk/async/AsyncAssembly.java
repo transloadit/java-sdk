@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
+ * Deprecated because the {@link Assembly} is capable of asynchronous and pauseable / resumeable uploads now.
+ * You can use {@link Assembly#pauseUploads()} and {@link Assembly#resumeUploads()} as a replacement.
  * This class represents a new assembly being created.
  * It is similar to {@link Assembly} but provides Asynchronous functionality.
  */
