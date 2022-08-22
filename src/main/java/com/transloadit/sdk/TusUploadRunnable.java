@@ -27,11 +27,11 @@ public class TusUploadRunnable implements Runnable {
     protected int uploadChunkSize;
     protected String name;
 
-    protected volatile boolean isStarted = false;
-    protected volatile boolean isRunning = false;
+    protected volatile boolean uploadHasBeenStarted = false;
+    protected volatile boolean isUploading = false;
     protected volatile boolean isPaused = false;
     protected volatile boolean isFinishedPermanentely = false;
-    protected Object lock;
+    protected final Object lock;
 
 
     /**
@@ -58,7 +58,7 @@ public class TusUploadRunnable implements Runnable {
     public void run() {
         try {
             this.tusUploader = tusClient.resumeOrCreateUpload(tusUpload);
-            this.isStarted = true;
+            this.uploadHasBeenStarted = true;
             if (uploadChunkSize > 0) {
                 tusUploader.setChunkSize(uploadChunkSize);
             }
@@ -66,7 +66,7 @@ public class TusUploadRunnable implements Runnable {
             assembly.threadThrowsRequestException(this.name, e);
             return;
         }
-        this.isRunning = true;
+        this.isUploading = true;
         try {
             tusExecutor.makeAttempts();
         } catch (ProtocolException | IOException e) {
@@ -88,8 +88,8 @@ public class TusUploadRunnable implements Runnable {
                 int uploadedChunk = 0;
                 try {
                     while (uploadedChunk > -1) {
-                        if (!isRunning) {
-                            isRunning = true;
+                        if (!isUploading) {
+                            isUploading = true;
                         }
 
                         if (Thread.currentThread().isInterrupted()) {
@@ -97,16 +97,16 @@ public class TusUploadRunnable implements Runnable {
                         }
 
                         if (!isPaused) {
-                            isRunning = true;
+                            isUploading = true;
                             uploadedChunk = tusUploader.uploadChunk();
                             if (uploadedChunk > -1) {
                                 assembly.updateUploadProgress(uploadedChunk);
                             }
                         } else {
-                            if (isStarted) {
+                            if (uploadHasBeenStarted) {
                                 synchronized (lock) {
                                     tusUploader.finish(false);
-                                    isRunning = false;
+                                    isUploading = false;
                                     assembly.getUploadProgressListener().onParallelUploadsPaused(name);
                                     lock.wait();
                                 }
@@ -120,7 +120,7 @@ public class TusUploadRunnable implements Runnable {
                 } catch (InterruptedException e) {
                     assembly.threadThrowsLocalOperationException(name, e);
                 } finally {
-                    isRunning = false;
+                    isUploading = false;
                     isFinishedPermanentely = true;
                     tusUploader.finish();
                 }
@@ -144,7 +144,7 @@ public class TusUploadRunnable implements Runnable {
      * This results in resuming the upload with the next chunk.
      */
     public void setUnPaused() throws LocalOperationException, RequestException {
-        if (isStarted && !isFinishedPermanentely) {  // prohibits an attempt of resuming a finished upload.
+        if (uploadHasBeenStarted && !isFinishedPermanentely) {  // prohibits an attempt of resuming a finished upload.
             try {
                 this.tusUploader = this.tusClient.resumeUpload(tusUpload);
                 if (uploadChunkSize > 0) {
