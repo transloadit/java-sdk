@@ -123,7 +123,7 @@ public final class MultiStepProcessing {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
                         + result.get("ext"));
-                System.out.println("Downloadlink: " + result.getString("ssl_url") + "\n");
+                System.out.println("Download link: " + result.getString("ssl_url") + "\n");
             }
         });
         try {
@@ -137,7 +137,7 @@ public final class MultiStepProcessing {
 
                 @Override
                 public void onUploadProgress(long uploadedBytes, long totalBytes) {
-                   // System.out.println("Upload: " + uploadedBytes + " from: " + totalBytes);
+                   System.out.println("Upload: " + uploadedBytes + " from: " + totalBytes);
                 }
 
                 @Override
@@ -164,20 +164,16 @@ public final class MultiStepProcessing {
                 }
             };
             assembly.setUploadProgressListener(uploadProgressListener);
-            assembly.setMaxParallelUploads(2); // todo: backward Compability
+            assembly.setMaxParallelUploads(2);
             assembly.setUploadChunkSize(50);
             assembly.save(true);
 
-            Thread.sleep(50);  // todo: adjust for new modules
+            Thread.sleep(50);
             assembly.pauseUploads();
             Thread.sleep(3000);
             assembly.resumeUploads();
 
-            // assembly.pauseUploads();
-            // assembly.abortUploads();
-           // assembly.resumeUploads();
             System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
-           // assembly.save(true);
          } catch (LocalOperationException | RequestException | InterruptedException e) {
             e.printStackTrace();
         }
