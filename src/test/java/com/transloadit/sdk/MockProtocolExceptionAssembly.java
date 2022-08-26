@@ -1,6 +1,5 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
