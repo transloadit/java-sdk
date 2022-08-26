@@ -1,6 +1,5 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -48,6 +47,7 @@ public class Assembly extends OptionsBuilder {
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
+    protected AssemblyListener runnableAssemblyListener;
     protected Socket socket;
 
 
@@ -58,7 +58,6 @@ public class Assembly extends OptionsBuilder {
 
     private long uploadSize;
     private long uploadedBytes;
-    private UploadProgressListener uploadProgressListener;
     protected int uploadChunkSize = 0;
 
     /**
@@ -426,42 +425,59 @@ public class Assembly extends OptionsBuilder {
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
-        if (uploadProgressListener == null) {
-            uploadProgressListener = new UploadProgressListener() {
+        AssemblyListener localListener;
+        if (assemblyListener == null) {
+            runnableAssemblyListener = new AssemblyListener() {
                 @Override
-                public void onUploadFinished() {
+                public void onAssemblyFinished(AssemblyResponse response) {
 
                 }
 
                 @Override
-                public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                public void onError(Exception error) {
 
                 }
 
                 @Override
-                public void onUploadFailed(Exception exception) {
+                public void onMetadataExtracted() {
 
                 }
 
                 @Override
-                public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+                public void onAssemblyUploadFinished() {
 
                 }
 
                 @Override
-                public void onParallelUploadsPaused(String name) {
+                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
                 }
 
                 @Override
-                public void onParallelUploadsResumed(String name) {
+                public void onFileUploadPaused(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadResumed(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+                }
+
+                @Override
+                public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
                 }
             };
+        } else {
+            runnableAssemblyListener = getAssemblyListener();
         }
         uploadSize = getUploadSize();
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        uploadProgressListener.onParallelUploadsStarting(maxParallelUploads,uploads.size());
         while (uploads.size() > 0) {
             final TusUpload  tusUpload = uploads.remove(0);
             TusUploadRunnable tusUploadRunnable = new TusUploadRunnable(tusClient, tusUpload, uploadChunkSize, this);
@@ -618,7 +634,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered.
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered.
      *
      * @return uploadChunkSize
      */
@@ -628,7 +644,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link UploadProgressListener#onUploadProgress(long, long)} callback be triggered. If not set,
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered. If not set,
      * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
      *
      * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
@@ -648,19 +664,20 @@ public class Assembly extends OptionsBuilder {
 
 
     /**
-     * Returns current UploadProgressListener.
-     * @return {@link UploadProgressListener}
+     * Returns current Assembly listener used by a {@link TusUploadRunnable}.
+     *
+     * @return {@link AssemblyListener}
      */
-    public UploadProgressListener getUploadProgressListener() {
-        return uploadProgressListener;
+    public AssemblyListener getRunnableAssemblyListener() {
+        return runnableAssemblyListener;
     }
 
     /**
-     * This methods sets a customised {@link UploadProgressListener}.
-     * @param uploadProgressListener {@link UploadProgressListener}
+     * Sets a custom Assembly listener used by a {@link TusUploadRunnable}.
+     * @param runnableAssemblyListener {@link AssemblyListener}
      */
-    public void setUploadProgressListener(UploadProgressListener uploadProgressListener) {
-        this.uploadProgressListener = uploadProgressListener;
+    protected void setRunnableAssemblyListener(AssemblyListener runnableAssemblyListener) {
+        this.runnableAssemblyListener = runnableAssemblyListener;
     }
     /**
      * This Method is used to pause running parallel File uploads.
@@ -715,7 +732,7 @@ public class Assembly extends OptionsBuilder {
         if (executor != null) {
             executor.shutdownNow();
         }
-        uploadProgressListener.onUploadFailed(e);
+        runnableAssemblyListener.onError(e);
         if (socket != null) {
             socket.disconnect();
         }
@@ -737,10 +754,7 @@ public class Assembly extends OptionsBuilder {
      */
     protected synchronized void updateUploadProgress(long uploadedBytes) {
         this.uploadedBytes += uploadedBytes;
-        uploadProgressListener.onUploadProgress(this.uploadedBytes, uploadSize);
-        if (this.uploadedBytes == uploadSize) {
-            uploadProgressListener.onUploadFinished();
-        }
+        runnableAssemblyListener.onFileUploadProgress(this.uploadedBytes, uploadSize);
     }
 
     /**

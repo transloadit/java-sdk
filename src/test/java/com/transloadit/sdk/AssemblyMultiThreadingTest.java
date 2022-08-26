@@ -1,9 +1,9 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,36 +73,51 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
         MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
-        assembly.setUploadProgressListener(new UploadProgressListener() {
-            @Override
-            public void onUploadFinished() {
+        assembly.setRunnableAssemblyListener(new AssemblyListener() {
+                    @Override
+                    public void onAssemblyFinished(AssemblyResponse response) {
 
-            }
+                    }
 
-            @Override
-            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                    @Override
+                    public void onError(Exception error) {
 
-            }
+                    }
 
-            @Override
-            public void onUploadFailed(Exception exception) {
-                exception.printStackTrace();
-            }
+                    @Override
+                    public void onMetadataExtracted() {
 
-            @Override
-            public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+                    }
 
-            }
+                    @Override
+                    public void onAssemblyUploadFinished() {
 
-            @Override
-            public void onParallelUploadsPaused(String name) {
+                    }
 
-            }
+                    @Override
+                    public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
-            @Override
-            public void onParallelUploadsResumed(String name) {
+                    }
 
-            }
+                    @Override
+                    public void onFileUploadPaused(String name) {
+
+                    }
+
+                    @Override
+                    public void onFileUploadResumed(String name) {
+
+                    }
+
+                    @Override
+                    public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+                    }
+
+                    @Override
+                    public void onAssemblyResultFinished(String stepName, JSONObject result) {
+
+                    }
         });
 
         assembly.addFile(new File("LICENSE"), "file_name1");
@@ -179,44 +194,59 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     }
 
     /**
-     * Checks if {@link Assembly#getUploadProgressListener()} and
-     * {@link Assembly#setUploadProgressListener(UploadProgressListener)} are working.
+     * Checks if {@link Assembly#getRunnableAssemblyListener()} and
+     * {@link Assembly#setRunnableAssemblyListener(AssemblyListener)} are working.
      */
     @Test
     public void getAndSetUploadProgressListener() {
-        UploadProgressListener listener = new UploadProgressListener() {
+        AssemblyListener listener = new AssemblyListener() {
             @Override
-            public void onUploadFinished() {
-                System.out.println("Test");
-            }
-
-            @Override
-            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+            public void onAssemblyFinished(AssemblyResponse response) {
 
             }
 
             @Override
-            public void onUploadFailed(Exception exception) {
+            public void onError(Exception error) {
 
             }
 
             @Override
-            public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+            public void onMetadataExtracted() {
 
             }
 
             @Override
-            public void onParallelUploadsPaused(String name) {
+            public void onAssemblyUploadFinished() {
 
             }
 
             @Override
-            public void onParallelUploadsResumed(String name) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+
+            }
+
+            @Override
+            public void onFileUploadPaused(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
             }
         };
-        assembly.setUploadProgressListener(listener);
-        assertEquals(listener, assembly.getUploadProgressListener());
+        assembly.setRunnableAssemblyListener(listener);
+        assertEquals(listener, assembly.getRunnableAssemblyListener());
     }
 
     /**
@@ -228,8 +258,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
      */
     @Test
     public void abortUploads() throws LocalOperationException, RequestException, IOException, InterruptedException {
-        UploadProgressListener listener = getEmptyUploadProgressListener();
-        UploadProgressListener spyListener = Mockito.spy(listener);
+        AssemblyListener listener = getEmptyAssemblyListener();
+        AssemblyListener spyListener = Mockito.spy(listener);
 
         MockProtocolExceptionAssembly exceptionAssembly = new MockProtocolExceptionAssembly(transloadit);
         exceptionAssembly.wipeAssemblyID();
@@ -237,7 +267,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         exceptionAssembly.addFile(new File(getClass().getResource("/__files/assembly_executing.json").getFile()));
 
         Assembly assemblySpy = Mockito.spy(exceptionAssembly);
-        assemblySpy.setUploadProgressListener(spyListener);
+        assemblySpy.setRunnableAssemblyListener(spyListener);
 
         mockServerClient.when(HttpRequest.request()
                         .withPath("/assemblies")
@@ -253,7 +283,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
         Thread.sleep(500);  // This avoids a too fast test completion, before the abortion could take place
         Mockito.verify(assemblySpy).abortUploads();
-        Mockito.verify(spyListener).onUploadFailed(exceptionArgumentCaptor.capture());
+        Mockito.verify(spyListener).onError(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
         String exceptionMessage = exceptionArgumentCaptor.getValue().getMessage();
         assertEquals(exceptionMessage, errorMessage);
@@ -280,11 +310,11 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         assembly.addFile(new File("LICENSE"), "file_name2");
 
 
-        UploadProgressListener listener = getEmptyUploadProgressListener();
-        UploadProgressListener spyListener = Mockito.spy(listener);
+        AssemblyListener listener = getEmptyAssemblyListener();
+        AssemblyListener spyListener = Mockito.spy(listener);
 
         Assembly assemblySpy = Mockito.spy(assembly);
-        assemblySpy.setUploadProgressListener(spyListener);
+        assemblySpy.setRunnableAssemblyListener(spyListener);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
 
@@ -335,38 +365,54 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     }
 
     /**
-     * Provides an {@link UploadProgressListener} without working callback methods.
-     * @return {@link UploadProgressListener}
+     * Provides an {@link AssemblyListener} without working callback methods.
+     *
+     * @return {@link AssemblyListener}
      */
-    public UploadProgressListener getEmptyUploadProgressListener() {
-        return new UploadProgressListener() {
+    public AssemblyListener getEmptyAssemblyListener() {
+        return new AssemblyListener() {
             @Override
-            public void onUploadFinished() {
+            public void onAssemblyFinished(AssemblyResponse response) {
 
             }
 
             @Override
-            public void onUploadProgress(long uploadedBytes, long totalBytes) {
+            public void onError(Exception error) {
 
             }
 
             @Override
-            public void onUploadFailed(Exception exception) {
+            public void onMetadataExtracted() {
 
             }
 
             @Override
-            public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+            public void onAssemblyUploadFinished() {
 
             }
 
             @Override
-            public void onParallelUploadsPaused(String name) {
+            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
             }
 
             @Override
-            public void onParallelUploadsResumed(String name) {
+            public void onFileUploadPaused(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
+            public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
             }
         };

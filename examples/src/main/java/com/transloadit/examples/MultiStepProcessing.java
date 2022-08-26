@@ -3,7 +3,6 @@ package com.transloadit.examples;
 import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.AssemblyListener;
 import com.transloadit.sdk.Transloadit;
-import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -128,44 +127,8 @@ public final class MultiStepProcessing {
         });
         try {
             System.out.println("Processing... ");
-            UploadProgressListener uploadProgressListener = new UploadProgressListener() {
-                @Override
-                public void onUploadFinished() {
-                    System.out.println("All file uploads have been finished.");
-
-                }
-
-                @Override
-                public void onUploadProgress(long uploadedBytes, long totalBytes) {
-                   System.out.println("Upload: " + uploadedBytes + " from: " + totalBytes);
-                }
-
-                @Override
-                public void onUploadFailed(Exception exception) {
-                    System.out.println("Upload Failed");
-                    exception.printStackTrace();
-                }
-
-                @Override
-                public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
-                    System.out.println("New Uploads: Max:" + parallelUploads + " Number in Queue: " + uploadNumber);
-                }
-
-                @Override
-                public void onParallelUploadsPaused(String name) {
-                    System.out.println("Paused: " + name);
-
-                }
-
-                @Override
-                public void onParallelUploadsResumed(String name) {
-                    System.out.println("Resumed: " + name);
-
-                }
-            };
-            assembly.setUploadProgressListener(uploadProgressListener);
             assembly.setMaxParallelUploads(2);
-            assembly.setUploadChunkSize(50);
+            assembly.setUploadChunkSize(150);
             assembly.save(true);
 
             Thread.sleep(50);

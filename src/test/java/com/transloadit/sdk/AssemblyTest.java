@@ -256,6 +256,21 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
+            public void onFileUploadPaused(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
 

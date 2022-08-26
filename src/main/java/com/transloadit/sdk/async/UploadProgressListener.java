@@ -1,9 +1,11 @@
 package com.transloadit.sdk.async;
 
 /**
+ * Deprecated as being a part of {@link AsyncAssembly}
  * Implementations of this interface are used to handle progress and completion of a background
  * Assembly file upload.
  */
+@Deprecated
 public interface UploadProgressListener {
 
     /**
@@ -27,21 +29,10 @@ public interface UploadProgressListener {
     void onUploadFailed(Exception exception);
 
     /**
-     * Callback to be executed if parallel uploads are starting.
-     * @param parallelUploads Inidcates how many files are uploaded in parallel
-     * @param uploadNumber  Indicates how many files are in the upload Queue;
+     * Callback to be executed if the Assembly uploads are starting.
+     *
+     * @param parallelUploads Number of started uploads.
+     * @param uploadNumber Number of the specific started upload.
      */
     void onParallelUploadsStarting(int parallelUploads, int uploadNumber);
-
-    /**
-     * Callback to be executed if an already running, parallel upload gets paused.
-     * @param name Name of the upload Thread, which gets paused.
-     */
-    void onParallelUploadsPaused(String name);
-
-    /**
-     * Callback to be executed if an already running, parallel upload gets paused.
-     * @param name Name of the upload Thread, which gets paused.
-     */
-    void onParallelUploadsResumed(String name);
 }

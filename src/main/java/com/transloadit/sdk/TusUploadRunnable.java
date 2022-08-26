@@ -30,7 +30,7 @@ public class TusUploadRunnable implements Runnable {
     protected volatile boolean uploadHasBeenStarted = false;
     protected volatile boolean isUploading = false;
     protected volatile boolean isPaused = false;
-    protected volatile boolean isFinishedPermanentely = false;
+    protected volatile boolean isFinishedPermanently = false;
     protected final Object lock;
 
 
@@ -108,12 +108,12 @@ public class TusUploadRunnable implements Runnable {
                                 synchronized (lock) {
                                     tusUploader.finish(false);
                                     isUploading = false;
-                                    assembly.getUploadProgressListener().onParallelUploadsPaused(name);
+                                    assembly.getRunnableAssemblyListener().onFileUploadPaused(name);
                                     lock.wait();
                                 }
                             } else {
                                 // pauses the Thread even if it has not started the upload.
-                                assembly.getUploadProgressListener().onParallelUploadsPaused(name);
+                                assembly.getRunnableAssemblyListener().onFileUploadPaused(name);
                                 lock.wait();
                             }
                         }
@@ -122,7 +122,7 @@ public class TusUploadRunnable implements Runnable {
                     assembly.threadThrowsLocalOperationException(name, e);
                 } finally {
                     isUploading = false;
-                    isFinishedPermanentely = true;
+                    isFinishedPermanently = true;
                     tusUploader.finish();
                 }
             }
@@ -145,7 +145,7 @@ public class TusUploadRunnable implements Runnable {
      * This results in resuming the upload with the next chunk.
      */
     public void setUnPaused() throws LocalOperationException, RequestException {
-        if (uploadHasBeenStarted && !isFinishedPermanentely) {  // prohibits an attempt of resuming a finished upload.
+        if (uploadHasBeenStarted && !isFinishedPermanently) {  // prohibits an attempt of resuming a finished upload.
             try {
                 this.tusUploader = this.tusClient.resumeUpload(tusUpload);
                 if (uploadChunkSize > 0) {
@@ -160,14 +160,14 @@ public class TusUploadRunnable implements Runnable {
             synchronized (lock) {
                 lock.notify();
             }
-            assembly.getUploadProgressListener().onParallelUploadsResumed(this.name);
+            assembly.getRunnableAssemblyListener().onFileUploadResumed(this.name);
         }
-        if (!isFinishedPermanentely && isPaused) {
+        if (!isFinishedPermanently && isPaused) {
             this.isPaused = false;
             synchronized (lock) {
                 lock.notify();
             }
-            assembly.getUploadProgressListener().onParallelUploadsResumed(this.name);
+            assembly.getRunnableAssemblyListener().onFileUploadResumed(this.name);
         }
     }
 }

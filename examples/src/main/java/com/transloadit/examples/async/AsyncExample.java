@@ -58,16 +58,6 @@ public final class AsyncExample {
          public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
 
          }
-
-         @Override
-         public void onParallelUploadsPaused(String name) {
-
-         }
-
-         @Override
-         public void onParallelUploadsResumed(String name) {
-
-         }
      }
     /**
      * Prohibits instantiation of utility class.
