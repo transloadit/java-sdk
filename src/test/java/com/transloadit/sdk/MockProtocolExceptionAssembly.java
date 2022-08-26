@@ -1,6 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.async.UploadProgressListener;
+import com.transloadit.sdk.response.AssemblyResponse;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
 import io.tus.java.client.TusUpload;
@@ -13,10 +14,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 //CHECKSTYLE:OFF
 import com.transloadit.sdk.exceptions.LocalOperationException;  // needed for doc
 import com.transloadit.sdk.exceptions.RequestException;
+import org.json.JSONObject;
 //CHECKSTYLE:ON
 
 public class MockProtocolExceptionAssembly extends Assembly {
-    private UploadProgressListener uploadProgressListener;
+    private AssemblyListener assemblyListener;
     private long uploadSize;
     private ArrayList<MockTusUploadRunnable> threadList = new ArrayList<MockTusUploadRunnable>();
     private int maxParallelUploads = 2;
@@ -36,42 +38,56 @@ public class MockProtocolExceptionAssembly extends Assembly {
      */
     @Override
     protected void uploadTusFiles() throws IOException, ProtocolException {
-        if (uploadProgressListener == null) {
-            uploadProgressListener = new UploadProgressListener() {
+        if (assemblyListener == null) {
+            assemblyListener = new AssemblyListener() {
                 @Override
-                public void onUploadFinished() {
+                public void onAssemblyFinished(AssemblyResponse response) {
 
                 }
 
                 @Override
-                public void onUploadProgress(long uploadedBytes, long totalBytes) {
+                public void onError(Exception error) {
 
                 }
 
                 @Override
-                public void onUploadFailed(Exception exception) {
+                public void onMetadataExtracted() {
 
                 }
 
                 @Override
-                public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+                public void onAssemblyUploadFinished() {
 
                 }
 
                 @Override
-                public void onParallelUploadsPaused(String name) {
+                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
 
                 }
 
                 @Override
-                public void onParallelUploadsResumed(String name) {
+                public void onFileUploadPaused(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadResumed(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+                }
+
+                @Override
+                public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
                 }
             };
         }
         uploadSize = getUploadSize();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        uploadProgressListener.onParallelUploadsStarting(maxParallelUploads, uploads.size());
         while (uploads.size() > 0) {
             final TusUpload tusUpload = uploads.remove(0);
             MockTusUploadRunnable tusUploadRunnable = new MockTusUploadRunnable(

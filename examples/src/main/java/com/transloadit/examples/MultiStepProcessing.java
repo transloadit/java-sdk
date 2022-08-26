@@ -118,6 +118,23 @@ public final class MultiStepProcessing {
             }
 
             @Override
+            public void onFileUploadPaused(String name) {
+                System.out.println("File upload paused: " + name);
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+                System.out.println("File upload resumed: " + name);
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+                System.out.println("Uploaded " + uploadedBytes + "/" + totalBytes + " Bytes");
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."

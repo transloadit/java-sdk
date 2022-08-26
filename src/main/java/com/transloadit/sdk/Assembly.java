@@ -717,7 +717,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * This Method is used to abort all parallel File uploads.
-     * It informs the current {@link UploadProgressListener} about the abortion.
+     * It informs the current {@link AssemblyListener} about the abortion.
      */
     public void abortUploads() {
         abortUploads(new LocalOperationException("Uploads aborted"));
@@ -725,7 +725,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * This Method is used to abort all parallel File uploads.
-     * It informs the current {@link UploadProgressListener} about the abortion.
+     * It informs the current {@link AssemblyListener} about the abortion.
      * @param e {@link Exception that lead to the abortion}
      */
     protected void abortUploads(Exception e) {

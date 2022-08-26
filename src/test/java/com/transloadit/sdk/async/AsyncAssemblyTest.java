@@ -279,20 +279,6 @@ public class AsyncAssemblyTest extends MockHttpService {
             }
         }
 
-        @Override
-        public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
-
-        }
-
-        @Override
-        public void onParallelUploadsPaused(String name) {
-
-        }
-
-        @Override
-        public void onParallelUploadsResumed(String name) {
-
-        }
 
         /**
          * Hands over AssemblyStatusUpdate exception object to {@link AsyncAssemblyTest#statusUpdateError}.
@@ -304,6 +290,11 @@ public class AsyncAssemblyTest extends MockHttpService {
             synchronized (this) {
                 notifyAll();
             }
+        }
+
+        @Override
+        public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
         }
     }
 }
