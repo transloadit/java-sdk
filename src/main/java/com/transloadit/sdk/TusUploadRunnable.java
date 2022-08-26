@@ -104,6 +104,7 @@ public class TusUploadRunnable implements Runnable {
                             }
                         } else {
                             if (uploadHasBeenStarted) {
+                                //Upload pausing works different if the upload has already benn started
                                 synchronized (lock) {
                                     tusUploader.finish(false);
                                     isUploading = false;
