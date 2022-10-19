@@ -37,7 +37,7 @@ jobs:
 
     slack-on-failure:
       needs: [Java]
-      if: failure() && github.ref == 'refs/heads/master'
+      if: failure() && github.ref == 'refs/heads/main'
       runs-on: ubuntu-latest
 
       steps:
