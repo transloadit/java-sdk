@@ -1,4 +1,4 @@
-[![Tests](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml)
+[![Tests](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml)
 
 ## java-sdk
 
