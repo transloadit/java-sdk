@@ -134,7 +134,7 @@ public final class MultiStepProcessing {
 
         try {
             System.out.println("Processing... ");
-            System.out.println("Assembly ID: " + assembly.getAssemblyID());
+            System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
             assembly.save(true);
          } catch (LocalOperationException | RequestException e) {
             e.printStackTrace();
