@@ -1,4 +1,7 @@
-### 0.4.2 / 2021-01-29 ###
+### 0.4.3 / 2022-10-28 ###
+* Includes a vulnerability patch in the used socket-io implementation
+
+### 0.4.2 / 2022-02-03 ###
 * Added possibility for SDKs using this SDK to send their own version number to the server in the Transloadit-Client header.
 * Resolved some file-name conflicts with the tus-java-client library.
 
