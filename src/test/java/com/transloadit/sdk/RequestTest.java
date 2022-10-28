@@ -65,7 +65,7 @@ public class RequestTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo")
                 .withMethod("GET")
-                .withHeader("Transloadit-Client", "java-sdk:0.4.2"));
+                .withHeader("Transloadit-Client", "java-sdk:0.4.3"));
 
     }
 
