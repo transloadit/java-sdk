@@ -1,3 +1,6 @@
+### 0.4.4 / 2022-10-30 ###
+* The Socket-IO plugin has been updated to version 4, which is also used by the API.
+
 ### 0.4.3 / 2022-10-28 ###
 * Includes a vulnerability patch in the used socket-io implementation
 
