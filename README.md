@@ -1,4 +1,4 @@
-[![Tests](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml)
+[![Tests](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/transloadit/java-sdk/actions/workflows/tests.yml)
 
 ## java-sdk
 
@@ -20,7 +20,7 @@ Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog
 **Gradle:**
 
 ```groovy
-implementation 'com.transloadit.sdk:transloadit:0.4.2'
+implementation 'com.transloadit.sdk:transloadit:0.4.4'
 ```
 
 **Maven:**
@@ -29,7 +29,7 @@ implementation 'com.transloadit.sdk:transloadit:0.4.2'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>0.4.2</version>
+  <version>0.4.4</version>
 </dependency>
 ```
 

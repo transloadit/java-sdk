@@ -146,6 +146,7 @@ public final class MultiStepProcessing {
             System.out.println("Processing... ");
             assembly.setMaxParallelUploads(2);
             assembly.setUploadChunkSize(150);
+            System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
             assembly.save(true);
 
             Thread.sleep(50);
