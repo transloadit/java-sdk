@@ -43,11 +43,32 @@ public interface AssemblyListener {
     void onFileUploadFinished(String fileName, JSONObject uploadInformation);
 
     /**
+     * Callback to be executed if an already running, parallel upload gets paused.
+     * @param name Name of the upload Thread, which gets paused.
+     */
+    void onFileUploadPaused(String name);
+
+    /**
+     * Callback to be executed if an already running, parallel upload gets paused.
+     * @param name Name of the upload Thread, which gets paused.
+     */
+    void onFileUploadResumed(String name);
+    /**
+     * Callback to be executed as an upload progress receiver.
+     *
+     * @param uploadedBytes the number of bytes uploaded so far.
+     * @param totalBytes the total number of bytes to uploaded (i.e the size of all the files all together).
+     */
+    void onFileUploadProgress(long uploadedBytes, long totalBytes);
+
+    /**
      * Callback to be executed if there is an Assembly result.
      * @param stepName name of the step, the result is part of
      * @param result {@link JSONObject} which holds information about the result as Key-Value pairs.
      */
     void onAssemblyResultFinished(String stepName, JSONObject result);
+
+
 
 
 }

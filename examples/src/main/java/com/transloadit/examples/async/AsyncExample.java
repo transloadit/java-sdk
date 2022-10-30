@@ -53,7 +53,12 @@ public final class AsyncExample {
             System.out.println("upload failed :(");
             exception.printStackTrace();
         }
-    }
+
+         @Override
+         public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
+         }
+     }
     /**
      * Prohibits instantiation of utility class.
      */

@@ -13,12 +13,12 @@ import org.mockserver.junit.MockServerRule;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -256,6 +256,21 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
+            public void onFileUploadPaused(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
 
@@ -361,6 +376,16 @@ public class AssemblyTest extends MockHttpService {
         assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
     }
 
+
+    /**
+     * Tests the functionality of {@link Assembly#getClientSideGeneratedAssemblyID()}.
+     */
+    @Test
+    public void getAssemblyId() throws LocalOperationException {
+        assembly.setAssemblyId("68fffff5474d40b8bf7a294cfce4aba5");
+        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getClientSideGeneratedAssemblyID());
+    }
+
     /**
      * Tests the integrity check of {@link Assembly#setAssemblyId(String)}.
      */
@@ -378,15 +403,6 @@ public class AssemblyTest extends MockHttpService {
             assembly.setAssemblyId(uuidLong); });
         assembly.setAssemblyId(uuid);
         assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
-    }
-
-    /**
-     * Tests the functionality of {@link Assembly#getClientSideGeneratedAssemblyID()}.
-     */
-    @Test
-    public void getAssemblyId() throws LocalOperationException {
-        assembly.setAssemblyId("68fffff5474d40b8bf7a294cfce4aba5");
-        assertEquals("68fffff5474d40b8bf7a294cfce4aba5", assembly.getClientSideGeneratedAssemblyID());
     }
 
     /**
@@ -412,5 +428,34 @@ public class AssemblyTest extends MockHttpService {
         String assemblyID = assembly.generateAssemblyID();
         assembly.setAssemblyId(assemblyID);
         assertEquals("/assemblies/" + assemblyID, assembly.obtainUploadUrlSuffix());
+    }
+
+    /**
+     * Determines if the correct fileSizes are returned by {@link Assembly#getUploadSize()}.
+     * @throws IOException
+     */
+    @Test
+    public void getUploadSize() throws IOException {
+        File file1 = new File(getClass().getResource("/__files/assembly_executing.json").getFile());
+        File file2 = new File(getClass().getResource("/__files/cancel_assembly.json").getFile());
+        assembly.addFile(file1);
+        assembly.addFile(file2);
+
+        long combinedFilesize = Files.size(file1.toPath()) + Files.size(file2.toPath());
+        assertEquals(combinedFilesize, assembly.getUploadSize());
+    }
+
+
+    /**
+     * Determines if correct number of upload files is determined.
+     * @throws FileNotFoundException
+     */
+    @Test public void getNumberOfFiles() throws FileNotFoundException {
+        File file1 = new File(getClass().getResource("/__files/assembly_executing.json").getFile());
+        FileInputStream file2 = new FileInputStream(getClass().getResource("/__files/cancel_assembly.json").getFile());
+        assembly.addFile(file1);
+        assembly.addFile(file2);
+
+        assertEquals(2, assembly.getNumberOfFiles());
     }
 }

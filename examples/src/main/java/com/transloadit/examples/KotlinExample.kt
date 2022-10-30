@@ -77,6 +77,18 @@ class KotlinExample {
                     println("File " + fileName + "has been uploaded successfully")
                 }
 
+                override fun onFileUploadPaused(name: String?) {
+                    println("Upload" + name + "has been paused")
+                }
+
+                override fun onFileUploadResumed(name: String?) {
+                    println("Upload" + name + "has been resumed")
+                }
+
+                override fun onFileUploadProgress(uploadedBytes: Long, totalBytes: Long) {
+                    println("Uploaded $uploadedBytes from $totalBytes bytes")
+                }
+
                 override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
                     println("Step Result available: ")
                     println(

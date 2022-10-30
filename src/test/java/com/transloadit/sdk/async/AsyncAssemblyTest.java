@@ -279,6 +279,7 @@ public class AsyncAssemblyTest extends MockHttpService {
             }
         }
 
+
         /**
          * Hands over AssemblyStatusUpdate exception object to {@link AsyncAssemblyTest#statusUpdateError}.
          * @param exception the error that causes the failure.
@@ -289,6 +290,11 @@ public class AsyncAssemblyTest extends MockHttpService {
             synchronized (this) {
                 notifyAll();
             }
+        }
+
+        @Override
+        public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+
         }
     }
 }

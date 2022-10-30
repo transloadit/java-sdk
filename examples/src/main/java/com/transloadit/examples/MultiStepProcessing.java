@@ -9,8 +9,10 @@ import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -24,15 +26,16 @@ public final class MultiStepProcessing {
      * Runs a multistep Transloadit assembly.
      * @param args
      */
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws FileNotFoundException {
         // New Transloadit Instance
         Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
         Assembly assembly = transloadit.newAssembly();
 
         // Add Files and define Field name
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/dutch-anthem.mp3").getFile()), "file_1");
-        assembly.addFile(new File(MultiStepProcessing.class.getResource("/german-anthem-0.mp3").getFile()), "file_2");
+        assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource(
+                "/dutch-anthem.mp3")).getFile()), "file_1");
+        assembly.addFile(new File(Objects.requireNonNull(MultiStepProcessing.class.getResource(
+                "/german-anthem-0.mp3")).getFile()), "file_2");
 
         // Step1 Reduce File's Bitrates
         Map<String, Object> step1 = new HashMap<>();
@@ -41,7 +44,6 @@ public final class MultiStepProcessing {
 
         assembly.addStep("encode", "/audio/encode", step1);
 
-
         // Step2 Concatenation
             /* Building "use" parameter as JSONObject
                 -   name = Name of previous step
@@ -49,7 +51,6 @@ public final class MultiStepProcessing {
                 -   as = audio_<number> defines oder of Concatenation
                 => Needs to be stored under key "steps" as it defines every substep
              */
-
         JSONObject outerJsonObject = new JSONObject();
         outerJsonObject.append(
                 "steps",
@@ -66,11 +67,11 @@ public final class MultiStepProcessing {
                         .put("as", "audio_1"));
 
         Map<String, Object> step2 = new HashMap<>();
+
         step2.put("preset", "mp3");
         step2.put("use", outerJsonObject);
 
         assembly.addStep("concat", "/audio/concat", step2);
-
 
         // Step 3 Waveform
         Map<String, Object> step3 = new HashMap<>();
@@ -78,9 +79,7 @@ public final class MultiStepProcessing {
         step3.put("width", 1920);
         step3.put("height", 720);
         step3.put("outer_color", "ff00c7ff");
-
         assembly.addStep("waveform", "/audio/waveform", step3);
-
 
         // Register AssemblyListener => Informs User on Assembly completion
         assembly.setAssemblyListener(new AssemblyListener() {
@@ -88,7 +87,6 @@ public final class MultiStepProcessing {
             public void onAssemblyFinished(AssemblyResponse response) {
                 System.out.println("Assembly finished");
             }
-
             public void printStatus(JSONArray status) {
                 for (int i = 0; i < status.length(); i++) {
                     JSONObject obj = status.getJSONObject(i);
@@ -120,23 +118,44 @@ public final class MultiStepProcessing {
             }
 
             @Override
+            public void onFileUploadPaused(String name) {
+                System.out.println("File upload paused: " + name);
+            }
+
+            @Override
+            public void onFileUploadResumed(String name) {
+                System.out.println("File upload resumed: " + name);
+
+            }
+
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+                System.out.println("Uploaded " + uploadedBytes + "/" + totalBytes + " Bytes");
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
                         + result.get("ext"));
-                System.out.println("Downlaodlink: " + result.getString("ssl_url") + "\n");
+                System.out.println("Download link: " + result.getString("ssl_url") + "\n");
             }
-
-
         });
-
-
-
         try {
             System.out.println("Processing... ");
+            assembly.setMaxParallelUploads(2);
+            assembly.setUploadChunkSize(150);
             System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
             assembly.save(true);
-         } catch (LocalOperationException | RequestException e) {
+
+            Thread.sleep(50);
+            assembly.pauseUploads();
+            Thread.sleep(3000);
+            assembly.resumeUploads();
+
+            System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
+         } catch (LocalOperationException | RequestException | InterruptedException e) {
             e.printStackTrace();
         }
     }

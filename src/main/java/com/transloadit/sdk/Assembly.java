@@ -9,11 +9,9 @@ import io.socket.emitter.Emitter;
 import io.socket.engineio.client.transports.WebSocket;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
-import io.tus.java.client.TusExecutor;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
-import io.tus.java.client.TusUploader;
 import org.jetbrains.annotations.TestOnly;
 import org.json.JSONObject;
 
@@ -28,7 +26,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.UUID;
+// CHECKSTYLE:OFF
+import io.tus.java.client.TusUploader;
+// CHECKTYLE:ON
+
 
 /**
  * This class represents a new assembly being created.
@@ -43,6 +47,18 @@ public class Assembly extends OptionsBuilder {
     protected List<TusUpload> uploads;
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
+    protected AssemblyListener runnableAssemblyListener;
+    protected Socket socket;
+
+
+    protected ArrayList<TusUploadRunnable> threadList;
+    private HashMap<String, Exception> threadExceptions;
+    private int maxParallelUploads = 2;
+    private ThreadPoolExecutor executor;
+
+    private long uploadSize;
+    private long uploadedBytes;
+    protected int uploadChunkSize = 0;
 
     /**
      * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
@@ -69,8 +85,9 @@ public class Assembly extends OptionsBuilder {
         uploads = new ArrayList<TusUpload>();
         fileStreams = new HashMap<String, InputStream>();
         shouldWaitForCompletion = false;
+        threadList =  new ArrayList<TusUploadRunnable>();
+        threadExceptions = new HashMap<String, Exception>();
         assemblyId = generateAssemblyID();
-
     }
 
     /**
@@ -193,7 +210,7 @@ public class Assembly extends OptionsBuilder {
      *
      * @return the number of files that have been added for upload.
      */
-    public int getFilesCount() {
+    public int getNumberOfFiles() {
         return files.size() + fileStreams.size();
     }
 
@@ -223,9 +240,9 @@ public class Assembly extends OptionsBuilder {
 
         AssemblyResponse response;
         // only do tus uploads if files will be uploaded
-        if (isResumable && getFilesCount() > 0) {
+        if (isResumable && getNumberOfFiles() > 0) {
             Map<String, String> tusOptions = new HashMap<String, String>();
-            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getFilesCount()));
+            tusOptions.put("tus_num_expected_upload_files", Integer.toString(getNumberOfFiles()));
 
             response = new AssemblyResponse(
                     request.post(obtainUploadUrlSuffix(), options, tusOptions, null, null), true);
@@ -314,13 +331,13 @@ public class Assembly extends OptionsBuilder {
     /**
      * Prepares a file for tus upload.
      *
-     * @param inptStream {@link InputStream}
+     * @param inputStream {@link InputStream}
      * @param fieldName the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with reading the input stream.
      */
-    protected void processTusFile(InputStream inptStream, String fieldName, String assemblyUrl) throws IOException {
-        TusUpload upload = getTusUploadInstance(inptStream, fieldName, assemblyUrl);
+    protected void processTusFile(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
+        TusUpload upload = getTusUploadInstance(inputStream, fieldName, assemblyUrl);
 
         Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("filename", fieldName);
@@ -340,6 +357,7 @@ public class Assembly extends OptionsBuilder {
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      */
+
     protected void processTusFile(File file, String fieldName, String assemblyUrl) throws IOException {
         TusUpload upload = getTusUploadInstance(file);
 
@@ -384,30 +402,89 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
+     * Calculates the expected uploadSize in Bytes.
+     * @return the expected cumulative upload size
+     * @throws IOException Input Streams cannote be read
+     */
+    public long getUploadSize() throws IOException {
+        long totalUploadSize = 0;
+        for (Map.Entry<String, File> entry : files.entrySet()) {
+            totalUploadSize += entry.getValue().length();
+        }
+
+        for (Map.Entry<String, InputStream> entry : fileStreams.entrySet()) {
+            totalUploadSize += entry.getValue().available();
+        }
+        return totalUploadSize;
+    }
+
+    /**
      * Does the actual uploading of files (when tus is enabled).
      *
      * @throws IOException when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
-        while (uploads.size() > 0) {
-            final TusUploader tusUploader = tusClient.resumeOrCreateUpload(uploads.get(0));
-
-            TusExecutor tusExecutor = new TusExecutor() {
+        AssemblyListener localListener;
+        if (assemblyListener == null) {
+            runnableAssemblyListener = new AssemblyListener() {
                 @Override
-                protected void makeAttempt() throws ProtocolException, IOException {
-                    int uploadedChunk = 0;
-                    while (uploadedChunk > -1) {
-                        uploadedChunk = tusUploader.uploadChunk();
-                    }
-                    tusUploader.finish();
+                public void onAssemblyFinished(AssemblyResponse response) {
+
+                }
+
+                @Override
+                public void onError(Exception error) {
+
+                }
+
+                @Override
+                public void onMetadataExtracted() {
+
+                }
+
+                @Override
+                public void onAssemblyUploadFinished() {
+
+                }
+
+                @Override
+                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+
+                }
+
+                @Override
+                public void onFileUploadPaused(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadResumed(String name) {
+
+                }
+
+                @Override
+                public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+                }
+
+                @Override
+                public void onAssemblyResultFinished(String stepName, JSONObject result) {
+
                 }
             };
-
-            tusExecutor.makeAttempts();
-            // remove upload instance from list
-            uploads.remove(0);
+        } else {
+            runnableAssemblyListener = getAssemblyListener();
         }
+        uploadSize = getUploadSize();
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
+        while (uploads.size() > 0) {
+            final TusUpload  tusUpload = uploads.remove(0);
+            TusUploadRunnable tusUploadRunnable = new TusUploadRunnable(tusClient, tusUpload, uploadChunkSize, this);
+            threadList.add(tusUploadRunnable);
+            executor.execute(tusUploadRunnable);
+        }
+        executor.shutdown();
     }
 
     /**
@@ -466,7 +543,7 @@ public class Assembly extends OptionsBuilder {
         final String assemblyUrl = response.getSslUrl();
         final String assemblyId = response.getId();
 
-        final Socket socket = getSocket(response.getWebsocketUrl());
+        socket = getSocket(response.getWebsocketUrl());
         Emitter.Listener onFinished = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -555,6 +632,71 @@ public class Assembly extends OptionsBuilder {
         return response;
     }
 
+    /**
+     * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered.
+     *
+     * @return uploadChunkSize
+     */
+    public int getUploadChunkSize() {
+        return uploadChunkSize;
+    }
+
+    /**
+     * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered. If not set,
+     * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
+     *
+     * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
+     */
+    public void setUploadChunkSize(int uploadChunkSize) {
+        this.uploadChunkSize = uploadChunkSize;
+    }
+
+    /**
+     * This method sets how many uploads are performed simultaneously. If the number of uploads exceeds the set value,
+     * a queue is created and processed piece by piece.
+     * @param maxUploads maximum number of uploads, which are performed simultaneously.
+     */
+    public void setMaxParallelUploads(int maxUploads) {
+        this.maxParallelUploads = maxUploads;
+    }
+
+
+    /**
+     * Returns current Assembly listener used by a {@link TusUploadRunnable}.
+     *
+     * @return {@link AssemblyListener}
+     */
+    public AssemblyListener getRunnableAssemblyListener() {
+        return runnableAssemblyListener;
+    }
+
+    /**
+     * Sets a custom Assembly listener used by a {@link TusUploadRunnable}.
+     * @param runnableAssemblyListener {@link AssemblyListener}
+     */
+    protected void setRunnableAssemblyListener(AssemblyListener runnableAssemblyListener) {
+        this.runnableAssemblyListener = runnableAssemblyListener;
+    }
+    /**
+     * This Method is used to pause running parallel File uploads.
+     */
+    public void pauseUploads() throws LocalOperationException {
+        for (TusUploadRunnable thread : threadList) {
+            int index = threadList.indexOf(thread);
+            thread.setPaused();
+        }
+    }
+
+    /**
+     * This Method is used to pause parallel File uploads.
+     */
+    public void resumeUploads() throws LocalOperationException, RequestException {
+        for (TusUploadRunnable thread : threadList) {
+            thread.setUnPaused();
+        }
+    }
 
     /**
      * Undocumented debug option, which is not intended for production use.
@@ -571,6 +713,71 @@ public class Assembly extends OptionsBuilder {
             throw new LocalOperationException("The provided Assembly ID doesn't match the expected pattern of "
                     + "\"[a-f0-9]{32}\"");
         }
+    }
+
+    /**
+     * This Method is used to abort all parallel File uploads.
+     * It informs the current {@link AssemblyListener} about the abortion.
+     */
+    public void abortUploads() {
+        abortUploads(new LocalOperationException("Uploads aborted"));
+    }
+
+    /**
+     * This Method is used to abort all parallel File uploads.
+     * It informs the current {@link AssemblyListener} about the abortion.
+     * @param e {@link Exception that lead to the abortion}
+     */
+    protected void abortUploads(Exception e) {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
+        runnableAssemblyListener.onError(e);
+        if (socket != null) {
+            socket.disconnect();
+        }
+    }
+
+
+    /**
+     * This method removes finished Threads from the ThreadList.
+     * @param tusUploadThread a Upload Thread instance
+     */
+    synchronized void removeThreadFromList(TusUploadRunnable tusUploadThread) {
+        threadList.remove(tusUploadThread);
+    }
+
+    /**
+     * Updates the number of Bytes, which have been uploaded already.
+     * Also triggers Upload finished if the uploads has been finished.
+     * @param uploadedBytes Number of bytes uploaded by the calling Thread.
+     */
+    protected synchronized void updateUploadProgress(long uploadedBytes) {
+        this.uploadedBytes += uploadedBytes;
+        runnableAssemblyListener.onFileUploadProgress(this.uploadedBytes, uploadSize);
+    }
+
+    /**
+     * Takes a {@link LocalOperationException} from a running thread and stores it in {@link #threadExceptions}.
+     * Also stops the uploads and notifies the user.
+     * @param s Thread Name
+     * @param e {@link LocalOperationException}
+     */
+     protected void threadThrowsLocalOperationException(String s, Exception e) {
+        this.threadExceptions.put(s, new LocalOperationException(e));
+         abortUploads(e);
+    }
+
+    /**
+     * /**
+     * Takes a {@link RequestException} from a running thread and stores it in {@link #threadExceptions}.
+     * Also stops the uploads and notifies the user.
+     * @param s Thread Name
+     * @param e {@link RequestException}
+     */
+     protected void threadThrowsRequestException(String s, Exception e) {
+         this.threadExceptions.put(s, new RequestException(e));
+         abortUploads(e);
     }
 
     /**
@@ -595,7 +802,7 @@ public class Assembly extends OptionsBuilder {
      * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
      * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be invalid.
      */
-    protected void wipeAssemblyID() {
+    public void wipeAssemblyID() {
         this.assemblyId = "";
     }
 
@@ -611,4 +818,11 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
+    /**
+     * Returns the current Thread List
+     * @return List of Type TusUploadRunnable
+     */
+     protected ArrayList<TusUploadRunnable> getThreadList() {
+        return threadList;
+    }
 }

@@ -75,6 +75,11 @@ public final class AsyncPausePlayExample {
             System.out.println("upload failed :(");
             exception.printStackTrace();
         }
+
+        @Override
+        public void onParallelUploadsStarting(int parallelUploads, int uploadNumber) {
+            System.out.println("Upload started: " + uploadNumber + " parallel Uploads in total " + parallelUploads);
+        }
     }
     /**
      * Prohibits instantiation of utility class.

@@ -1,0 +1,11 @@
+{
+  "ok": "ASSEMBLY_UPLOADING",
+  "http_code": 200,
+  "message": "The assembly is still in the process of being uploaded.",
+  "assembly_id": "02ce6150ea2811e6a35a8d1e061a5b71",
+  "instance": "dara.transloadit.com",
+  "websocket_url": "http://localhost:9040/ws0014",
+  "assembly_url": "http://localhost:9040/assemblies/assemblies/02ce6150ea2811e6a35a8d1e061a5b71",
+  "assembly_ssl_url": "http://localhost:9040/assemblies/02ce6150ea2811e6a35a8d1e061a5b71",
+  "tus_url": "http://localhost:9040/resumable/files"
+}

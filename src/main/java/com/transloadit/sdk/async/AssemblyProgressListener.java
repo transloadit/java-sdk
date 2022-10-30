@@ -2,10 +2,13 @@ package com.transloadit.sdk.async;
 
 import com.transloadit.sdk.response.AssemblyResponse;
 
+
 /**
+ * Deprecated because its use is limited to the also deprecated {@link AsyncAssembly}.
  * Implementations of this interface are used to handle progress and completion of a background
  * Assembly file upload and execution.
  */
+@Deprecated
 public interface AssemblyProgressListener {
 
     /**
