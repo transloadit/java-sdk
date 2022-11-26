@@ -35,6 +35,13 @@ public class StepsTest {
     public void addStepGetStep() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
         assertEquals(steps.getStep("encode").robot, "/video/encode");
+
+        HashMap<String, Object> stepOptions = new HashMap<String, Object>();
+        stepOptions.put("width", 1920);
+        stepOptions.put("height", 720);
+
+        steps.addStep("video", stepOptions);
+        assertEquals(steps.getStep("video").options, stepOptions);
     }
 
     /**
@@ -57,7 +64,7 @@ public class StepsTest {
     @Test
     public void toMap() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
-        steps.addStep("thumbs", "/video/thumbs", new HashMap<String, Object>());
+        steps.addStep("thumbs", new HashMap<String, Object>());
 
         Map<String, Map> controlMap = new HashMap<String, Map>();
 
@@ -65,7 +72,6 @@ public class StepsTest {
         encodeStep.put("robot", "/video/encode");
 
         Map<String, String> thumbStep = new HashMap<String, String>();
-        thumbStep.put("robot", "/video/thumbs");
 
         controlMap.put("encode", encodeStep);
         controlMap.put("thumbs", thumbStep);

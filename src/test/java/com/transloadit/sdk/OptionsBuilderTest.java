@@ -9,6 +9,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -40,8 +41,10 @@ public class OptionsBuilderTest {
     @Test
     public void addStep() {
         optionsBuilder.addStep("encode", "/video/encode", new HashMap<String, Object>());
+        optionsBuilder.addStep("noRobotName", new HashMap<String, Object>());
 
         assertEquals(optionsBuilder.steps.getStep("encode").robot, "/video/encode");
+        assertNotNull(optionsBuilder.steps.getStep("noRobotName"));
     }
 
     /**

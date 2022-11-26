@@ -23,6 +23,15 @@ public class OptionsBuilder {
     protected Map<String, Object> options;
 
     /**
+     * Adds a new step to the list of steps without defining a robot to be used in the step's execution.
+     * A potential use case could be overwriting templates.
+     * @param name Name of the step to add.
+     * @param options extra options required for the step.
+     */
+    public void addStep(String name, Map<String, Object> options) {
+        steps.addStep(name, null, options);
+    }
+    /**
      * Adds a step to the steps.
      *
      * @param name {@link String} name of the step
@@ -53,7 +62,7 @@ public class OptionsBuilder {
 
     /**
      * Adds a single option to be sent along with the request.
-     *
+     * In case you want to use a template, you can add your template's id here as: `"template_id": " template uuid "`.
      * @param key {@link String} name of the option
      * @param value {@link Object} value of the option.
      */
@@ -89,7 +98,7 @@ public class OptionsBuilder {
      * Already existing Keys will be overwritten.
      * Also overwrites existing values stored under the key "fields" in options. This happens if the value is not a
      * instance of {@link JSONObject}
-     * @param fields
+     * @param fields Map of fields to be added.
      */
     public void addFields(Map<String, Object> fields) {
 
