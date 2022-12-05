@@ -42,11 +42,22 @@ public class Steps {
          */
         public Map<String, Object> toMap() {
             Map<String, Object> options = new HashMap<String, Object>(this.options);
-            options.put("robot", this.robot);
+            if (robot != null && !robot.isEmpty()) {
+                options.put("robot", this.robot);
+            }
             return options;
         }
     }
 
+    /***
+     * Adds a new step to the list of steps without defining a robot to be used in the step's execution.
+     * A potential use case could be overwriting templates.
+     * @param name Name of the step to add.
+     * @param options extra options required for the step.
+     */
+    public void addStep(String name, Map<String, Object> options) {
+        all.put(name, new Step(name, null, options));
+    }
     /**
      * Adds a new step to the list of steps.
      *
