@@ -24,7 +24,7 @@ allprojects {
 dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'io.tus.java.client:tus-java-client:0.4.5'
-    implementation 'joda-time:joda-time:2.12.0'
+    implementation 'joda-time:joda-time:2.12.2'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'org.json:json:20220924'
     implementation 'commons-codec:commons-codec:1.15'
@@ -60,9 +60,11 @@ def pomConfig = {
 
     developers {
         developer {
-            id 'Transloadit'
-            name 'Transloadit'
-            email 'support@transloadit.com'
+            id 'cdr_chakotay'
+            name 'Florian Kuenzig'
+            email 'florian@transloadit.com'
+            organization 'Transloadit II GmbH'
+            organizationUrl 'transloadit.com'
         }
     }
 

@@ -1,3 +1,25 @@
+### 1.0.0 / 2022-12-14 ###
+#### Major Release
+This version introduces some breaking changes and is Warning: This version includes breaking changes and some 
+experimental features, please keep that in mind when using it.
+
+If you encounter any problems, please do not hesitate to contact support@transloadit.com
+
+##### Most Important Innovations:
+* Introduction of multithreaded uploads. - Now you can upload multiple files in parallel:
+  * The uploads are pausable via `Assembly#pauseUploads()`.
+  * And resumable with `Assembly#resumeUploads()`.
+  * The default value of files being uploaded at the same time is 2. You can adjust this with 
+  `Assembly#setMaxParallelUploads(int maxUploads)`.
+  * If you want to turn off this feature use: `Assembly#setMaxParallelUploads(int maxUploads)` with a value of 1.
+* The `AssemblyListener` has now an extended feature set and provides also information to the new upload mode.
+* `AsyncAssemblies` are deprecated now in favor of multithreaded uploads.
+ * Because some users, especially on Android, are using AsyncAssemblies 
+   this release ships a fix for the corresponding Listeners to avoid `NullPointerExceptions`.
+* If you want to add a `Step` to an `Assembly`, providing the Robot's name is now optional. This helps if you want to do a Template Override.
+  The provided Examples were revised and new examples have been added.
+* All dependencies are up-to-date now and include all necessary security patches.
+
 ### 0.4.4 / 2022-10-30 ###
 * The Socket-IO plugin has been updated to version 4, which is also used by the API.
 
