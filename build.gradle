@@ -66,6 +66,11 @@ def pomConfig = {
             organization 'Transloadit II GmbH'
             organizationUrl 'transloadit.com'
         }
+        developer {
+            id 'Transloadit'
+            name 'Transloadit'
+            email 'support@transloadit.com'
+        }
     }
 
     scm {
