@@ -350,14 +350,14 @@ public class Request {
      */
     private String getSignature(String message) throws LocalOperationException {
         byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
-        byte[] rawHmac = hmacSHA1(kSecret, message);
+        byte[] rawHmac = hmacSHA384(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
-
-        return new String(hexBytes, Charset.forName("UTF-8"));
+        String signature = "sha384:" + new String(hexBytes, Charset.forName("UTF-8"));
+        return signature;
     }
 
-    private byte[] hmacSHA1(byte[] key, String data) throws LocalOperationException {
-        final String algorithm = "HmacSHA1";
+    private byte[] hmacSHA384(byte[] key, String data) throws LocalOperationException {
+        final String algorithm = "HmacSHA384";
         Mac mac;
 
         try {
