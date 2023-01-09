@@ -27,7 +27,11 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Transloadit tailored Http Request class.
