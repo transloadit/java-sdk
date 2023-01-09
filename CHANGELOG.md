@@ -18,7 +18,11 @@ If you encounter any problems, please do not hesitate to contact support@translo
    this release ships a fix for the corresponding Listeners to avoid `NullPointerExceptions`.
 * If you want to add a `Step` to an `Assembly`, providing the Robot's name is now optional. This helps if you want to do a Template Override.
   The provided Examples were revised and new examples have been added.
+
+##### Minor changes:
 * All dependencies are up-to-date now and include all necessary security patches.
+* Signature Authentication uses HmacSHA384 now.
+* Signature Authentication uses a unique nonce per assembly in order to prevent signature reuse errors.
 
 ### 0.4.4 / 2022-10-30 ###
 * The Socket-IO plugin has been updated to version 4, which is also used by the API.
