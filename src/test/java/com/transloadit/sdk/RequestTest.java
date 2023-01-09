@@ -180,14 +180,14 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
-     * Test nonce generation
+     * Test secure nonce generation with.
      */
     @Test
     public void getNonce() {
         String cipher = "Blowfish";
         int keyLength = 256;
 
-        String nonce = request.getNonce(cipher,keyLength);
+        String nonce = request.getNonce(cipher, keyLength);
         assertEquals(44, nonce.length());
     }
 
@@ -206,7 +206,4 @@ public class RequestTest extends MockHttpService {
         assertTrue(delta >= timeout);
 
     }
-
-
-
 }
