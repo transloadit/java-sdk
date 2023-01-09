@@ -14,7 +14,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
@@ -25,10 +27,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Transloadit tailored Http Request class.
@@ -303,6 +302,7 @@ public class Request {
     private Map<String, String> toPayload(Map<String, Object> data) throws LocalOperationException {
         Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
+        dataClone.put("nonce", getNonce("AES", 256));
 
         Map<String, String> payload = new HashMap<String, String>();
         payload.put("params", jsonifyData(dataClone));
@@ -369,6 +369,25 @@ public class Request {
             throw new LocalOperationException(e);
         }
         return mac.doFinal(data.getBytes(Charset.forName("UTF-8")));
+    }
+
+    /**
+     * Generates a strong cryptographic nonce in order to make the request's signature unique.
+     * @param cipher Algorithm to derive key with
+     * @param lengthInBits Length of the generated key in bits
+     * @return A Key formatted as String
+     */
+    protected String getNonce(String cipher, int lengthInBits) {
+        KeyGenerator keyGenerator = null;
+        try {
+            keyGenerator = KeyGenerator.getInstance(cipher);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        keyGenerator.init(lengthInBits);
+         SecretKey secKey = keyGenerator.generateKey();
+         String encodedKey = Base64.getEncoder().encodeToString(secKey.getEncoded());
+        return encodedKey;
     }
 
     /**
