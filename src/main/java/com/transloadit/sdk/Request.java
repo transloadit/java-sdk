@@ -14,7 +14,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONObject;
 
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +28,7 @@ import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -303,6 +306,7 @@ public class Request {
     private Map<String, String> toPayload(Map<String, Object> data) throws LocalOperationException {
         Map<String, Object> dataClone = new HashMap<String, Object>(data);
         dataClone.put("auth", getAuthData());
+        dataClone.put("nonce", getNonce("AES", 256));
 
         Map<String, String> payload = new HashMap<String, String>();
         payload.put("params", jsonifyData(dataClone));
@@ -350,14 +354,14 @@ public class Request {
      */
     private String getSignature(String message) throws LocalOperationException {
         byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
-        byte[] rawHmac = hmacSHA1(kSecret, message);
+        byte[] rawHmac = hmacSHA384(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
-
-        return new String(hexBytes, Charset.forName("UTF-8"));
+        String signature = "sha384:" + new String(hexBytes, Charset.forName("UTF-8"));
+        return signature;
     }
 
-    private byte[] hmacSHA1(byte[] key, String data) throws LocalOperationException {
-        final String algorithm = "HmacSHA1";
+    private byte[] hmacSHA384(byte[] key, String data) throws LocalOperationException {
+        final String algorithm = "HmacSHA384";
         Mac mac;
 
         try {
@@ -369,6 +373,25 @@ public class Request {
             throw new LocalOperationException(e);
         }
         return mac.doFinal(data.getBytes(Charset.forName("UTF-8")));
+    }
+
+    /**
+     * Generates a strong cryptographic nonce in order to make the request's signature unique.
+     * @param cipher Algorithm to derive key with
+     * @param lengthInBits Length of the generated key in bits
+     * @return A Key formatted as String
+     */
+    protected String getNonce(String cipher, int lengthInBits) {
+        KeyGenerator keyGenerator = null;
+        try {
+            keyGenerator = KeyGenerator.getInstance(cipher);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        keyGenerator.init(lengthInBits);
+         SecretKey secKey = keyGenerator.generateKey();
+         String encodedKey = Base64.getEncoder().encodeToString(secKey.getEncoded());
+        return encodedKey;
     }
 
     /**

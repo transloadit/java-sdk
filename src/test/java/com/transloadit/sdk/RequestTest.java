@@ -180,6 +180,18 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
+     * Test secure nonce generation with.
+     */
+    @Test
+    public void getNonce() {
+        String cipher = "Blowfish";
+        int keyLength = 256;
+
+        String nonce = request.getNonce(cipher, keyLength);
+        assertEquals(44, nonce.length());
+    }
+
+    /**
      * Tests if {@link Request#delayBeforeRetry()} works.
      * @throws LocalOperationException
      */
@@ -194,8 +206,4 @@ public class RequestTest extends MockHttpService {
         assertTrue(delta >= timeout);
 
     }
-
-
-
 }
-
