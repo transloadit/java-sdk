@@ -3,7 +3,17 @@
 This version introduces some breaking changes and is Warning: This version includes breaking changes and some 
 experimental features, please keep that in mind when using it.
 
-If you encounter any problems, please do not hesitate to contact support@transloadit.com
+If you encounter any problems because of the upgrade, please do not hesitate to contact support@transloadit.com 
+or open a GitHub-Issue.
+
+##### Breaking Changes - Upgrade Guide
+* The AssemblyListener Interface has been upgraded. As a result you will have to implement the following methods:
+  - `onFileUploadPaused(String name)`
+  - `onFileUploadResumed(String name)`
+  - `onFileUploadProgress(long uploadedBytes, long totalBytes)`
+  If you do not need their functionality, just leave them blank.
+* Also take note of the deprecation of `AsyncAssemblies`. The normal `Assembly` class, thanks to its extended 
+  functionality, serves as a replacement. You can find more about it further down in the text.
 
 ##### Most Important Innovations:
 * Introduction of multithreaded uploads. - Now you can upload multiple files in parallel:
