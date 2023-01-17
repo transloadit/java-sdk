@@ -1,7 +1,6 @@
 ### 1.0.0 / 2022-12-14 ###
 #### Major Release
-This version introduces some breaking changes and is Warning: This version includes breaking changes and some 
-experimental features, please keep that in mind when using it.
+Warning: This version includes breaking changes and some experimental features, please keep that in mind when using it.
 
 If you encounter any problems because of the upgrade, please do not hesitate to contact support@transloadit.com 
 or open a GitHub-Issue.
