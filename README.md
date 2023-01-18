@@ -353,7 +353,7 @@ public class Main {
 
 ## Example
 
-For fully working examples take a look at [/examples](https://github.com/transloadit/java-sdk/tree/master/examples).
+For fully working examples take a look at [/examples](https://github.com/transloadit/java-sdk/tree/main/examples).
 
 ## Documentation
 

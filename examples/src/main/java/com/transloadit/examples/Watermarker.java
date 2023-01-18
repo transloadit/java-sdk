@@ -27,7 +27,7 @@ public final class Watermarker {
         stepOptions.put("use", ":original");
         stepOptions.put("background", "aaaaaa");
         stepOptions.put("watermark_url",
-                "https://github.com/transloadit/java-sdk/raw/master/examples/src/main/resources/watermark.png");
+                "https://github.com/transloadit/java-sdk/raw/main/examples/src/main/resources/watermark.png");
         stepOptions.put("result", true);
 
         Assembly assembly = transloadit.newAssembly();
