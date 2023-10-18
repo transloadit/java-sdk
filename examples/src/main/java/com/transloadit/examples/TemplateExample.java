@@ -18,7 +18,7 @@ public final class TemplateExample {
      * @param args
      */
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"));
 
         Assembly assembly = transloadit.newAssembly();
         // set template id

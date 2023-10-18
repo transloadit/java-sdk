@@ -20,7 +20,7 @@ class KotlinExample {
         @JvmStatic
         fun main(args: Array<String>) {
             // Setup the TransloaditClient and a new Assembly
-            val transloadit = Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET")
+            val transloadit = Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"))
 
             val assembly: Assembly = transloadit.newAssembly()
             val kotlinExample = KotlinExample()

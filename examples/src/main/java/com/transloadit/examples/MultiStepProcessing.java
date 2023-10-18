@@ -28,7 +28,7 @@ public final class MultiStepProcessing {
      */
     public static void main(String[] args) throws FileNotFoundException {
         // New Transloadit Instance
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"));
         Assembly assembly = transloadit.newAssembly();
 
         // Add Files and define Field name
