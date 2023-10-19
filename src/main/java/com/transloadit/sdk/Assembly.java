@@ -1,26 +1,27 @@
 package com.transloadit.sdk;
 
+import com.launchdarkly.eventsource.ConnectStrategy;
+import com.launchdarkly.eventsource.EventSource;
+import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.background.BackgroundEventHandler;
+import com.launchdarkly.eventsource.background.BackgroundEventSource;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import io.socket.client.IO;
-import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
-import io.socket.engineio.client.transports.WebSocket;
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
 import org.jetbrains.annotations.TestOnly;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 // CHECKSTYLE:OFF
 import io.tus.java.client.TusUploader;
 // CHECKTYLE:ON
@@ -48,7 +50,7 @@ public class Assembly extends OptionsBuilder {
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
     protected AssemblyListener runnableAssemblyListener;
-    protected Socket socket;
+    protected BackgroundEventSource backgroundEventSource;
 
 
     protected ArrayList<TusUploadRunnable> threadList;
@@ -252,8 +254,8 @@ public class Assembly extends OptionsBuilder {
                 throw new RequestException("Request to Assembly failed: " + response.json().getString("error"));
             }
 
-            if (shouldWaitWithSocket()) {
-                listenToSocket(response);
+            if (shouldWaitWithSSE()) {
+                listenToServerSentEvents(response);
             }
 
             try {
@@ -265,12 +267,12 @@ public class Assembly extends OptionsBuilder {
             }
         } else {
             response = new AssemblyResponse(request.post(obtainUploadUrlSuffix(), options, null, files, fileStreams));
-            if (shouldWaitWithSocket() && !response.isFinished()) {
-                listenToSocket(response);
+            if (shouldWaitWithSSE() && !response.isFinished()) {
+                listenToServerSentEvents(response);
             }
         }
 
-        return shouldWaitWithoutSocket() ? waitTillComplete(response) : response;
+        return shouldWaitWithoutSSE() ? waitTillComplete(response) : response;
     }
 
     /**
@@ -498,115 +500,117 @@ public class Assembly extends OptionsBuilder {
      * <li>{@code false} if the client should not wait for completion by observing the HTTP - Response</li></ul>
      * @see Assembly#save(boolean) Usage in Assembly.save()
      */
-    protected boolean shouldWaitWithoutSocket() {
+    protected boolean shouldWaitWithoutSSE() {
         return this.shouldWaitForCompletion && this.assemblyListener == null;
     }
 
     /**
-     * Determines if the Client should wait until the Assembly execution is finished by observing a server socket. <p>
+     * Determines if the Client should wait until the Assembly execution is finished by observing a server sent events (SSE). <p>
      * Can only be {@code true} if <code> {@link #shouldWaitForCompletion}  = true</code> and an
      * {@link AssemblyListener} has been specified.</p>
-     * @return <ul><li>{@code true} if the client should wait for Assembly completion by observing the socket</li>
-     * <li>{@code false} if the client should not wait for completion by observing the socket.</li></ul>
+     * @return <ul><li>{@code true} if the client should wait for Assembly completion by observing SSE</li>
+     * <li>{@code false} if the client should not wait for completion by observing the SSE.</li></ul>
      * @see Assembly#save(boolean) Usage in Assembly.save()
      */
-    protected boolean shouldWaitWithSocket() {
+    protected boolean shouldWaitWithSSE() {
         return this.shouldWaitForCompletion && this.assemblyListener != null;
-    }
-
-    /**
-     * Opens a Websocket to the provided URL in order to receive updates on the assembly's execution status.
-     * @param socketUrl target url to open the WebSocket at.
-     * @return {@link Socket}
-     * @throws LocalOperationException
-     */
-    Socket getSocket(String socketUrl) throws LocalOperationException {
-        IO.Options options = new IO.Options();
-        options.transports = new String[] {WebSocket.NAME };
-        try {
-            URL url =  new URL(socketUrl);
-            options.path = url.getPath();
-            String host = url.getProtocol() + "://" + url.getHost();
-            return IO.socket(host, options);
-        } catch (URISyntaxException | MalformedURLException e) {
-            throw new LocalOperationException(e);
-        }
     }
 
     /**
      * Wait till the assembly is finished and then return the response of the complete state.
      *
      * @param response {@link AssemblyResponse}
-     * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
-    private void listenToSocket(AssemblyResponse response) throws LocalOperationException {
-        final String assemblyUrl = response.getSslUrl();
-        final String assemblyId = response.getId();
+    private void listenToServerSentEvents(AssemblyResponse response) {
+        final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
 
-        socket = getSocket(response.getWebsocketUrl());
-        Emitter.Listener onFinished = new Emitter.Listener() {
+
+        BackgroundEventHandler myHandler = new BackgroundEventHandler() {
             @Override
-            public void call(Object... args) {
-                socket.disconnect();
-                try {
-                    getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(assemblyUrl));
-                } catch (RequestException e) {
-                    getAssemblyListener().onError(e);
-                } catch (LocalOperationException e) {
-                    getAssemblyListener().onError(e);
+            public void onOpen() {
+            }
+
+            @Override
+            public void onClosed() {
+            }
+            // Here the different SSE sent events are getting piped to the corresponding assembly event via the {@link AssemblyListener}
+            public void onMessage(String event, MessageEvent messageEvent) {
+                if (event != null && messageEvent != null) {
+                    // In case of a message event, without additional payload.
+                    if (event.equals("message")) {
+                        String messageContent = messageEvent.getData();
+                        if (messageContent.equals("assembly_finished")) {
+                            try {
+                                getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
+                            } catch (RequestException | LocalOperationException e) {
+                                getAssemblyListener().onError(e);
+                            } finally {
+                                // Close the event source, as the assembly encoding process has finished.
+                                getBackgroundEventSource().close();
+                            }
+                        }
+
+                        if (messageContent.equals("assembly_uploading_finished")) {
+                            getAssemblyListener().onAssemblyUploadFinished();
+                        }
+
+                        if (messageContent.equals("assembly_upload_meta_data_extracted")) {
+                            getAssemblyListener().onMetadataExtracted();
+                        }
+
+                        // In case of regular events, which are coming with extra payloads from the server.
+                    } else {
+                        // Some events are not wrapped inside a plain JSON Object, but inside a JSON array.
+                        JSONArray messageEventArray = new JSONArray(messageEvent.getData());
+
+                        if (event.equals("assembly_result_finished")) {
+                            // Unpack the two expected fields in the JSON array.
+                            String stepName = messageEventArray.getString(0);
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(1);
+                            getAssemblyListener().onAssemblyResultFinished(stepName, messageEventJson);
+                        }
+
+                        if (event.equals("assembly_error")) {
+                            // Deliver error information to the user.
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                            String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
+                            getAssemblyListener().onError(new RequestException(errorString));
+                        }
+
+                        if (event.equals("assembly_upload_finished")) {
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                            getAssemblyListener().onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
+                        }
+                    }
                 }
             }
-        };
 
-        Emitter.Listener onConnect = new Emitter.Listener() {
             @Override
-            public void call(Object... args) {
-                JSONObject obj = new JSONObject();
-                obj.put("id", assemblyId);
-                socket.emit("assembly_connect", obj);
+            public void onComment(String comment) {
             }
-        };
 
-        Emitter.Listener onError = new Emitter.Listener() {
             @Override
-            public void call(Object... args) {
-                socket.disconnect();
-                getAssemblyListener().onError((Exception) args[0]);
+            public void onError(Throwable t) {
             }
-        };
 
-        Emitter.Listener onMetadataExtracted = args -> {
-            getAssemblyListener().onMetadataExtracted();
         };
+        this.backgroundEventSource = new BackgroundEventSource.Builder(myHandler, new EventSource.Builder(
+                ConnectStrategy.http(sseUpdateStreamUrl)
+                        .header("Accept", "text/event-stream")
+                        .connectTimeout(5, TimeUnit.SECONDS)
+        )
+        ).build();
 
-        Emitter.Listener onAssemblyResultFinished = args -> {
-            String stepName = (String) args[0];
-            JSONObject result = (JSONObject) args[1];
-            getAssemblyListener().onAssemblyResultFinished(stepName, result);
-        };
+        this.backgroundEventSource.start();
 
-        //Hands over Filename of recently uploaded file to the callback in the AssemblyListener
-        Emitter.Listener onFileUploadFinished = args -> {
-            String name = ((JSONObject) args[0]).getString("name");
-            JSONObject uploadInformation = (JSONObject) args[0];
-            getAssemblyListener().onFileUploadFinished(name, uploadInformation);
-        };
+    }
 
-        // Triggers callback in the {@link Assembly#assemblyListener} if the Assembly instructions have been uploaded.
-        Emitter.Listener onAssemblyUploadFinished = args -> {
-                getAssemblyListener().onAssemblyUploadFinished();
-        };
-
-        socket
-                .on(Socket.EVENT_CONNECT, onConnect)
-                .on("assembly_finished", onFinished)
-                .on("assembly_uploading_finished", onAssemblyUploadFinished)
-                .on("assembly_upload_finished", onFileUploadFinished)
-                .on("assembly_upload_meta_data_extracted", onMetadataExtracted)
-                .on("assembly_result_finished", onAssemblyResultFinished)
-                .on("assembly_error", onFinished)
-                .on(Socket.EVENT_CONNECT_ERROR, onError);
-        socket.connect();
+    /**
+     * Returns the Event Source, which handles the Server Sent Event driven assembly status updates.
+     * @return BackgroundEventSource, which handles the assembly Status via SSE.
+     */
+    public BackgroundEventSource getBackgroundEventSource() {
+        return backgroundEventSource;
     }
 
     /**
@@ -733,8 +737,8 @@ public class Assembly extends OptionsBuilder {
             executor.shutdownNow();
         }
         runnableAssemblyListener.onError(e);
-        if (socket != null) {
-            socket.disconnect();
+        if (backgroundEventSource != null) {
+            backgroundEventSource.close();
         }
     }
 

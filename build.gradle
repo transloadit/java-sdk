@@ -25,10 +25,12 @@ dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'io.tus.java.client:tus-java-client:0.4.5'
     implementation 'joda-time:joda-time:2.12.2'
-    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     implementation 'org.json:json:20230227'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'io.socket:socket.io-client:2.1.0'
+    implementation 'com.launchdarkly:okhttp-eventsource:4.1.1'
+
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mock-server:mockserver-junit-rule:5.15.0'
