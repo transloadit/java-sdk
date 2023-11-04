@@ -154,7 +154,6 @@ public final class MultiStepProcessing {
             Thread.sleep(3000);
             assembly.resumeUploads();
 
-            System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
          } catch (LocalOperationException | RequestException | InterruptedException e) {
             e.printStackTrace();
         }

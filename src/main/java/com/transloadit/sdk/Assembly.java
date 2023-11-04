@@ -1,6 +1,7 @@
 package com.transloadit.sdk;
 
 import com.launchdarkly.eventsource.ConnectStrategy;
+import com.launchdarkly.eventsource.ErrorStrategy;
 import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.background.BackgroundEventHandler;
@@ -21,20 +22,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-// CHECKSTYLE:OFF
-import io.tus.java.client.TusUploader;
 // CHECKTYLE:ON
-
 
 /**
  * This class represents a new assembly being created.
@@ -51,7 +48,7 @@ public class Assembly extends OptionsBuilder {
     protected AssemblyListener assemblyListener;
     protected AssemblyListener runnableAssemblyListener;
     protected BackgroundEventSource backgroundEventSource;
-
+    private BackgroundEventHandler backgroundEventHandler;
 
     protected ArrayList<TusUploadRunnable> threadList;
     private HashMap<String, Exception> threadExceptions;
@@ -63,7 +60,9 @@ public class Assembly extends OptionsBuilder {
     protected int uploadChunkSize = 0;
 
     /**
-     * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit client as parameter.
+     * Calls {@link #Assembly(Transloadit, Steps, Map, Map)} with the transloadit
+     * client as parameter.
+     *
      * @param transloadit {@link Transloadit} the transloadit client.
      */
     public Assembly(Transloadit transloadit) {
@@ -72,9 +71,11 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Constructs a new instance of the Assembly object.
+     *
      * @param transloadit {@link Transloadit} the transloadit client.
      * @param steps       {@link Steps} the steps to add to the assembly.
-     * @param files       is a map of file names and files that are meant to be uploaded.
+     * @param files       is a map of file names and files that are meant to be
+     *                    uploaded.
      * @param options     map of extra options to be sent along with the request.
      */
     public Assembly(Transloadit transloadit, Steps steps, Map<String, File> files, Map<String, Object> options) {
@@ -87,18 +88,20 @@ public class Assembly extends OptionsBuilder {
         uploads = new ArrayList<TusUpload>();
         fileStreams = new HashMap<String, InputStream>();
         shouldWaitForCompletion = false;
-        threadList =  new ArrayList<TusUploadRunnable>();
+        threadList = new ArrayList<TusUploadRunnable>();
         threadExceptions = new HashMap<String, Exception>();
         assemblyId = generateAssemblyID();
     }
 
     /**
-     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * Adds a file to your assembly. If the field name specified already exists, it
+     * will override the content of the
      * existing name. This also means that previously added and similarly named
      * {@link java.io.FileInputStream FileInputStreams} will be replaced.
      *
      * @param file {@link File} the file to be uploaded.
-     * @param name {@link String} the field name of the file when submitted Transloadit.
+     * @param name {@link String} the field name of the file when submitted
+     *             Transloadit.
      */
     public void addFile(File file, String name) {
         files.put(name, file);
@@ -110,7 +113,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly but automatically generates the field name of the file.
+     * Adds a file to your assembly but automatically generates the field name of
+     * the file.
      *
      * @param file {@link File} the file to be uploaded.
      */
@@ -120,12 +124,14 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly. If the field name specified already exists, it will override the content of the
+     * Adds a file to your assembly. If the field name specified already exists, it
+     * will override the content of the
      * existing name. This also means that previously added and similarly named
      * {@link java.io.File Files} will be replaced.
      *
      * @param inputStream {@link InputStream} the file to be uploaded.
-     * @param name {@link String} the field name of the file when submitted Transloadit.
+     * @param name        {@link String} the field name of the file when submitted
+     *                    Transloadit.
      */
     public void addFile(InputStream inputStream, String name) {
         fileStreams.put(name, inputStream);
@@ -137,7 +143,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Adds a file to your assembly but automatically genarates the name of the file.
+     * Adds a file to your assembly but automatically genarates the name of the
+     * file.
      *
      * @param inputStream {@link InputStream} the file to be uploaded.
      */
@@ -152,13 +159,9 @@ public class Assembly extends OptionsBuilder {
      * @param name field name of the file to remove.
      */
     public void removeFile(String name) {
-        if (files.containsKey(name)) {
-            files.remove(name);
-        }
+        files.remove(name);
 
-        if (fileStreams.containsKey(name)) {
-            fileStreams.remove(name);
-        }
+        fileStreams.remove(name);
     }
 
     /**
@@ -172,7 +175,9 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the listener that should be called after assembly executing has been finished.
+     * Returns the listener that should be called after assembly executing has been
+     * finished.
+     *
      * @return {@link AssemblyListener}
      */
     public AssemblyListener getAssemblyListener() {
@@ -180,10 +185,12 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Determine whether or not to wait till the assembly is complete after it is saved.
+     * Determine whether or not to wait till the assembly is complete after it is
+     * saved.
      *
      * @deprecated use {@link #setAssemblyListener(AssemblyListener)} instead
-     * @param shouldWaitForCompletion boolean value to determine whether or not to wait till the assembly is complete
+     * @param shouldWaitForCompletion boolean value to determine whether or not to
+     *                                wait till the assembly is complete
      */
     @Deprecated
     public void setShouldWaitForCompletion(boolean shouldWaitForCompletion) {
@@ -191,7 +198,9 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Normalizes a duplicated filename by adding an underscore and a incrementing number.
+     * Normalizes a duplicated filename by adding an underscore and a incrementing
+     * number.
+     *
      * @param name duplicated Filename
      * @return renamed filename
      */
@@ -217,7 +226,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Set custom Url Storage. This should be an implementation of {@link TusURLStore}.
+     * Set custom Url Storage. This should be an implementation of
+     * {@link TusURLStore}.
      *
      * @param store {@link TusURLStore} the storage instance.
      */
@@ -228,10 +238,13 @@ public class Assembly extends OptionsBuilder {
     /**
      * Submits the configured assembly to Transloadit for processing.
      *
-     * @param isResumable boolean value that tells the assembly whether or not to use tus.
-     * @return {@link AssemblyResponse} the response received from the Transloadit server.
+     * @param isResumable boolean value that tells the assembly whether or not to
+     *                    use tus.
+     * @return {@link AssemblyResponse} the response received from the Transloadit
+     *         server.
      * @throws RequestException        if request to Transloadit server fails.
-     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws LocalOperationException if something goes wrong while running
+     *                                 non-http operations.
      */
     public AssemblyResponse save(boolean isResumable)
             throws RequestException, LocalOperationException {
@@ -255,7 +268,7 @@ public class Assembly extends OptionsBuilder {
             }
 
             if (shouldWaitWithSSE()) {
-                listenToServerSentEvents(response);
+                listenToServerSentEvents(response, assemblyListener);
             }
 
             try {
@@ -268,7 +281,7 @@ public class Assembly extends OptionsBuilder {
         } else {
             response = new AssemblyResponse(request.post(obtainUploadUrlSuffix(), options, null, files, fileStreams));
             if (shouldWaitWithSSE() && !response.isFinished()) {
-                listenToServerSentEvents(response);
+                listenToServerSentEvents(response, assemblyListener);
             }
         }
 
@@ -277,19 +290,23 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Calls {@link #save(boolean)} with boolean isResumable = true.
-     * @return {@link AssemblyResponse} the response received from the Transloadit server.
+     *
+     * @return {@link AssemblyResponse} the response received from the Transloadit
+     *         server.
      * @throws RequestException        if request to Transloadit server fails.
-     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     * @throws LocalOperationException if something goes wrong while running
+     *                                 non-http operations.
      */
     public AssemblyResponse save() throws LocalOperationException, RequestException {
         return this.save(true);
     }
 
     /**
-     * If tus uploads are enabled, this method would be called by {@link Assembly#save()} to handle the file uploads.
+     * If tus uploads are enabled, this method would be called by
+     * {@link Assembly#save()} to handle the file uploads.
      *
      * @param response {@link AssemblyResponse}
-     * @throws IOException when there's a failure with file retrieval.
+     * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void handleTusUpload(AssemblyResponse response) throws IOException, ProtocolException {
@@ -301,8 +318,8 @@ public class Assembly extends OptionsBuilder {
      * Prepares all files added for tus uploads.
      *
      * @param assemblyUrl the assembly url affiliated with the tus upload.
-     * @param tusUrl the tus url affiliated with the tus upload.
-     * @throws IOException       when there's a failure with file retrieval.
+     * @param tusUrl      the tus url affiliated with the tus upload.
+     * @throws IOException when there's a failure with file retrieval.
      */
     protected void processTusFiles(String assemblyUrl, String tusUrl) throws IOException {
         tusClient.setUploadCreationURL(new URL(tusUrl));
@@ -323,7 +340,8 @@ public class Assembly extends OptionsBuilder {
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
-     * @deprecated ideally this method should make uploads to the tus url assigned to an assembly, but it doesn't
+     * @deprecated ideally this method should make uploads to the tus url assigned
+     *             to an assembly, but it doesn't
      */
     @Deprecated
     protected void processTusFiles(String assemblyUrl) throws IOException, ProtocolException {
@@ -334,7 +352,7 @@ public class Assembly extends OptionsBuilder {
      * Prepares a file for tus upload.
      *
      * @param inputStream {@link InputStream}
-     * @param fieldName the form field name assigned to the file.
+     * @param fieldName   the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with reading the input stream.
      */
@@ -354,8 +372,8 @@ public class Assembly extends OptionsBuilder {
     /**
      * Prepares a file for tus upload.
      *
-     * @param file {@link File}
-     * @param fieldName the form field name assigned to the file.
+     * @param file        {@link File}
+     * @param fieldName   the form field name assigned to the file.
      * @param assemblyUrl the assembly url affiliated with the tus upload.
      * @throws IOException when there's a failure with file retrieval.
      */
@@ -377,7 +395,7 @@ public class Assembly extends OptionsBuilder {
      * Returns the {@link TusUpload} instance that would be used to upload a file.
      *
      * @param inputStream {@link InputStream}
-     * @param fieldName {@link String} the field name assigned to the file
+     * @param fieldName   {@link String} the field name assigned to the file
      * @param assemblyUrl {@link String} the assembly url
      * @return {@link TusUpload}
      * @throws IOException when there's a failure with reading the input stream.
@@ -405,6 +423,7 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Calculates the expected uploadSize in Bytes.
+     *
      * @return the expected cumulative upload size
      * @throws IOException Input Streams cannote be read
      */
@@ -423,7 +442,7 @@ public class Assembly extends OptionsBuilder {
     /**
      * Does the actual uploading of files (when tus is enabled).
      *
-     * @throws IOException when there's a failure with file retrieval.
+     * @throws IOException       when there's a failure with file retrieval.
      * @throws ProtocolException when there's a failure with tus upload.
      */
     protected void uploadTusFiles() throws IOException, ProtocolException {
@@ -480,8 +499,8 @@ public class Assembly extends OptionsBuilder {
         }
         uploadSize = getUploadSize();
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        while (uploads.size() > 0) {
-            final TusUpload  tusUpload = uploads.remove(0);
+        while (!uploads.isEmpty()) {
+            final TusUpload tusUpload = uploads.remove(0);
             TusUploadRunnable tusUploadRunnable = new TusUploadRunnable(tusClient, tusUpload, uploadChunkSize, this);
             threadList.add(tusUploadRunnable);
             executor.execute(tusUploadRunnable);
@@ -490,14 +509,24 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Determines if the Client should wait until the Assembly execution is finished by observing the
-     * {@link AssemblyResponse} status. <p>Can only be {@code true} if <code>
+     * Determines if the Client should wait until the Assembly execution is finished
+     * by observing the
+     * {@link AssemblyResponse} status.
+     * <p>
+     * Can only be {@code true} if <code>
      * {@link #shouldWaitForCompletion}  = true
      * </code> and no
-     * {@link AssemblyListener} has been specified.</p>
-     * @return <ul><li>{@code true} if the client should wait for Assembly completion by observing the
-     * HTTP - Response;</li>
-     * <li>{@code false} if the client should not wait for completion by observing the HTTP - Response</li></ul>
+     * {@link AssemblyListener} has been specified.
+     * </p>
+     *
+     * @return
+     *         <ul>
+     *         <li>{@code true} if the client should wait for Assembly completion by
+     *         observing the
+     *         HTTP - Response;</li>
+     *         <li>{@code false} if the client should not wait for completion by
+     *         observing the HTTP - Response</li>
+     *         </ul>
      * @see Assembly#save(boolean) Usage in Assembly.save()
      */
     protected boolean shouldWaitWithoutSSE() {
@@ -505,11 +534,21 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Determines if the Client should wait until the Assembly execution is finished by observing a server sent events (SSE). <p>
-     * Can only be {@code true} if <code> {@link #shouldWaitForCompletion}  = true</code> and an
-     * {@link AssemblyListener} has been specified.</p>
-     * @return <ul><li>{@code true} if the client should wait for Assembly completion by observing SSE</li>
-     * <li>{@code false} if the client should not wait for completion by observing the SSE.</li></ul>
+     * Determines if the Client should wait until the Assembly execution is finished
+     * by observing a server sent events (SSE).
+     * <p>
+     * Can only be {@code true} if
+     * <code> {@link #shouldWaitForCompletion}  = true</code> and an
+     * {@link AssemblyListener} has been specified.
+     * </p>
+     *
+     * @return
+     *         <ul>
+     *         <li>{@code true} if the client should wait for Assembly completion by
+     *         observing SSE</li>
+     *         <li>{@code false} if the client should not wait for completion by
+     *         observing the SSE.</li>
+     *         </ul>
      * @see Assembly#save(boolean) Usage in Assembly.save()
      */
     protected boolean shouldWaitWithSSE() {
@@ -517,70 +556,79 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Wait till the assembly is finished and then return the response of the complete state.
+     * Wait till the assembly is finished and then return the response of the
+     * complete state.
      *
      * @param response {@link AssemblyResponse}
+     * @param assemblyListener {@link AssemblyListener}
      */
-    private void listenToServerSentEvents(AssemblyResponse response) {
-        final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
+    private void listenToServerSentEvents(AssemblyResponse response, AssemblyListener assemblyListener) throws LocalOperationException {
+        final URL sseUpdateStreamUrl;
+        try {
+            sseUpdateStreamUrl = new URL(response.getUpdateStreamUrl());
+        } catch (MalformedURLException e) {
+            throw new LocalOperationException(e);
+        }
 
-
-        BackgroundEventHandler myHandler = new BackgroundEventHandler() {
+        backgroundEventHandler = new BackgroundEventHandler() {
             @Override
             public void onOpen() {
+                System.out.println("connected");
             }
 
             @Override
             public void onClosed() {
             }
-            // Here the different SSE sent events are getting piped to the corresponding assembly event via the {@link AssemblyListener}
+
+            // Here the different SSE sent events are getting piped to the corresponding
+            // assembly event via the {@link AssemblyListener}
             public void onMessage(String event, MessageEvent messageEvent) {
-                if (event != null && messageEvent != null) {
-                    // In case of a message event, without additional payload.
-                    if (event.equals("message")) {
-                        String messageContent = messageEvent.getData();
-                        if (messageContent.equals("assembly_finished")) {
-                            try {
-                                getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
-                            } catch (RequestException | LocalOperationException e) {
-                                getAssemblyListener().onError(e);
-                            } finally {
-                                // Close the event source, as the assembly encoding process has finished.
-                                getBackgroundEventSource().close();
-                            }
+                System.out.println("Event: " + event + " Data: " + messageEvent.getData());
+                // In case of a message event, without additional payload.
+                if (event.equals("message")) {
+                    String messageContent = messageEvent.getData();
+                    if (messageContent.equals("assembly_finished")) {
+                        try {
+                            assemblyListener.onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
+                            getBackgroundEventSource().close();
+                        } catch (RequestException | LocalOperationException e) {
+                            assemblyListener.onError(e);
+                            getBackgroundEventSource().close();
                         }
+                    }
 
-                        if (messageContent.equals("assembly_uploading_finished")) {
-                            getAssemblyListener().onAssemblyUploadFinished();
-                        }
+                    if (messageContent.equals("assembly_uploading_finished")) {
+                        assemblyListener.onAssemblyUploadFinished();
+                    }
 
-                        if (messageContent.equals("assembly_upload_meta_data_extracted")) {
-                            getAssemblyListener().onMetadataExtracted();
-                        }
+                    if (messageContent.equals("assembly_upload_meta_data_extracted")) {
+                        assemblyListener.onMetadataExtracted();
+                    }
 
-                        // In case of regular events, which are coming with extra payloads from the server.
-                    } else {
-                        // Some events are not wrapped inside a plain JSON Object, but inside a JSON array.
-                        JSONArray messageEventArray = new JSONArray(messageEvent.getData());
+                    // In case of regular events, which are coming with extra payloads from the
+                    // server.
+                } else {
+                    // Some events are not wrapped inside a plain JSON Object, but inside a JSON
+                    // array.
+                    JSONArray messageEventArray = new JSONArray(messageEvent.getData());
 
-                        if (event.equals("assembly_result_finished")) {
-                            // Unpack the two expected fields in the JSON array.
-                            String stepName = messageEventArray.getString(0);
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(1);
-                            getAssemblyListener().onAssemblyResultFinished(stepName, messageEventJson);
-                        }
+                    if (event.equals("assembly_result_finished")) {
+                        // Unpack the two expected fields in the JSON array.
+                        String stepName = messageEventArray.getString(0);
+                        JSONObject messageEventJson = messageEventArray.getJSONObject(1);
+                        assemblyListener.onAssemblyResultFinished(stepName, messageEventJson);
+                    }
 
-                        if (event.equals("assembly_error")) {
-                            // Deliver error information to the user.
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                            String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
-                            getAssemblyListener().onError(new RequestException(errorString));
-                        }
+                    if (event.equals("assembly_error")) {
+                        // Deliver error information to the user.
+                        JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                        String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
+                        assemblyListener.onError(new RequestException(errorString));
+                    }
 
-                        if (event.equals("assembly_upload_finished")) {
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                            getAssemblyListener().onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
-                        }
+                    if (event.equals("assembly_upload_finished")) {
+                        JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                        assemblyListener.onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
                     }
                 }
             }
@@ -594,19 +642,19 @@ public class Assembly extends OptionsBuilder {
             }
 
         };
-        this.backgroundEventSource = new BackgroundEventSource.Builder(myHandler, new EventSource.Builder(
+        this.backgroundEventSource = new BackgroundEventSource.Builder(backgroundEventHandler, new EventSource.Builder(
                 ConnectStrategy.http(sseUpdateStreamUrl)
-                        .header("Accept", "text/event-stream")
-                        .connectTimeout(5, TimeUnit.SECONDS)
-        )
-        ).build();
+                        .header("Accept", "text/event-stream"))
+                .errorStrategy(ErrorStrategy.continueWithMaxAttempts(50)))
+                .threadPriority(Thread.MAX_PRIORITY).build();
 
-        this.backgroundEventSource.start();
-
+        backgroundEventSource.start();
     }
 
     /**
-     * Returns the Event Source, which handles the Server Sent Event driven assembly status updates.
+     * Returns the Event Source, which handles the Server Sent Event driven assembly
+     * status updates.
+     *
      * @return BackgroundEventSource, which handles the assembly Status via SSE.
      */
     public BackgroundEventSource getBackgroundEventSource() {
@@ -614,12 +662,14 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Wait till the assembly is finished and then return the response of the complete state.
+     * Wait till the assembly is finished and then return the response of the
+     * complete state.
      *
      * @param response {@link AssemblyResponse}
      * @return {@link AssemblyResponse}
-     * @throws LocalOperationException if something goes wrong while running non-http operations.
-     * @throws RequestException if request to Transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running
+     *                                 non-http operations.
+     * @throws RequestException        if request to Transloadit server fails.
      */
     protected AssemblyResponse waitTillComplete(AssemblyResponse response)
             throws LocalOperationException, RequestException {
@@ -637,8 +687,10 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered.
+     * Returns the uploadChunkSize which is used to determine after how many bytes
+     * upload should the
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be
+     * triggered.
      *
      * @return uploadChunkSize
      */
@@ -647,25 +699,31 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Sets the uploadChunkSize which is used to determine after how many bytes upload should the
-     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be triggered. If not set,
-     * or if given the value of 0, the default set by {@link TusUploader} will be used internally.
+     * Sets the uploadChunkSize which is used to determine after how many bytes
+     * upload should the
+     * {@link AssemblyListener#onFileUploadProgress(long, long)} callback be
+     * triggered. If not set,
+     * or if given the value of 0, the default set by {@link TusUploader} will be
+     * used internally.
      *
-     * @param uploadChunkSize the upload chunk size in bytes after which you want to receive an upload progress
+     * @param uploadChunkSize the upload chunk size in bytes after which you want to
+     *                        receive an upload progress
      */
     public void setUploadChunkSize(int uploadChunkSize) {
         this.uploadChunkSize = uploadChunkSize;
     }
 
     /**
-     * This method sets how many uploads are performed simultaneously. If the number of uploads exceeds the set value,
+     * This method sets how many uploads are performed simultaneously. If the number
+     * of uploads exceeds the set value,
      * a queue is created and processed piece by piece.
-     * @param maxUploads maximum number of uploads, which are performed simultaneously.
+     *
+     * @param maxUploads maximum number of uploads, which are performed
+     *                   simultaneously.
      */
     public void setMaxParallelUploads(int maxUploads) {
         this.maxParallelUploads = maxUploads;
     }
-
 
     /**
      * Returns current Assembly listener used by a {@link TusUploadRunnable}.
@@ -678,11 +736,13 @@ public class Assembly extends OptionsBuilder {
 
     /**
      * Sets a custom Assembly listener used by a {@link TusUploadRunnable}.
+     *
      * @param runnableAssemblyListener {@link AssemblyListener}
      */
     protected void setRunnableAssemblyListener(AssemblyListener runnableAssemblyListener) {
         this.runnableAssemblyListener = runnableAssemblyListener;
     }
+
     /**
      * This Method is used to pause running parallel File uploads.
      */
@@ -705,13 +765,15 @@ public class Assembly extends OptionsBuilder {
     /**
      * Undocumented debug option, which is not intended for production use.
      * Providing custom Assembly IDs could lead to a security risk.
+     *
      * @param assemblyId custom Assembly ID
-     * @throws LocalOperationException if the provided id doesn't match the expected pattern.
+     * @throws LocalOperationException if the provided id doesn't match the expected
+     *                                 pattern.
      */
     @TestOnly
     public void setAssemblyId(String assemblyId) throws LocalOperationException {
         String id = assemblyId.toLowerCase();
-        if (id.matches("[a-f0-9]{32}")) { //Check ID Format
+        if (id.matches("[a-f0-9]{32}")) { // Check ID Format
             this.assemblyId = id;
         } else {
             throw new LocalOperationException("The provided Assembly ID doesn't match the expected pattern of "
@@ -730,6 +792,7 @@ public class Assembly extends OptionsBuilder {
     /**
      * This Method is used to abort all parallel File uploads.
      * It informs the current {@link AssemblyListener} about the abortion.
+     *
      * @param e {@link Exception that lead to the abortion}
      */
     protected void abortUploads(Exception e) {
@@ -742,9 +805,9 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
-
     /**
      * This method removes finished Threads from the ThreadList.
+     *
      * @param tusUploadThread a Upload Thread instance
      */
     synchronized void removeThreadFromList(TusUploadRunnable tusUploadThread) {
@@ -754,6 +817,7 @@ public class Assembly extends OptionsBuilder {
     /**
      * Updates the number of Bytes, which have been uploaded already.
      * Also triggers Upload finished if the uploads has been finished.
+     *
      * @param uploadedBytes Number of bytes uploaded by the calling Thread.
      */
     protected synchronized void updateUploadProgress(long uploadedBytes) {
@@ -762,31 +826,37 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Takes a {@link LocalOperationException} from a running thread and stores it in {@link #threadExceptions}.
+     * Takes a {@link LocalOperationException} from a running thread and stores it
+     * in {@link #threadExceptions}.
      * Also stops the uploads and notifies the user.
+     *
      * @param s Thread Name
      * @param e {@link LocalOperationException}
      */
-     protected void threadThrowsLocalOperationException(String s, Exception e) {
+    protected void threadThrowsLocalOperationException(String s, Exception e) {
         this.threadExceptions.put(s, new LocalOperationException(e));
-         abortUploads(e);
+        abortUploads(e);
     }
 
     /**
      * /**
-     * Takes a {@link RequestException} from a running thread and stores it in {@link #threadExceptions}.
+     * Takes a {@link RequestException} from a running thread and stores it in
+     * {@link #threadExceptions}.
      * Also stops the uploads and notifies the user.
+     *
      * @param s Thread Name
      * @param e {@link RequestException}
      */
-     protected void threadThrowsRequestException(String s, Exception e) {
-         this.threadExceptions.put(s, new RequestException(e));
-         abortUploads(e);
+    protected void threadThrowsRequestException(String s, Exception e) {
+        this.threadExceptions.put(s, new RequestException(e));
+        abortUploads(e);
     }
 
     /**
-     * Returns the assembly ID generated on client side to allow early logging. Be aware the Assembly ID will change if
+     * Returns the assembly ID generated on client side to allow early logging. Be
+     * aware the Assembly ID will change if
      * you use the {@link Assembly#wipeAssemblyID()} method.
+     *
      * @return {@link String}AssemblyID
      */
     public String getClientSideGeneratedAssemblyID() {
@@ -794,7 +864,9 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Derives a new AssemblyID from an UUIDv4, without assigning it to the current assembly.
+     * Derives a new AssemblyID from an UUIDv4, without assigning it to the current
+     * assembly.
+     *
      * @return {@link String} Assembly ID
      */
     protected String generateAssemblyID() {
@@ -802,16 +874,21 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Wipes the client side generated Assembly-ID. As a result, the assembly id is assigned by the API after upload.
-     * In this case you cannot obtain the Assembly ID before receiving a server response. As a result every Assembly ID
-     * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be invalid.
+     * Wipes the client side generated Assembly-ID. As a result, the assembly id is
+     * assigned by the API after upload.
+     * In this case you cannot obtain the Assembly ID before receiving a server
+     * response. As a result every Assembly ID
+     * obtained by {@link Assembly#getClientSideGeneratedAssemblyID()} would be
+     * invalid.
      */
     public void wipeAssemblyID() {
         this.assemblyId = "";
     }
 
     /**
-     * Obtains the suffix of the upload url depending on if a custom or client side assembly ID has been set.
+     * Obtains the suffix of the upload url depending on if a custom or client side
+     * assembly ID has been set.
+     *
      * @return upload url suffix
      */
     protected String obtainUploadUrlSuffix() {
@@ -823,10 +900,11 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the current Thread List
+     * Returns the current Thread List.
+     *
      * @return List of Type TusUploadRunnable
      */
-     protected ArrayList<TusUploadRunnable> getThreadList() {
+    protected ArrayList<TusUploadRunnable> getThreadList() {
         return threadList;
     }
 }
