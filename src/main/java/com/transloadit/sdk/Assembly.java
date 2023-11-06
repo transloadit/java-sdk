@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 // CHECKTYLE:ON
 
 /**
@@ -47,8 +49,6 @@ public class Assembly extends OptionsBuilder {
     protected boolean shouldWaitForCompletion;
     protected AssemblyListener assemblyListener;
     protected AssemblyListener runnableAssemblyListener;
-    protected BackgroundEventSource backgroundEventSource;
-    private BackgroundEventHandler backgroundEventHandler;
 
     protected ArrayList<TusUploadRunnable> threadList;
     private HashMap<String, Exception> threadExceptions;
@@ -268,7 +268,7 @@ public class Assembly extends OptionsBuilder {
             }
 
             if (shouldWaitWithSSE()) {
-                listenToServerSentEvents(response, assemblyListener);
+                listenToServerSentEvents(response);
             }
 
             try {
@@ -281,7 +281,7 @@ public class Assembly extends OptionsBuilder {
         } else {
             response = new AssemblyResponse(request.post(obtainUploadUrlSuffix(), options, null, files, fileStreams));
             if (shouldWaitWithSSE() && !response.isFinished()) {
-                listenToServerSentEvents(response, assemblyListener);
+                listenToServerSentEvents(response);
             }
         }
 
@@ -559,76 +559,65 @@ public class Assembly extends OptionsBuilder {
      * Wait till the assembly is finished and then return the response of the
      * complete state.
      *
-     * @param response {@link AssemblyResponse}
-     * @param assemblyListener {@link AssemblyListener}
+     * @param response         {@link AssemblyResponse}
      */
-    private void listenToServerSentEvents(AssemblyResponse response, AssemblyListener assemblyListener) throws LocalOperationException {
-        final URL sseUpdateStreamUrl;
-        try {
-            sseUpdateStreamUrl = new URL(response.getUpdateStreamUrl());
-        } catch (MalformedURLException e) {
-            throw new LocalOperationException(e);
-        }
+    private void listenToServerSentEvents(AssemblyResponse response) throws LocalOperationException {
+        final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
 
-        backgroundEventHandler = new BackgroundEventHandler() {
+
+        BackgroundEventHandler myHandler = new BackgroundEventHandler() {
             @Override
             public void onOpen() {
-                System.out.println("connected");
             }
 
             @Override
             public void onClosed() {
             }
-
-            // Here the different SSE sent events are getting piped to the corresponding
-            // assembly event via the {@link AssemblyListener}
+            // Here the different SSE sent events are getting piped to the corresponding assembly event via the {@link AssemblyListener}
             public void onMessage(String event, MessageEvent messageEvent) {
-                System.out.println("Event: " + event + " Data: " + messageEvent.getData());
-                // In case of a message event, without additional payload.
-                if (event.equals("message")) {
-                    String messageContent = messageEvent.getData();
-                    if (messageContent.equals("assembly_finished")) {
-                        try {
-                            assemblyListener.onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
-                            getBackgroundEventSource().close();
-                        } catch (RequestException | LocalOperationException e) {
-                            assemblyListener.onError(e);
-                            getBackgroundEventSource().close();
+                if (event != null && messageEvent != null) {
+                    // In case of a message event, without additional payload.
+                    if (event.equals("message")) {
+                        String messageContent = messageEvent.getData();
+                        if (messageContent.equals("assembly_finished")) {
+                            try {
+                                getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
+                            } catch (RequestException | LocalOperationException e) {
+                                getAssemblyListener().onError(e);
+                            }
                         }
-                    }
 
-                    if (messageContent.equals("assembly_uploading_finished")) {
-                        assemblyListener.onAssemblyUploadFinished();
-                    }
+                        if (messageContent.equals("assembly_uploading_finished")) {
+                            getAssemblyListener().onAssemblyUploadFinished();
+                        }
 
-                    if (messageContent.equals("assembly_upload_meta_data_extracted")) {
-                        assemblyListener.onMetadataExtracted();
-                    }
+                        if (messageContent.equals("assembly_upload_meta_data_extracted")) {
+                            getAssemblyListener().onMetadataExtracted();
+                        }
 
-                    // In case of regular events, which are coming with extra payloads from the
-                    // server.
-                } else {
-                    // Some events are not wrapped inside a plain JSON Object, but inside a JSON
-                    // array.
-                    JSONArray messageEventArray = new JSONArray(messageEvent.getData());
+                        // In case of regular events, which are coming with extra payloads from the server.
+                    } else {
+                        // Some events are not wrapped inside a plain JSON Object, but inside a JSON array.
+                        JSONArray messageEventArray = new JSONArray(messageEvent.getData());
 
-                    if (event.equals("assembly_result_finished")) {
-                        // Unpack the two expected fields in the JSON array.
-                        String stepName = messageEventArray.getString(0);
-                        JSONObject messageEventJson = messageEventArray.getJSONObject(1);
-                        assemblyListener.onAssemblyResultFinished(stepName, messageEventJson);
-                    }
+                        if (event.equals("assembly_result_finished")) {
+                            // Unpack the two expected fields in the JSON array.
+                            String stepName = messageEventArray.getString(0);
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(1);
+                            getAssemblyListener().onAssemblyResultFinished(stepName, messageEventJson);
+                        }
 
-                    if (event.equals("assembly_error")) {
-                        // Deliver error information to the user.
-                        JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                        String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
-                        assemblyListener.onError(new RequestException(errorString));
-                    }
+                        if (event.equals("assembly_error")) {
+                            // Deliver error information to the user.
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                            String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
+                            getAssemblyListener().onError(new RequestException(errorString));
+                        }
 
-                    if (event.equals("assembly_upload_finished")) {
-                        JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                        assemblyListener.onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
+                        if (event.equals("assembly_upload_finished")) {
+                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
+                            getAssemblyListener().onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
+                        }
                     }
                 }
             }
@@ -642,23 +631,15 @@ public class Assembly extends OptionsBuilder {
             }
 
         };
-        this.backgroundEventSource = new BackgroundEventSource.Builder(backgroundEventHandler, new EventSource.Builder(
+        BackgroundEventSource backgroundEventSource = new BackgroundEventSource.Builder(myHandler, new EventSource.Builder(
                 ConnectStrategy.http(sseUpdateStreamUrl)
-                        .header("Accept", "text/event-stream"))
-                .errorStrategy(ErrorStrategy.continueWithMaxAttempts(50)))
-                .threadPriority(Thread.MAX_PRIORITY).build();
+                        .header("Accept", "text/event-stream")
+                        .connectTimeout(5, TimeUnit.SECONDS)
+        )
+        ).build();
 
         backgroundEventSource.start();
-    }
 
-    /**
-     * Returns the Event Source, which handles the Server Sent Event driven assembly
-     * status updates.
-     *
-     * @return BackgroundEventSource, which handles the assembly Status via SSE.
-     */
-    public BackgroundEventSource getBackgroundEventSource() {
-        return backgroundEventSource;
     }
 
     /**
@@ -800,9 +781,6 @@ public class Assembly extends OptionsBuilder {
             executor.shutdownNow();
         }
         runnableAssemblyListener.onError(e);
-        if (backgroundEventSource != null) {
-            backgroundEventSource.close();
-        }
     }
 
     /**
