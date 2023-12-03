@@ -1,12 +1,11 @@
 package com.transloadit.sdk;
 
-import com.launchdarkly.eventsource.ConnectStrategy;
-import com.launchdarkly.eventsource.EventSource;
+import com.launchdarkly.eventsource.*;
 
 import java.net.URI;
 
 public class EventsourceRunnable implements Runnable {
-    protected boolean assemblyFinished = false;
+    protected boolean assemblyFinished;
     protected AssemblyListener assemblyListener;
     protected EventSource eventSource;
 
@@ -39,6 +38,47 @@ public class EventsourceRunnable implements Runnable {
 
     @Override
     public void run() {
+        this.assemblyFinished = false;
+        try {
+            eventSource.start();
+        } catch (StreamException e) {
+            assemblyListener.onError(e);
+        }
 
+        while (!assemblyFinished) {
+            try {
+                StreamEvent streamEvent = eventSource.readAnyEvent();
+                if (streamEvent != null) {
+                    if (streamEvent instanceof MessageEvent) {
+                        handleMessageEvent(streamEvent);
+                    } else if (streamEvent instanceof CommentEvent) {
+                        handleCommentEvent(streamEvent);
+                    } else if (streamEvent instanceof StartedEvent) {
+                        handleStartedEvent(streamEvent);
+                    } else {
+                        handleFaultEvent(streamEvent);
+                    }
+                }
+            } catch (StreamException e) {
+                assemblyListener.onError(e);
+            }
+        }
     }
+
+    protected void handleMessageEvent(MessageEvent messageEvent) {
+        break;
+    }
+
+    protected void handleCommentEvent(CommentEvent commentEvent) {
+        break;
+    }
+
+    protected void handleStartedEvent(StartedEvent startedEvent) {
+        break;
+    }
+
+    protected void handleFaultEvent(FaultEvent faultEvent) {
+        break;
+    }
+
 }
