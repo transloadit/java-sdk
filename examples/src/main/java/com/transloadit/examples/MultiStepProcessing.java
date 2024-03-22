@@ -135,6 +135,11 @@ public final class MultiStepProcessing {
             }
 
             @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+                System.out.println("Assembly Execution Progress: " + combinedProgress);
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
                 System.out.println("\n ---- Step Result for Step: ---- ");
                 System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."

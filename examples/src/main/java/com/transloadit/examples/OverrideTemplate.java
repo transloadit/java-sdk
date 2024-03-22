@@ -95,6 +95,11 @@ public final class OverrideTemplate {
             }
 
             @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
             }

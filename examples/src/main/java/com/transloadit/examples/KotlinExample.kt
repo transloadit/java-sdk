@@ -36,7 +36,8 @@ class KotlinExample {
                     JSONObject()
                     .put("text","Kotlin Example")
                     .put("color","#e61010")
-                    .put("font","Helvetica")
+                    .put("font","Ubuntu-Mono-Bold")
+                    // .put("font","Helvetica") You can put Helvetica here in order to test the error handling
                     .put("size", 15)
             )
 
@@ -87,6 +88,11 @@ class KotlinExample {
 
                 override fun onFileUploadProgress(uploadedBytes: Long, totalBytes: Long) {
                     println("Uploaded $uploadedBytes from $totalBytes bytes")
+                }
+
+                override fun onAssemblyProgress(combinedProgress: Double, progressPerOriginalFile: JSONObject?) {
+                    println("Assembly Progress: $combinedProgress")
+                    println("Progress per file: ${progressPerOriginalFile.toString()}")
                 }
 
                 override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
