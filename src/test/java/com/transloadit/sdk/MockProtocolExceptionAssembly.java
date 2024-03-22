@@ -80,6 +80,11 @@ public class MockProtocolExceptionAssembly extends Assembly {
                 }
 
                 @Override
+                public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+
+                }
+
+                @Override
                 public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
                 }
