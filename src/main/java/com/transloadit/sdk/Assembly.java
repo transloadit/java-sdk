@@ -2,10 +2,6 @@ package com.transloadit.sdk;
 
 import com.launchdarkly.eventsource.ConnectStrategy;
 import com.launchdarkly.eventsource.ErrorStrategy;
-import com.launchdarkly.eventsource.EventSource;
-import com.launchdarkly.eventsource.MessageEvent;
-import com.launchdarkly.eventsource.background.BackgroundEventHandler;
-import com.launchdarkly.eventsource.background.BackgroundEventSource;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -15,14 +11,12 @@ import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
 import org.jetbrains.annotations.TestOnly;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -490,6 +485,11 @@ public class Assembly extends OptionsBuilder {
                 }
 
                 @Override
+                public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+
+                }
+
+                @Override
                 public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
                 }
@@ -563,83 +563,13 @@ public class Assembly extends OptionsBuilder {
      */
     private void listenToServerSentEvents(AssemblyResponse response) throws LocalOperationException {
         final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
+        final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl).connectTimeout(10, TimeUnit.MINUTES);
+        final ErrorStrategy errorStrategy = ErrorStrategy.alwaysContinue();
+        final EventsourceRunnable eventsourceRunnable = new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, errorStrategy);
 
-
-        BackgroundEventHandler myHandler = new BackgroundEventHandler() {
-            @Override
-            public void onOpen() {
-            }
-
-            @Override
-            public void onClosed() {
-            }
-            // Here the different SSE sent events are getting piped to the corresponding assembly event via the {@link AssemblyListener}
-            public void onMessage(String event, MessageEvent messageEvent) {
-                if (event != null && messageEvent != null) {
-                    // In case of a message event, without additional payload.
-                    if (event.equals("message")) {
-                        String messageContent = messageEvent.getData();
-                        if (messageContent.equals("assembly_finished")) {
-                            try {
-                                getAssemblyListener().onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
-                            } catch (RequestException | LocalOperationException e) {
-                                getAssemblyListener().onError(e);
-                            }
-                        }
-
-                        if (messageContent.equals("assembly_uploading_finished")) {
-                            getAssemblyListener().onAssemblyUploadFinished();
-                        }
-
-                        if (messageContent.equals("assembly_upload_meta_data_extracted")) {
-                            getAssemblyListener().onMetadataExtracted();
-                        }
-
-                        // In case of regular events, which are coming with extra payloads from the server.
-                    } else {
-                        // Some events are not wrapped inside a plain JSON Object, but inside a JSON array.
-                        JSONArray messageEventArray = new JSONArray(messageEvent.getData());
-
-                        if (event.equals("assembly_result_finished")) {
-                            // Unpack the two expected fields in the JSON array.
-                            String stepName = messageEventArray.getString(0);
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(1);
-                            getAssemblyListener().onAssemblyResultFinished(stepName, messageEventJson);
-                        }
-
-                        if (event.equals("assembly_error")) {
-                            // Deliver error information to the user.
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                            String errorString = messageEventJson.getString("error") + "\n" + messageEventJson.toString(2);
-                            getAssemblyListener().onError(new RequestException(errorString));
-                        }
-
-                        if (event.equals("assembly_upload_finished")) {
-                            JSONObject messageEventJson = messageEventArray.getJSONObject(0);
-                            getAssemblyListener().onFileUploadFinished(messageEventJson.getString("name"), messageEventJson);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onComment(String comment) {
-            }
-
-            @Override
-            public void onError(Throwable t) {
-            }
-
-        };
-        BackgroundEventSource backgroundEventSource = new BackgroundEventSource.Builder(myHandler, new EventSource.Builder(
-                ConnectStrategy.http(sseUpdateStreamUrl)
-                        .header("Accept", "text/event-stream")
-                        .connectTimeout(5, TimeUnit.SECONDS)
-        )
-        ).build();
-
-        backgroundEventSource.start();
-
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(eventsourceRunnable);
+        executor.shutdown();
     }
 
     /**

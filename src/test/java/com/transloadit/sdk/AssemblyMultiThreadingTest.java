@@ -114,7 +114,12 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
                     }
 
-                    @Override
+            @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+
+            }
+
+            @Override
                     public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
                     }
@@ -237,6 +242,11 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
             @Override
             public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
 
             }
 

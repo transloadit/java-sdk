@@ -83,6 +83,11 @@ public final class ImageResizer {
             }
 
             @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+                System.out.printf("Assembly Execution Progress: %f", combinedProgress);
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
             }
