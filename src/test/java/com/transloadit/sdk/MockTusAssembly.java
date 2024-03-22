@@ -46,7 +46,7 @@ public class MockTusAssembly extends Assembly {
      * @param url URL the {@link MockSocket} should mock.
      * @return {@link MockSocket}
      */
-    @Override
+
     Socket getSocket(String url) {
         if (socket == null) {
             socket = new MockSocket();

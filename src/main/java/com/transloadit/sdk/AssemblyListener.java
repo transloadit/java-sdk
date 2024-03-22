@@ -62,6 +62,14 @@ public interface AssemblyListener {
     void onFileUploadProgress(long uploadedBytes, long totalBytes);
 
     /**
+     * Callback to be executed if am assembly execution progress is propagated from the backend.
+     *
+     * @param combinedProgress Overall execution progress of the whole assembly.
+     * @param progressPerOriginalFile JSONObject including the progress for each individual file.
+     */
+    void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile);
+
+    /**
      * Callback to be executed if there is an Assembly result.
      * @param stepName name of the step, the result is part of
      * @param result {@link JSONObject} which holds information about the result as Key-Value pairs.

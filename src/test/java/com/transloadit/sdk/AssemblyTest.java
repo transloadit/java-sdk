@@ -169,7 +169,7 @@ public class AssemblyTest extends MockHttpService {
      * setting {@link Assembly#shouldWaitForCompletion} = {@code true}.
      * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
      * if Test resources  "assembly_executing.json" or "resumable_assembly_complete.json" are missing.
-     * @see Assembly#shouldWaitWithoutSocket()
+     * @see Assembly#shouldWaitWithoutSSE()
      */
     @Test
     public void saveTillComplete() throws Exception {
@@ -271,6 +271,11 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+
+            }
+
+            @Override
             public void onAssemblyResultFinished(String stepName, JSONObject result) {
 
 
@@ -303,7 +308,7 @@ public class AssemblyTest extends MockHttpService {
      * This Test verifies the functionality of {@link Assembly#save(boolean)}. It is identical to
      * {@link AssemblyTest#saveWithTus()}, except it waits until the {@link Assembly} execution is finished.
      * This is determined by by observing the {@link AssemblyResponse} status.
-     * @see Assembly#shouldWaitWithoutSocket()
+     * @see Assembly#shouldWaitWithoutSSE()
      * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
      * if Test resources "resumable_assembly.json" or "resumable_assembly_complete.json" are missing.
      */

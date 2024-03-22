@@ -20,7 +20,7 @@ class KotlinExample {
         @JvmStatic
         fun main(args: Array<String>) {
             // Setup the TransloaditClient and a new Assembly
-            val transloadit = Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET")
+            val transloadit = Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"))
 
             val assembly: Assembly = transloadit.newAssembly()
             val kotlinExample = KotlinExample()
@@ -36,7 +36,8 @@ class KotlinExample {
                     JSONObject()
                     .put("text","Kotlin Example")
                     .put("color","#e61010")
-                    .put("font","Helvetica")
+                    .put("font","Ubuntu-Mono-Bold")
+                    // .put("font","Helvetica") You can put Helvetica here in order to test the error handling
                     .put("size", 15)
             )
 
@@ -87,6 +88,11 @@ class KotlinExample {
 
                 override fun onFileUploadProgress(uploadedBytes: Long, totalBytes: Long) {
                     println("Uploaded $uploadedBytes from $totalBytes bytes")
+                }
+
+                override fun onAssemblyProgress(combinedProgress: Double, progressPerOriginalFile: JSONObject?) {
+                    println("Assembly Progress: $combinedProgress")
+                    println("Progress per file: ${progressPerOriginalFile.toString()}")
                 }
 
                 override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {

@@ -35,7 +35,7 @@ public final class OverrideTemplate {
      * @param args
      */
     public static void main(String[] args) {
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"));
 
         Map<String, Object> stepOptions = new HashMap<>();
         stepOptions.put("url", "https://transloadit.com/");
@@ -91,6 +91,11 @@ public final class OverrideTemplate {
 
             @Override
             public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+
+            }
+
+            @Override
+            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
 
             }
 

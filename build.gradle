@@ -29,6 +29,8 @@ dependencies {
     implementation 'org.json:json:20231013'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'io.socket:socket.io-client:2.1.0'
+    implementation 'com.launchdarkly:okhttp-eventsource:4.1.1'
+
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mock-server:mockserver-junit-rule:5.15.0'
