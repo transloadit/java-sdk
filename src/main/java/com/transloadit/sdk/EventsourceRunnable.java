@@ -30,6 +30,8 @@ public class EventsourceRunnable implements Runnable {
      * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
      * {@link Runnable} in order to make it usable by a {@link java.util.concurrent.ExecutorService}.
      * This constructor uses the standard {@link ConnectStrategy} of the {@link EventSource} library.
+     * @param transloadit The {@link Transloadit} instance to be used to fetch the assembly response.
+     * @param response The {@link AssemblyResponse} object containing the assembly response.
      * @param assemblyListener The {@link AssemblyListener} to be notified about the assembly status
      * @param statusUri The {@link URI} to the status endpoint of the assembly
      */
@@ -45,10 +47,14 @@ public class EventsourceRunnable implements Runnable {
      * {@link Runnable} in order to make it usable by a {@link java.util.concurrent.ExecutorService}.
      * This constructor lets the user define the used {@link ConnectStrategy} and does not need a {@link URI} to the
      * status endpoint of the assembly, as it is inculded in the {@link ConnectStrategy} object.
+     * @param transloadit The {@link Transloadit} instance to be used to fetch the assembly response.
+     * @param response The {@link AssemblyResponse} object containing the assembly response.
      * @param assemblyListener The {@link AssemblyListener} to be notified about the assembly status
      * @param connectStrategy The {@link ConnectStrategy} to be used by the {@link EventSource} instance.
+     * @param errorStrategy The {@link ErrorStrategy} to be used by the {@link EventSource} instance.
      */
-    public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener, ConnectStrategy connectStrategy, ErrorStrategy errorStrategy) {
+    public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener,
+                               ConnectStrategy connectStrategy, ErrorStrategy errorStrategy) {
         this.transloadit = transloadit;
         this.response = response;
         this.assemblyListener = assemblyListener;
@@ -57,6 +63,10 @@ public class EventsourceRunnable implements Runnable {
         this.eventSource = builder.build();
     }
 
+    /**
+     * The {@link Runnable} implementation of the {@link EventsourceRunnable}. Runs a {@link EventSource} instance and
+     * parses the incoming events. The events are then passed to the {@link AssemblyListener} to notify the user about them.
+     */
     @Override
     public void run() {
         this.assemblyFinished = false;
@@ -139,6 +149,8 @@ public class EventsourceRunnable implements Runnable {
 
                 case "assembly_error":
                     assemblyListener.onError(new RequestException(data));
+                    this.eventSource.close();
+                    System.exit(1);
                     break;
 
                 case "assembly_execution_progress":
