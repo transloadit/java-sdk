@@ -5,11 +5,13 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -21,31 +23,24 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 //CHECKSTYLE:ON
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
 
 
 /**
  * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)
+@MockServerSettings(ports = MockHttpService.PORT)
 public class TransloaditTest extends MockHttpService {
-
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", MockHttpService.PORT);
 
     /**
      * Runs after each test run and resets the mockServerClient.
      */
-    @After
+   @AfterEach
     public void tearDown() {
         mockServerClient.reset();
     }
@@ -55,7 +50,7 @@ public class TransloaditTest extends MockHttpService {
      */
     @Test
     public void getHostUrl() {
-        assertEquals(transloadit.getHostUrl(), "http://localhost:" + PORT);
+        Assertions.assertEquals(transloadit.getHostUrl(), "http://localhost:" + PORT);
     }
 
     /**
@@ -74,8 +69,8 @@ public class TransloaditTest extends MockHttpService {
 
         AssemblyResponse assembly = transloadit.getAssembly("76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -96,8 +91,8 @@ public class TransloaditTest extends MockHttpService {
         AssemblyResponse assembly = transloadit
                 .getAssemblyByUrl(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -116,7 +111,7 @@ public class TransloaditTest extends MockHttpService {
         AssemblyResponse assembly = transloadit
                 .cancelAssembly(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
+        Assertions.assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
     }
 
     /**
@@ -134,7 +129,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assemblies.json")));
 
         ListResponse assemblies = transloadit.listAssemblies();
-        assertEquals(assemblies.size(), 0);
+        Assertions.assertEquals(assemblies.size(), 0);
     }
 
     /**
@@ -153,8 +148,8 @@ public class TransloaditTest extends MockHttpService {
 
         Response template = transloadit.getTemplate("76fe5df1c93a0a530f3e583805cf98b4");
 
-        assertEquals(template.json().get("template_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(template.json().get("ok"), "TEMPLATE_FOUND");
+        Assertions.assertEquals(template.json().get("template_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(template.json().get("ok"), "TEMPLATE_FOUND");
     }
 
     /**
@@ -175,7 +170,7 @@ public class TransloaditTest extends MockHttpService {
         Response template = transloadit.updateTemplate("55c965a063a311e6ba2d379ef10b28f7",
                 new HashMap<String, Object>());
 
-        assertEquals(template.json().get("ok"), "TEMPLATE_UPDATED");
+        Assertions.assertEquals(template.json().get("ok"), "TEMPLATE_UPDATED");
     }
 
     /**
@@ -194,7 +189,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("delete_template.json")));
 
         Response deletedTemplate = transloadit.deleteTemplate("11148db0ec4f11e6a05ca3d04d2a53e6");
-        assertEquals(deletedTemplate.json().get("ok"), "TEMPLATE_DELETED");
+        Assertions.assertEquals(deletedTemplate.json().get("ok"), "TEMPLATE_DELETED");
     }
 
     /**
@@ -211,7 +206,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("templates.json")));
 
         ListResponse templates = transloadit.listTemplates();
-        assertEquals(templates.size(), 0);
+        Assertions.assertEquals(templates.size(), 0);
     }
 
     /**
@@ -229,7 +224,7 @@ public class TransloaditTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("bill.json")));
 
         Response bill = transloadit.getBill(9, 2016);
-        assertEquals(bill.json().get("invoice_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(bill.json().get("invoice_id"), "76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -242,7 +237,7 @@ public class TransloaditTest extends MockHttpService {
         exceptionTemplate.add("java.net.SocketTimeoutException");
         exceptionTemplate.add("Socket.blah.Exception");
 
-        assertTrue(transloadit.getQualifiedErrorsForRetry().size() == 1);
+        Assertions.assertEquals(1, transloadit.getQualifiedErrorsForRetry().size());
         ArrayList<String> exceptionsSet = transloadit.getQualifiedErrorsForRetry();
         exceptionsSet.add("Socket.blah.Exception");
 
@@ -251,26 +246,27 @@ public class TransloaditTest extends MockHttpService {
         exceptionsSet = transloadit.getQualifiedErrorsForRetry();
 
         for (int i = 0; i < exceptionsSet.size(); i++) {
-            assertEquals(exceptionTemplate.get(i), exceptionsSet.get(i));
+            Assertions.assertEquals(exceptionTemplate.get(i), exceptionsSet.get(i));
         }
     }
 
     /**
      * Test if timeout setting works properly.
-     * @throws LocalOperationException
+     * @throws LocalOperationException if setting the timeout goes wrong.
      */
     @Test
     public void getAndSetTimeoutRetry() throws LocalOperationException {
-        assertEquals(0, transloadit.getRetryDelay());
-        transloadit.setRetryDelay(5);
-        assertEquals(5, transloadit.getRetryDelay());
+        int timeout = 5;
+        Assertions.assertEquals(0, transloadit.getRetryDelay());
+        transloadit.setRetryDelay(timeout);
+        Assertions.assertEquals(timeout, transloadit.getRetryDelay());
         Exception exception = new Exception();
         try {
-            transloadit.setRetryDelay(-5);
+            transloadit.setRetryDelay(-timeout);
         } catch (LocalOperationException e) {
             exception = e;
         }
-      assertTrue(exception instanceof LocalOperationException);
+        Assertions.assertInstanceOf(LocalOperationException.class, exception);
 
     }
 
@@ -283,7 +279,7 @@ public class TransloaditTest extends MockHttpService {
         Pattern versionPattern = Pattern.compile(
                 "^[a-z-]*[:]([0-9]+)\\.([0-9]+)\\.([0-9]+)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = versionPattern.matcher(info);
-        assertTrue(matcher.find());
+        Assertions.assertTrue(matcher.find());
     }
 }
 

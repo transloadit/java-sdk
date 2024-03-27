@@ -3,41 +3,38 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.Response;
-import org.junit.Rule;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
  * Unit test for {@link Template} class. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class TemplateTest extends MockHttpService {
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-    /**
-     * MockServerClient makes HTTP requests to a MockServer instance.
-     */
-    private MockServerClient mockServerClient;
+
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", PORT);
 
     /**
      * Tests if a new Template returns its correct name by calling {@link Template#getName()}.
      * The name gets defined by its instantiation.
      */
+
+
     @Test
     public void getName() {
         Template template = transloadit.newTemplate("foo");
-        assertEquals(template.getName(), "foo");
+        Assertions.assertEquals(template.getName(), "foo");
     }
 
     /**
@@ -47,10 +44,10 @@ public class TemplateTest extends MockHttpService {
     @Test
     public void setName() {
         Template template = transloadit.newTemplate("foo");
-        assertEquals(template.getName(), "foo");
+        Assertions.assertEquals(template.getName(), "foo");
 
         template.setName("bar");
-        assertEquals(template.getName(), "bar");
+        Assertions.assertEquals(template.getName(), "bar");
     }
 
     /**
@@ -70,7 +67,7 @@ public class TemplateTest extends MockHttpService {
         Template template = new Template(transloadit, "template_name");
         Response newTemplate = template.save();
 
-        assertEquals(newTemplate.json().get("ok"), "TEMPLATE_FOUND");
+        Assertions.assertEquals(newTemplate.json().get("ok"), "TEMPLATE_FOUND");
 
         mockServerClient.reset();
     }
