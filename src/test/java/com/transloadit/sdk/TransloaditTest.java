@@ -29,8 +29,8 @@ import java.util.regex.Pattern;
 /**
  * Unit test for {@link Transloadit} class. Api-Responses are simulated by mocking the server's response.
  */
-@ExtendWith(MockServerExtension.class)
-@MockServerSettings(ports = MockHttpService.PORT)
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class TransloaditTest extends MockHttpService {
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
