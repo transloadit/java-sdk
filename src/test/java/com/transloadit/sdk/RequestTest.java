@@ -2,12 +2,16 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 
@@ -24,28 +28,23 @@ import static org.mockserver.model.HttpError.error;
 /**
  * Unit test for {@link Request} class. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class RequestTest extends MockHttpService {
     /**
      * Links to {@link Request} instance to perform the tests on.
      */
     private Request request;
-
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", MockHttpService.PORT);
 
     /**
      * Assings a new {@link Request} instance to Request variable before each individual test and resets
      * the mockServerClient.
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         request = new Request(transloadit);
         mockServerClient.reset();
@@ -121,15 +120,15 @@ public class RequestTest extends MockHttpService {
         transloadit2.setRetryAttemptsRequestException(5); // Test if it works with defined errors
         Request newRequest = new Request(transloadit2);
         Exception e = new SocketTimeoutException("connect timed out");
-        assertTrue(newRequest.qualifiedForRetry(e));
-        assertEquals(4, newRequest.retryAttemptsRequestExceptionLeft); // tests counting logic
+        Assertions.assertTrue(newRequest.qualifiedForRetry(e));
+        Assertions.assertEquals(4, newRequest.retryAttemptsRequestExceptionLeft); // tests counting logic
 
         Exception e2 = new ArrayStoreException("foo bar"); // shouldn't work here
-        assertFalse(newRequest.qualifiedForRetry(e2));
+        Assertions.assertFalse(newRequest.qualifiedForRetry(e2));
 
         transloadit2.setRetryAttemptsRequestException(0);
         newRequest = new Request(transloadit2);
-        assertFalse(newRequest.qualifiedForRetry(e));
+        Assertions.assertFalse(newRequest.qualifiedForRetry(e));
     }
 
     /**
@@ -188,7 +187,7 @@ public class RequestTest extends MockHttpService {
         int keyLength = 256;
 
         String nonce = request.getNonce(cipher, keyLength);
-        assertEquals(44, nonce.length());
+        Assertions.assertEquals(44, nonce.length());
     }
 
     /**
@@ -203,7 +202,7 @@ public class RequestTest extends MockHttpService {
         int timeout = request.delayBeforeRetry();
         endTime = System.currentTimeMillis();
         int delta = (int) (endTime - startTime);
-        assertTrue(delta >= timeout);
+        Assertions.assertTrue(delta >= timeout);
 
     }
 }
