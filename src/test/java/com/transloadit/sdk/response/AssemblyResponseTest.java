@@ -1,34 +1,30 @@
 package com.transloadit.sdk.response;
 
 import com.transloadit.sdk.MockHttpService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Unit Test class for {@link AssemblyResponse}. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class AssemblyResponseTest extends MockHttpService {
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", MockHttpService.PORT);
 
     /**
      * Links to {@link AssemblyResponse} instance to perform the tests on.
@@ -40,7 +36,7 @@ public class AssemblyResponseTest extends MockHttpService {
      * before each test.
      * @throws Exception if Test resource "assembly.json" is missing.
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies").withMethod("POST"))
@@ -52,7 +48,7 @@ public class AssemblyResponseTest extends MockHttpService {
     /**
      * Resets the mockServerClient after each run.
      */
-    @After
+    @AfterEach
     public void tearDown() {
         mockServerClient.reset();
     }
@@ -62,7 +58,7 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     @Test
     public void getId() {
-        assertEquals(response.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(response.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -71,7 +67,7 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     @Test
     public void getUrl() {
-        assertEquals(response.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(response.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -80,7 +76,7 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     @Test
     public void getSslUrl() {
-        assertEquals(response.getSslUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(response.getSslUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
     }
 
     /**
@@ -88,7 +84,7 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     @Test
     public void getStepResult() {
-        assertEquals(response.getStepResult("resize").getJSONObject(0).getString("url"),
+        Assertions.assertEquals(response.getStepResult("resize").getJSONObject(0).getString("url"),
                 "http://tmp.jane.transloadit.com/result_url.png");
     }
 
@@ -97,7 +93,7 @@ public class AssemblyResponseTest extends MockHttpService {
      */
     @Test
     public void isCompleted() {
-        assertTrue(response.isCompleted());
+        Assertions.assertTrue(response.isCompleted());
     }
 
     /**
@@ -117,8 +113,8 @@ public class AssemblyResponseTest extends MockHttpService {
 
         AssemblyResponse abortedResponse = newAssemblyWithoutID().save(false);
 
-        assertTrue(abortedResponse.isAborted());
-        assertFalse(response.isAborted());
+        Assertions.assertTrue(abortedResponse.isAborted());
+        Assertions.assertFalse(response.isAborted());
     }
 
     /**
@@ -138,8 +134,8 @@ public class AssemblyResponseTest extends MockHttpService {
 
         AssemblyResponse cancelledResponse = newAssemblyWithoutID().save(false);
 
-        assertTrue(cancelledResponse.isCanceled());
-        assertFalse(response.isCanceled());
+        Assertions.assertTrue(cancelledResponse.isCanceled());
+        Assertions.assertFalse(response.isCanceled());
     }
 
     /**
@@ -159,8 +155,8 @@ public class AssemblyResponseTest extends MockHttpService {
 
         AssemblyResponse executingResponse = newAssemblyWithoutID().save(false);
 
-        assertTrue(executingResponse.isExecuting());
-        assertFalse(response.isExecuting());
+        Assertions.assertTrue(executingResponse.isExecuting());
+        Assertions.assertFalse(response.isExecuting());
     }
 
     /**
@@ -180,7 +176,7 @@ public class AssemblyResponseTest extends MockHttpService {
 
         AssemblyResponse executingResponse = newAssemblyWithoutID().save(false);
 
-        assertFalse(executingResponse.isFinished());
-        assertTrue(response.isFinished());
+        Assertions.assertFalse(executingResponse.isFinished());
+        Assertions.assertTrue(response.isFinished());
     }
 }
