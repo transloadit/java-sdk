@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.UUID;
 // CHECKSTYLE:OFF
 import io.tus.java.client.TusUploader;
-// CHECKTYLE:ON
+// CHECKSTYLE:ON
 
 
 /**
@@ -819,7 +819,7 @@ public class Assembly extends OptionsBuilder {
     }
 
     /**
-     * Returns the current Thread List
+     * Returns the current Thread List.
      * @return List of Type TusUploadRunnable
      */
      protected ArrayList<TusUploadRunnable> getThreadList() {

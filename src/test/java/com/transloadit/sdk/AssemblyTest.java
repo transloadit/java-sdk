@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Objects;
 
 import static org.mockserver.model.RegexBody.regex;
 
@@ -46,11 +47,11 @@ public class AssemblyTest extends MockHttpService {
     private boolean assemblyFinished;
 
     /**
-     * Assings a new {@link Assembly} instance to the {@link AssemblyTest#assembly} variable before each individual test
+     * Assigns a new {@link Assembly} instance to the {@link AssemblyTest#assembly} variable before each individual test
      * and resets the mockServerClient. Also sets {@link AssemblyTest#assemblyFinished} {@code = false}.
      */
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         assembly = newAssemblyWithoutID();
         assemblyFinished = false;
         mockServerClient.reset();
@@ -70,25 +71,25 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * Performs a similar test to {@link Assembly#addFile(File, String)}, except that a FileStream is added.
-     * @throws Exception if File cannot be created.
+     * @throws IOException if File cannot be created.
      */
     @Test
-    public void addInputStreamFile() throws FileNotFoundException {
-        InputStream file = new FileInputStream(new File("LICENSE"));
+    public void addInputStreamFile() throws IOException {
+        InputStream file = Files.newInputStream(new File("LICENSE").toPath());
         assembly.addFile(file, "file_name");
 
         Assertions.assertEquals(file, assembly.fileStreams.get("file_name"));
     }
 
     /**
-     * Performs a double test, adding a file and a FileStream wtih the same name to the {@link Assembly} instance.
-     * Both are added by calling {@link Assembly#addFile}. Test passes if only the later added {@link File} can be found
+     * Performs a double test, adding a file and a FileStream with the same name to the {@link Assembly} instance.
+     * Both are added by calling {@link Assembly#addFile}. Test passes if only the latter added {@link File} can be found
      * in the {@link Assembly} instance.
-     * @throws Exception
+     * @throws IOException if File cannot be created.
      */
     @Test
-    public void addCombinedFiles() throws Exception {
-        InputStream fileStream = new FileInputStream(new File("LICENSE"));
+    public void addCombinedFiles() throws IOException {
+        InputStream fileStream = Files.newInputStream(new File("LICENSE").toPath());
         assembly.addFile(fileStream, "file_name");
 
         File file = new File("LICENSE");
@@ -100,7 +101,7 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * Performs a test if a file can successfully be removed from an Assembly with {@link Assembly#removeFile(String)}.
-     * Therefore a file gets added to the Assembly and gets removed afterwards. Tests passes if the file's name
+     * Therefore, a file gets added to the Assembly and gets removed afterward. Tests passes if the file's name
      * cannot be found in {@link Assembly#files}.
      */
     @Test
@@ -123,8 +124,9 @@ public class AssemblyTest extends MockHttpService {
      * <li>The {@link Assembly#save(boolean)} methods parameter {@code isResumable = false}, indicating that
      * the {@link io.tus.java.client.TusUpload TUS Uploader} should not be used.</li>
      * </ul>
-     * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
-     * if Test resource "assembly_executing.json" is missing.
+     * @throws IOException if Test resource "assembly_executing.json" is missing.
+     * @throws LocalOperationException if building the request goes wrong
+     * @throws RequestException if communication with the server goes wrong.
      */
     @Test
     public void save() throws IOException, LocalOperationException, RequestException {
@@ -214,7 +216,7 @@ public class AssemblyTest extends MockHttpService {
     /**
      * This test verifies the functionality of {@link Assembly#save(boolean)}. It is identical to
      * {@link AssemblyTest#saveWithTus()} except it listens to the Socket and waits until the execution of the
-     * {@link Assembly} is finished. Therefore it implements an {@link AssemblyListener} and verifies the needed
+     * {@link Assembly} is finished. Therefore, it implements an {@link AssemblyListener} and verifies the needed
      * POST and GET requests to the server.
      * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
      * if Test resources "resumable_assembly.json" or "resumable_assembly_complete.json" are missing.
@@ -298,7 +300,7 @@ public class AssemblyTest extends MockHttpService {
     /**
      * This Test verifies the functionality of {@link Assembly#save(boolean)}. It is identical to
      * {@link AssemblyTest#saveWithTus()}, except it waits until the {@link Assembly} execution is finished.
-     * This is determined by by observing the {@link AssemblyResponse} status.
+     * This is determined by observing the {@link AssemblyResponse} status.
      * @see Assembly#shouldWaitWithoutSocket()
      * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
      * if Test resources "resumable_assembly.json" or "resumable_assembly_complete.json" are missing.
@@ -391,12 +393,9 @@ public class AssemblyTest extends MockHttpService {
         String uuidShort = "6859bd25474d";
         String uuidLong = "6859bd25474d40b8bf7a294cfce4aba56859bd25474d40b8bf7a294cfce4aba5";
         String uuidWrongChar = "6859bd25474d40b8bf-a294cfce4aba5";
-        Assertions.assertThrows(LocalOperationException.class, () ->  {
-            assembly.setAssemblyId(uuidShort); });
-        Assertions.assertThrows(LocalOperationException.class, () ->  {
-            assembly.setAssemblyId(uuidWrongChar); });
-        Assertions.assertThrows(LocalOperationException.class, () ->  {
-            assembly.setAssemblyId(uuidLong); });
+        Assertions.assertThrows(LocalOperationException.class, () -> assembly.setAssemblyId(uuidShort));
+        Assertions.assertThrows(LocalOperationException.class, () -> assembly.setAssemblyId(uuidWrongChar));
+        Assertions.assertThrows(LocalOperationException.class, () -> assembly.setAssemblyId(uuidLong));
         assembly.setAssemblyId(uuid);
         Assertions.assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
     }
@@ -406,7 +405,7 @@ public class AssemblyTest extends MockHttpService {
      * Test succeeds if a certain pattern is generated and every run generates a different String.
      */
     @Test
-    public void generateAssemblyID() throws LocalOperationException {
+    public void generateAssemblyID() {
         String assemblyID1 = assembly.generateAssemblyID();
         String assemblyID2 = assembly.generateAssemblyID();
 
@@ -428,12 +427,12 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * Determines if the correct fileSizes are returned by {@link Assembly#getUploadSize()}.
-     * @throws IOException
+     * @throws IOException if File cannot be created.
      */
     @Test
     public void getUploadSize() throws IOException {
-        File file1 = new File(getClass().getResource("/__files/assembly_executing.json").getFile());
-        File file2 = new File(getClass().getResource("/__files/cancel_assembly.json").getFile());
+        File file1 = new File(Objects.requireNonNull(getClass().getResource("/__files/assembly_executing.json")).getFile());
+        File file2 = new File(Objects.requireNonNull(getClass().getResource("/__files/cancel_assembly.json")).getFile());
         assembly.addFile(file1);
         assembly.addFile(file2);
 
@@ -444,11 +443,11 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * Determines if correct number of upload files is determined.
-     * @throws FileNotFoundException
+     * @throws FileNotFoundException if File cannot be found.
      */
     @Test public void getNumberOfFiles() throws FileNotFoundException {
-        File file1 = new File(getClass().getResource("/__files/assembly_executing.json").getFile());
-        FileInputStream file2 = new FileInputStream(getClass().getResource("/__files/cancel_assembly.json").getFile());
+        File file1 = new File(Objects.requireNonNull(getClass().getResource("/__files/assembly_executing.json")).getFile());
+        FileInputStream file2 = new FileInputStream(Objects.requireNonNull(getClass().getResource("/__files/cancel_assembly.json")).getFile());
         assembly.addFile(file1);
         assembly.addFile(file2);
 
