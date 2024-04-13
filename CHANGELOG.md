@@ -1,5 +1,6 @@
 ### Unreleased ###
 * Migrated test suite from JUnit4 to JUnit 5
+* Upgrade okhttp to 4.12.0 as a security update
 
 ### 1.0.0 / 2022-12-14 ###
 #### Major Release
