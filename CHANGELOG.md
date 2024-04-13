@@ -1,3 +1,6 @@
+### Unreleased ###
+* Migrated test suite from JUnit4 to JUnit 5
+
 ### 1.0.0 / 2022-12-14 ###
 #### Major Release
 Warning: This version includes breaking changes and some experimental features, please keep that in mind when using it.
