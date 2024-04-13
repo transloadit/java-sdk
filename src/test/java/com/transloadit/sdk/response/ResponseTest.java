@@ -12,7 +12,6 @@ import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.assertEquals;
 
 /**
  * Unit Test class for {@link Response}. Api-Responses are simulated by mocking the server's response.

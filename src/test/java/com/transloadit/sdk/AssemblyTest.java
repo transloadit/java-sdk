@@ -4,7 +4,7 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONObject;
-import org.junit.Assert;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -391,11 +391,11 @@ public class AssemblyTest extends MockHttpService {
         String uuidShort = "6859bd25474d";
         String uuidLong = "6859bd25474d40b8bf7a294cfce4aba56859bd25474d40b8bf7a294cfce4aba5";
         String uuidWrongChar = "6859bd25474d40b8bf-a294cfce4aba5";
-        Assert.assertThrows(LocalOperationException.class, () ->  {
+        Assertions.assertThrows(LocalOperationException.class, () ->  {
             assembly.setAssemblyId(uuidShort); });
-        Assert.assertThrows(LocalOperationException.class, () ->  {
+        Assertions.assertThrows(LocalOperationException.class, () ->  {
             assembly.setAssemblyId(uuidWrongChar); });
-        Assert.assertThrows(LocalOperationException.class, () ->  {
+        Assertions.assertThrows(LocalOperationException.class, () ->  {
             assembly.setAssemblyId(uuidLong); });
         assembly.setAssemblyId(uuid);
         Assertions.assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
