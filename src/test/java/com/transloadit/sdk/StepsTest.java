@@ -1,14 +1,12 @@
 package com.transloadit.sdk;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for {@link Steps} class.
@@ -22,7 +20,7 @@ public class StepsTest {
     /**
      * Assings a new {@link Steps} instance to Steps variable before each individual test.
      */
-    @Before
+    @BeforeEach
     public void setUp() {
         steps = new Steps();
     }
@@ -34,14 +32,14 @@ public class StepsTest {
     @Test
     public void addStepGetStep() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
-        assertEquals(steps.getStep("encode").robot, "/video/encode");
+        Assertions.assertEquals(steps.getStep("encode").robot, "/video/encode");
 
         HashMap<String, Object> stepOptions = new HashMap<String, Object>();
         stepOptions.put("width", 1920);
         stepOptions.put("height", 720);
 
         steps.addStep("video", stepOptions);
-        assertEquals(steps.getStep("video").options, stepOptions);
+        Assertions.assertEquals(steps.getStep("video").options, stepOptions);
     }
 
     /**
@@ -53,9 +51,9 @@ public class StepsTest {
     public void removeStep() {
         steps.addStep("encode", "/video/encode", new HashMap<String, Object>());
 
-        assertTrue(steps.all.containsKey("encode"));
+        Assertions.assertTrue(steps.all.containsKey("encode"));
         steps.removeStep("encode");
-        assertFalse(steps.all.containsKey("encode"));
+        Assertions.assertFalse(steps.all.containsKey("encode"));
     }
 
     /**
@@ -76,7 +74,7 @@ public class StepsTest {
         controlMap.put("encode", encodeStep);
         controlMap.put("thumbs", thumbStep);
 
-        assertEquals(controlMap, steps.toMap());
+        Assertions.assertEquals(controlMap, steps.toMap());
     }
 
 }

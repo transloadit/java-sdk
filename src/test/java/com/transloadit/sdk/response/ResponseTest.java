@@ -1,36 +1,33 @@
 package com.transloadit.sdk.response;
 
 import com.transloadit.sdk.MockHttpService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.assertEquals;
 
 /**
  * Unit Test class for {@link Response}. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class ResponseTest extends MockHttpService {
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", PORT);
 
     /**
      * Resets MockserverClient before each Test run.
      */
-    @Before
+    @BeforeEach
     public void setUp() {
         mockServerClient.reset();
     }
@@ -48,7 +45,7 @@ public class ResponseTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
         AssemblyResponse response = newAssemblyWithoutID().save(false);
-        assertEquals(response.json().getString("ok"), "ASSEMBLY_COMPLETED");
+        Assertions.assertEquals(response.json().getString("ok"), "ASSEMBLY_COMPLETED");
     }
 
     /**
@@ -62,7 +59,7 @@ public class ResponseTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("assembly.json")));
 
         AssemblyResponse response = newAssemblyWithoutID().save(false);
-        assertEquals(response.status(), 200);
+        Assertions.assertEquals(response.status(), 200);
     }
 
 }
