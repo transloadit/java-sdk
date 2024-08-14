@@ -4,13 +4,15 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -21,23 +23,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
  * Unit test for the multi threading features of {@link Assembly Assembly.class}.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class AssemblyMultiThreadingTest extends MockHttpService {
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", PORT);
 
     /**
      * Links to {@link Assembly} instance to perform the tests on.
@@ -53,7 +50,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
      * individual test
      * and resets the mockServerClient. Also sets {@link AssemblyMultiThreadingTest#assemblyFinished} {@code = false}.
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
@@ -194,8 +191,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST"), VerificationTimes.atLeast(3));
 
-        assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-        assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+        Assertions.assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
     }
 
     /**
@@ -256,7 +253,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
             }
         };
         assembly.setRunnableAssemblyListener(listener);
-        assertEquals(listener, assembly.getRunnableAssemblyListener());
+        Assertions.assertEquals(listener, assembly.getRunnableAssemblyListener());
     }
 
     /**
@@ -296,7 +293,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         Mockito.verify(spyListener).onError(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
         String exceptionMessage = exceptionArgumentCaptor.getValue().getMessage();
-        assertEquals(exceptionMessage, errorMessage);
+        Assertions.assertEquals(exceptionMessage, errorMessage);
     }
 
     /**
@@ -310,7 +307,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
 
         String uploadSize = "" + new File("LICENSE").length();
-        assertEquals(uploadSize, "1077");  // verify, that test sizes can work
+        Assertions.assertEquals(uploadSize, "1077");  // verify, that test sizes can work
         String uploadChunkSize = "1";
         assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();

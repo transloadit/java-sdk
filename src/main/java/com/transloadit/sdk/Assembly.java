@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-// CHECKTYLE:ON
+// CHECKSTYLE:ON
 
 /**
  * This class represents a new assembly being created.

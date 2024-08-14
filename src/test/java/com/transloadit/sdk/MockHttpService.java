@@ -10,9 +10,8 @@ import java.io.IOException;
 public class MockHttpService {
     //CHECKSTYLE:OFF
     // Checkstyle was turned off here to enable the upper case variable name of the "PORT" variable.
-    protected final int PORT = 9040;
-    protected final Transloadit transloadit = new Transloadit("KEY", "SECRET",
-            "http://localhost:" + PORT);
+    public final static int PORT = 9040;
+    protected final Transloadit transloadit = new Transloadit("KEY", "SECRET", "http://localhost:9040");
     //CHECKSTYLE:ON
 
     /**

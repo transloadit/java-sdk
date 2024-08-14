@@ -9,40 +9,31 @@ import com.transloadit.sdk.MockHttpService;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.junit.MockServerRule;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.RegexBody.regex;
 
 /**
  * Unit Test class for {@link AsyncAssembly}. Api-Responses are simulated by mocking the server's response.
  */
+@ExtendWith(MockServerExtension.class)  // MockServerExtension is used to start and stop the MockServer
+@MockServerSettings(ports = MockHttpService.PORT) // MockServerSettings is used to define the port of the MockServer
 public class AsyncAssemblyTest extends MockHttpService {
-
-    /**
-     * MockServer can be run using the MockServerRule.
-     */
-    @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, true, PORT);
-
     /**
      * MockServerClient makes HTTP requests to a MockServer instance.
      */
-    private MockServerClient mockServerClient;
+    private final MockServerClient mockServerClient = new MockServerClient("localhost", PORT);
 
     private AsyncAssembly assembly;
     private AssemblyProgressListener listener;
@@ -58,7 +49,7 @@ public class AsyncAssemblyTest extends MockHttpService {
      * Defines basic Mockserver Expectations to support Assembly creation and status updates.
      * @throws Exception if Test resources "async_resumable_assembly.json" or "assembly.json" are missing.
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mockServerClient.reset();
         listener = new Listener();
@@ -99,12 +90,12 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertTrue(uploadFinished);
-        assertTrue(assemblyFinished);
-        assertEquals(1077, totalUploaded);
-        assertNull(statusUpdateError);
-        assertNull(uploadError);
+        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertTrue(uploadFinished);
+        Assertions.assertTrue(assemblyFinished);
+        Assertions.assertEquals(1077, totalUploaded);
+        Assertions.assertNull(statusUpdateError);
+        Assertions.assertNull(uploadError);
     }
 
     /**
@@ -122,12 +113,12 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertTrue(uploadFinished);
-        assertFalse(assemblyFinished);
-        assertEquals(1077, totalUploaded);
-        assertNull(statusUpdateError);
-        assertNull(uploadError);
+        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertTrue(uploadFinished);
+        Assertions.assertFalse(assemblyFinished);
+        Assertions.assertEquals(1077, totalUploaded);
+        Assertions.assertNull(statusUpdateError);
+        Assertions.assertNull(uploadError);
 
         mockServerClient.reset();
     }
@@ -148,14 +139,14 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertFalse(uploadFinished);
-        assertFalse(assemblyFinished);
-        assertNotEquals(1077, totalUploaded);
-        assertNull(statusUpdateError);
+        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertFalse(uploadFinished);
+        Assertions.assertFalse(assemblyFinished);
+        Assertions.assertNotEquals(1077, totalUploaded);
+        Assertions.assertNull(statusUpdateError);
 
-        assertNotNull(uploadError);
-        assertEquals("some error message", uploadError.getMessage());
+        Assertions.assertNotNull(uploadError);
+        Assertions.assertEquals("some error message", uploadError.getMessage());
     }
 
     /**
@@ -174,14 +165,14 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertTrue(uploadFinished);
-        assertEquals(1077, totalUploaded);
-        assertNull(uploadError);
-        assertFalse(assemblyFinished);
+        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertTrue(uploadFinished);
+        Assertions.assertEquals(1077, totalUploaded);
+        Assertions.assertNull(uploadError);
+        Assertions.assertFalse(assemblyFinished);
 
-        assertNotNull(statusUpdateError);
-        assertEquals("some request exception", statusUpdateError.getMessage());
+        Assertions.assertNotNull(statusUpdateError);
+        Assertions.assertEquals("some request exception", statusUpdateError.getMessage());
     }
 
     /**
@@ -207,15 +198,15 @@ public class AsyncAssemblyTest extends MockHttpService {
         synchronized (listener) {
             listener.wait(3000);
         }
-        assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
-        assertEquals(MockAsyncAssembly.State.PAUSED, assembly.state);
+        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "76fe5df1c93a0a530f3e583805cf98b4");
+        Assertions.assertEquals(MockAsyncAssembly.State.PAUSED, assembly.state);
 
         // expect the states to not have updated after 5 seconds of wait
-        assertFalse(uploadFinished);
-        assertFalse(assemblyFinished);
-        assertNotEquals(1077, totalUploaded);
-        assertNull(statusUpdateError);
-        assertNull(uploadError);
+        Assertions.assertFalse(uploadFinished);
+        Assertions.assertFalse(assemblyFinished);
+        Assertions.assertNotEquals(1077, totalUploaded);
+        Assertions.assertNull(statusUpdateError);
+        Assertions.assertNull(uploadError);
 
         // resume upload and wait again
         assembly.resumeUpload();
@@ -224,11 +215,11 @@ public class AsyncAssemblyTest extends MockHttpService {
         }
 
         // expect the states to have changed as the upload is done this time.
-        assertTrue(uploadFinished);
-        assertTrue(assemblyFinished);
-        assertEquals(1077, totalUploaded);
-        assertNull(statusUpdateError);
-        assertNull(uploadError);
+        Assertions.assertTrue(uploadFinished);
+        Assertions.assertTrue(assemblyFinished);
+        Assertions.assertEquals(1077, totalUploaded);
+        Assertions.assertNull(statusUpdateError);
+        Assertions.assertNull(uploadError);
     }
 
     /**
