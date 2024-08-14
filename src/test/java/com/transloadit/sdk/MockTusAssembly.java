@@ -27,7 +27,6 @@ public class MockTusAssembly extends Assembly {
      */
     public MockTusAssembly(Transloadit transloadit) {
         super(transloadit);
-        emitted = new HashMap<String, Object>();
         assemblyId = "";
     }
 
@@ -39,63 +38,5 @@ public class MockTusAssembly extends Assembly {
     @Override
     protected void processTusFile(InputStream inputStream, String fieldName, String assemblyUrl) throws IOException {
         // do nothing
-    }
-
-    /**
-     * Provides a {@link MockSocket} to simulate a WebSocket.
-     * @param url URL the {@link MockSocket} should mock.
-     * @return {@link MockSocket}
-     */
-
-    Socket getSocket(String url) {
-        if (socket == null) {
-            socket = new MockSocket();
-        }
-        return socket;
-    }
-
-    /**
-     * This class defines a MockSocket in order to simulate the behavior of a WebSocket.
-     */
-    private class MockSocket extends Socket {
-        private Emitter fakeSocket;
-        private boolean connected = false;
-
-        MockSocket() {
-            super(new Manager(), "", new Manager.Options());
-            fakeSocket = new Emitter();
-        }
-
-        @Override
-        public Socket on(String event, Listener fn) {
-            fakeSocket.on(event, fn);
-            return this;
-        }
-
-        @Override
-        public Socket emit(final String event, final Object... args) {
-            fakeSocket.emit(event, args);
-            emitted.put(event, args);
-            return this;
-        }
-
-        @Override
-        public Socket connect() {
-            connected = true;
-            fakeSocket.emit(Socket.EVENT_CONNECT);
-            return this;
-        }
-
-        @Override
-        public boolean connected() {
-            return connected;
-        }
-
-        @Override
-        public Socket disconnect() {
-            connected = false;
-            fakeSocket.emit(Socket.EVENT_DISCONNECT);
-            return this;
-        }
     }
 }

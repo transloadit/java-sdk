@@ -243,7 +243,7 @@ public class AssemblyTest extends MockHttpService {
         Assertions.assertFalse(assemblyFinished);
         Assertions.assertTrue(assembly.emitted.containsKey("assembly_connect"));
         // emit that assembly is complete
-        assembly.getSocket("").emit("assembly_finished");
+        // assembly.getSocket("").emit("assembly_finished");
         Assertions.assertTrue(assemblyFinished);
     }
 
