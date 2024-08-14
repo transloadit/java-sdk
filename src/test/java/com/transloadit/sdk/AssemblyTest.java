@@ -3,6 +3,7 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import org.junit.jupiter.api.Assertions;
@@ -223,6 +224,30 @@ public class AssemblyTest extends MockHttpService {
      */
     @Test
     public void saveWithTusTillSocketComplete() throws Exception {
+        MockTusAssembly assembly = getMockTusAssembly();
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies")
+                .withMethod("POST")
+                .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1"
+                        + "\\r\\n\\r\\n1[\\w\\W]*")))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
+
+        mockServerClient.when(HttpRequest.request()
+                .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
+
+        AssemblyResponse response = assembly.save(true);
+
+        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+        Assertions.assertFalse(assemblyFinished);
+        Assertions.assertTrue(assembly.emitted.containsKey("assembly_connect"));
+        // emit that assembly is complete
+        assembly.getSocket("").emit("assembly_finished");
+        Assertions.assertTrue(assemblyFinished);
+    }
+
+    private @NotNull MockTusAssembly getMockTusAssembly() {
         MockTusAssembly assembly = new MockTusAssembly(transloadit);
         assembly.addFile(new File("LICENSE"), "file_name");
         assembly.setAssemblyListener(new AssemblyListener() {
@@ -280,26 +305,7 @@ public class AssemblyTest extends MockHttpService {
             }
 
         });
-
-        mockServerClient.when(HttpRequest.request()
-                .withPath("/assemblies")
-                .withMethod("POST")
-                .withBody(regex("[\\w\\W]*tus_num_expected_upload_files\"\\r\\nContent-Length: 1"
-                        + "\\r\\n\\r\\n1[\\w\\W]*")))
-                .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
-
-        mockServerClient.when(HttpRequest.request()
-                .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
-                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
-
-        AssemblyResponse response = assembly.save(true);
-
-        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
-        Assertions.assertFalse(assemblyFinished);
-        Assertions.assertTrue(assembly.emitted.containsKey("assembly_connect"));
-        // emit that assembly is complete
-        assembly.getSocket("").emit("assembly_finished");
-        Assertions.assertTrue(assemblyFinished);
+        return assembly;
     }
 
     /**

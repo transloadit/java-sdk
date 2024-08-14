@@ -7,5 +7,6 @@
   "websocket_url": "http://localhost:9040/ws0014",
   "assembly_url": "http://localhost:9040/assemblies/assemblies/02ce6150ea2811e6a35a8d1e061a5b71",
   "assembly_ssl_url": "http://localhost:9040/assemblies/02ce6150ea2811e6a35a8d1e061a5b71",
-  "tus_url": "http://localhost:9040/resumable/files"
+  "tus_url": "http://localhost:9040/resumable/files",
+  "update_stream_url":	"https://api2-kranj.transloadit.com/ws20013?assembly=3c9a6dda5546479dbf66a200310490e1"
 }
