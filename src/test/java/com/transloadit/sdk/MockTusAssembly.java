@@ -1,13 +1,10 @@
 package com.transloadit.sdk;
 
-import io.socket.client.Manager;
 import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,7 +12,6 @@ import java.util.Map;
  * Assemblies with resumability enabled and provides a suitable {@link MockSocket}.
  */
 public class MockTusAssembly extends Assembly {
-    private Socket socket;
     /**
      * Stores emitted information.
      */

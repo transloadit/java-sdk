@@ -1,0 +1,25 @@
+id: 3c951d1310dd4f829a6fb696a48a43e1
+
+event: assembly_execution_progress
+data: {"progress_combined":null,"progress_per_original_file":[]}
+
+data: assembly_uploading_finished
+
+event: assembly_execution_progress
+data: {"progress_combined":null,"progress_per_original_file":[]}
+
+event: assembly_upload_finished
+data: {"id":"77bfd6d1378a4289a83ff8777848dce8","name":"lesereihe.doc","basename":"lesereihe","ext":"doc","size":61440,"mime":"application/msword","type":"office","field":"file","md5hash":"154a9349b8f9111865a07ed0a7050f55","original_id":"77bfd6d1378a4289a83ff8777848dce8","original_basename":"lesereihe","original_name":"lesereihe.doc","original_path":"/","original_md5hash":"154a9349b8f9111865a07ed0a7050f55","from_batch_import":false,"is_tus_file":true,"tus_upload_url":"https://api2-samho.transloadit.com/resumable/files/3c951d1310dd4f829a6fb696a48a43e1_38f7dd7616eb554ca069264d3e0ee17a","url":"http://tmp-eu-west-1.transloadit.net/6ed8698028ac11e4a6abc57a5f066e81/3c951d1310dd4f829a6fb696a48a43e1/77bfd6d1378a4289a83ff8777848dce8.doc","ssl_url":"https://tmp-eu-west-1.transloadit.net/6ed8698028ac11e4a6abc57a5f066e81/3c951d1310dd4f829a6fb696a48a43e1/77bfd6d1378a4289a83ff8777848dce8.doc","meta":{},"user_meta":{},"as":null,"is_temp_url":true}
+
+data: assembly_upload_meta_data_extracted
+
+event: assembly_execution_progress
+data: {"progress_combined":0,"progress_per_original_file":[{"original_id":"77bfd6d1378a4289a83ff8777848dce8","progress":0}]}
+
+event: assembly_result_finished
+data: ["avatar",{"id":"1ddf6ddf086444e6894717aebe0757e7","name":"lesereihe.pdf","basename":"lesereihe","ext":"pdf","size":126266,"mime":"application/pdf","type":"pdf","field":"file","md5hash":"3ec28058ac524ed8cff0d4da477913a6","original_id":"77bfd6d1378a4289a83ff8777848dce8","original_basename":"lesereihe","original_name":"lesereihe.doc","original_path":"/","original_md5hash":"154a9349b8f9111865a07ed0a7050f55","from_batch_import":false,"is_tus_file":false,"tus_upload_url":null,"url":"http://tmp-eu-west-1.transloadit.net/6ed8698028ac11e4a6abc57a5f066e81/3c951d1310dd4f829a6fb696a48a43e1/1ddf6ddf086444e6894717aebe0757e7.pdf","ssl_url":"https://tmp-eu-west-1.transloadit.net/6ed8698028ac11e4a6abc57a5f066e81/3c951d1310dd4f829a6fb696a48a43e1/1ddf6ddf086444e6894717aebe0757e7.pdf","meta":{"page_count":2,"width":1238,"height":1750,"page_size":"595.304 x 841.89 pts (A4)","title":"Lesereihe%202007%3A","author":"Lugsteinhof","producer":"LibreOffice 7.5","creator":"Writer","create_date":"2024:08:14 13:43:02Z","modify_date":null},"user_meta":{},"as":null,"queue":"live","queue_time":0,"exec_time":2.86,"cost":1048576,"is_temp_url":true}]
+
+event: assembly_execution_progress
+data: {"progress_combined":100,"progress_per_original_file":[]}
+
+data: assembly_finished
