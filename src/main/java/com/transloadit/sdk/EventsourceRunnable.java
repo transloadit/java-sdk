@@ -155,8 +155,20 @@ public class EventsourceRunnable implements Runnable {
 
                 case "assembly_execution_progress":
                     JSONObject executionProgress = new JSONObject(data);
-                    double overallProgress = executionProgress.getDouble("progress_combined");
-                    JSONObject progressPerOriginalFile = executionProgress.getJSONObject("progress_per_original_file");
+                    double overallProgress;
+                    try {
+                        overallProgress = executionProgress.getDouble("progress_combined");
+                    } catch (Exception e) {
+                        overallProgress = 0;
+                    }
+
+                    JSONObject progressPerOriginalFile;
+                    try {
+                        progressPerOriginalFile = executionProgress.getJSONObject("progress_per_original_file");
+                    } catch (Exception e) {
+                        progressPerOriginalFile = new JSONObject();
+                    }
+
                     assemblyListener.onAssemblyProgress(overallProgress, progressPerOriginalFile);
                     break;
                 default:
