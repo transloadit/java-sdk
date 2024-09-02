@@ -1,7 +1,5 @@
 package com.transloadit.sdk;
 
-import io.socket.client.Socket;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

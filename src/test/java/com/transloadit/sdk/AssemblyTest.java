@@ -6,7 +6,6 @@ import com.transloadit.sdk.response.AssemblyResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import org.json.JSONStringer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,11 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Objects;
@@ -43,9 +46,9 @@ public class AssemblyTest extends MockHttpService {
     private Assembly assembly;
 
     /**
-     * Keeps track of events fired by the {@link AssemblyListener}
+     * Keeps track of events fired by the {@link AssemblyListener}.
      */
-    private HashMap<String, Boolean> emittedEvents = new HashMap<String, Boolean>() {{
+    private final HashMap<String, Boolean> emittedEvents = new HashMap<String, Boolean>() {{
         put("ASSEMBLY_ERROR", false);
         put("ASSEMBLY_META_DATA_EXTRACTED", false);
         put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", false);

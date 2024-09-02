@@ -566,7 +566,8 @@ public class Assembly extends OptionsBuilder {
         final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
         final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl).connectTimeout(10, TimeUnit.MINUTES);
         final ErrorStrategy errorStrategy = ErrorStrategy.alwaysContinue();
-        final EventsourceRunnable eventsourceRunnable = new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, errorStrategy);
+        final EventsourceRunnable eventsourceRunnable =
+                new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, errorStrategy);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(eventsourceRunnable);
