@@ -249,25 +249,27 @@ public class AssemblyTest extends MockHttpService {
         mockServerClient.when(request()
                 .withPath("/ws20013").withMethod("GET").withHeader("Accept", "text/event-stream"))
                 .respond(HttpResponse.response().withBody(sseBody));
+
         // When the assembly is finished (finished status)
-        /*mockServerClient.when(HttpRequest.request()
+        mockServerClient.when(HttpRequest.request()
                 .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
-                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));*/
+                .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
 
         AssemblyResponse response = assembly.save(true);
 
         Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
         Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FINISHED"), false);
-        //Assertions.assertTrue(assembly.emitted.containsKey("assembly_connect"));
-        // emit that assembly is complete
-        // assembly.getSocket("").emit("assembly_finished");
 
+        // Wait for the assembly to finish and the SSE events to be processed
+        Thread.sleep(1000);
 
-        HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(
-                        request()
-                );
-
-        System.out.println("lol");
+        // Check if SSE events triggered the correct events
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED"), true);
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED"), true);
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED"), true);
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_PROGRESS"), true);
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_RESULT_FINISHED"), true);
+        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FINISHED"), true);
 
     }
 
@@ -320,7 +322,6 @@ public class AssemblyTest extends MockHttpService {
 
             @Override
             public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
-                System.out.println("Boeing707-800");
                 emittedEvents.put("ASSEMBLY_PROGRESS", true);
             }
 
