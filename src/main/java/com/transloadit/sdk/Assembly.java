@@ -10,7 +10,10 @@ import io.tus.java.client.TusClient;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusURLStore;
 import io.tus.java.client.TusUpload;
+// CHECKSTYLE:OFF
+// Only needed for Java Doc
 import io.tus.java.client.TusUploader;
+// CHECKSTYLE:ON
 import org.jetbrains.annotations.TestOnly;
 import org.json.JSONObject;
 
