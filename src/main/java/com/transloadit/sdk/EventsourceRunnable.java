@@ -109,7 +109,6 @@ public class EventsourceRunnable implements Runnable {
         String eventName = messageEvent.getEventName();
         String data = messageEvent.getData();
 
-        System.out.println("Event: " + eventName + "\t" + "Data: " + data);
         // Check if the event is a message event without
         if (eventName.equals("message")) {
             switch (data) {
@@ -130,7 +129,8 @@ public class EventsourceRunnable implements Runnable {
                     assemblyListener.onAssemblyUploadFinished();
                     break;
                 default:
-                    System.out.printf("Unknown message: %s\n", data);
+                    LocalOperationException e = new LocalOperationException("Unknown SSE message: " + data);
+                    assemblyListener.onError(e);
             }
         } else {
             switch (eventName) {
@@ -156,12 +156,14 @@ public class EventsourceRunnable implements Runnable {
                 case "assembly_execution_progress":
                     JSONObject executionProgress = new JSONObject(data);
                     double overallProgress;
+                    // Address the case where the progress_combined key is not present in the JSON object
                     try {
                         overallProgress = executionProgress.getDouble("progress_combined");
                     } catch (Exception e) {
                         overallProgress = 0;
                     }
 
+                    // Address the case where the progress_per_original_file key is not present in the JSON object
                     JSONObject progressPerOriginalFile;
                     try {
                         progressPerOriginalFile = executionProgress.getJSONObject("progress_per_original_file");
@@ -172,7 +174,8 @@ public class EventsourceRunnable implements Runnable {
                     assemblyListener.onAssemblyProgress(overallProgress, progressPerOriginalFile);
                     break;
                 default:
-                    System.out.printf("Unknown message: %s\n", eventName);
+                    LocalOperationException e = new LocalOperationException("Unknown SSE message: " + data);
+                    assemblyListener.onError(e);
             }
         }
 
