@@ -9,6 +9,10 @@ import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.StartedEvent;
 import com.launchdarkly.eventsource.StreamEvent;
 import com.launchdarkly.eventsource.StreamException;
+import com.launchdarkly.logging.LDLogLevel;
+import com.launchdarkly.logging.LDLogger;
+import com.launchdarkly.logging.Logs;
+import com.launchdarkly.logging.SimpleLogging;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -60,6 +64,7 @@ public class EventsourceRunnable implements Runnable {
         this.assemblyListener = assemblyListener;
 
         EventSource.Builder builder = new EventSource.Builder(connectStrategy).errorStrategy(errorStrategy);
+        builder.logger(LDLogger.withAdapter(Logs.toConsole(), "SSELogger"));
         this.eventSource = builder.build();
     }
 
