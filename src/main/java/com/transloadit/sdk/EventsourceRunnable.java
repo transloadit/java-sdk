@@ -129,7 +129,6 @@ public class EventsourceRunnable implements Runnable {
                 case "assembly_error":
                     assemblyListener.onError(new RequestException(data));
                     this.eventSource.close();
-                    System.exit(1);
                     break;
 
                 case "assembly_execution_progress":
