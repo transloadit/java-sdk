@@ -1,25 +1,15 @@
 package com.transloadit.sdk;
 
-import com.launchdarkly.eventsource.CommentEvent;
-import com.launchdarkly.eventsource.ConnectStrategy;
-import com.launchdarkly.eventsource.ErrorStrategy;
-import com.launchdarkly.eventsource.EventSource;
-import com.launchdarkly.eventsource.FaultEvent;
-import com.launchdarkly.eventsource.MessageEvent;
-import com.launchdarkly.eventsource.StartedEvent;
-import com.launchdarkly.eventsource.StreamEvent;
-import com.launchdarkly.eventsource.StreamException;
-import com.launchdarkly.logging.LDLogLevel;
+import com.launchdarkly.eventsource.*;
 import com.launchdarkly.logging.LDLogger;
 import com.launchdarkly.logging.Logs;
-import com.launchdarkly.logging.SimpleLogging;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.net.URI;
+import java.util.Iterator;
 
 public class EventsourceRunnable implements Runnable {
     protected boolean assemblyFinished;
@@ -33,37 +23,23 @@ public class EventsourceRunnable implements Runnable {
     /**
      * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
      * {@link Runnable} in order to make it usable by a {@link java.util.concurrent.ExecutorService}.
-     * This constructor uses the standard {@link ConnectStrategy} of the {@link EventSource} library.
-     * @param transloadit The {@link Transloadit} instance to be used to fetch the assembly response.
-     * @param response The {@link AssemblyResponse} object containing the assembly response.
-     * @param assemblyListener The {@link AssemblyListener} to be notified about the assembly status
-     * @param statusUri The {@link URI} to the status endpoint of the assembly
-     */
-    public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener, URI statusUri) {
-        this.transloadit = transloadit;
-        this.response = response;
-        this.assemblyListener = assemblyListener;
-        this.eventSource = new EventSource.Builder(statusUri).build();
-    }
-
-    /**
-     * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
-     * {@link Runnable} in order to make it usable by a {@link java.util.concurrent.ExecutorService}.
      * This constructor lets the user define the used {@link ConnectStrategy} and does not need a {@link URI} to the
      * status endpoint of the assembly, as it is inculded in the {@link ConnectStrategy} object.
-     * @param transloadit The {@link Transloadit} instance to be used to fetch the assembly response.
-     * @param response The {@link AssemblyResponse} object containing the assembly response.
+     *
+     * @param transloadit      The {@link Transloadit} instance to be used to fetch the assembly response.
+     * @param response         The {@link AssemblyResponse} object containing the assembly response.
      * @param assemblyListener The {@link AssemblyListener} to be notified about the assembly status
-     * @param connectStrategy The {@link ConnectStrategy} to be used by the {@link EventSource} instance.
-     * @param errorStrategy The {@link ErrorStrategy} to be used by the {@link EventSource} instance.
+     * @param connectStrategy  The {@link ConnectStrategy} to be used by the {@link EventSource} instance.
+     * @param retryStrategy    The {@link RetryDelayStrategy} to be used by the {@link EventSource} instance.
+     * @param errorStrategy    The {@link ErrorStrategy} to be used by the {@link EventSource} instance.
      */
     public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener,
-                               ConnectStrategy connectStrategy, ErrorStrategy errorStrategy) {
+                               ConnectStrategy connectStrategy, RetryDelayStrategy retryStrategy, ErrorStrategy errorStrategy) {
         this.transloadit = transloadit;
         this.response = response;
         this.assemblyListener = assemblyListener;
 
-        EventSource.Builder builder = new EventSource.Builder(connectStrategy).errorStrategy(errorStrategy);
+        EventSource.Builder builder = new EventSource.Builder(connectStrategy).retryDelayStrategy(retryStrategy).errorStrategy(errorStrategy);
         builder.logger(LDLogger.withAdapter(Logs.toConsole(), "SSELogger"));
         this.eventSource = builder.build();
     }
@@ -82,21 +58,19 @@ public class EventsourceRunnable implements Runnable {
         }
 
         while (!assemblyFinished) {
-            try {
-                StreamEvent streamEvent = eventSource.readAnyEvent();
-                if (streamEvent != null) {
-                    if (streamEvent instanceof MessageEvent) {
-                        handleMessageEvent((MessageEvent) streamEvent);
-                    } else if (streamEvent instanceof CommentEvent) {
-                        handleCommentEvent((CommentEvent) streamEvent);
-                    } else if (streamEvent instanceof StartedEvent) {
-                        handleStartedEvent((StartedEvent) streamEvent);
-                    } else {
-                        handleFaultEvent((FaultEvent) streamEvent);
-                    }
+            Iterable<StreamEvent> events = eventSource.anyEvents();
+            Iterator<StreamEvent> eventIterator = events.iterator();
+            if (eventIterator.hasNext()) {
+                StreamEvent streamEvent = eventIterator.next();
+                if (streamEvent instanceof MessageEvent) {
+                    handleMessageEvent((MessageEvent) streamEvent);
+                } else if (streamEvent instanceof CommentEvent) {
+                    handleCommentEvent((CommentEvent) streamEvent);
+                } else if (streamEvent instanceof StartedEvent) {
+                    handleStartedEvent((StartedEvent) streamEvent);
+                } else {
+                    handleFaultEvent((FaultEvent) streamEvent);
                 }
-            } catch (StreamException e) {
-                assemblyListener.onError(e);
             }
         }
     }
