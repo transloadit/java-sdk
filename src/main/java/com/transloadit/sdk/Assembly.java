@@ -2,6 +2,7 @@ package com.transloadit.sdk;
 
 import com.launchdarkly.eventsource.ConnectStrategy;
 import com.launchdarkly.eventsource.ErrorStrategy;
+import com.launchdarkly.eventsource.RetryDelayStrategy;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -567,10 +568,11 @@ public class Assembly extends OptionsBuilder {
      */
     private void listenToServerSentEvents(AssemblyResponse response) throws LocalOperationException {
         final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
-        final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl).connectTimeout(10, TimeUnit.MINUTES);
+        final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl).connectTimeout(10, TimeUnit.SECONDS).readTimeout(2, TimeUnit.MINUTES);
+        final RetryDelayStrategy retryStrategy = RetryDelayStrategy.defaultStrategy().maxDelay(1, TimeUnit.SECONDS);
         final ErrorStrategy errorStrategy = ErrorStrategy.alwaysContinue();
         final EventsourceRunnable eventsourceRunnable =
-                new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, errorStrategy);
+                new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, retryStrategy, errorStrategy);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(eventsourceRunnable);
