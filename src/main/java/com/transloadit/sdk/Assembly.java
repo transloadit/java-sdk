@@ -16,6 +16,7 @@ import io.tus.java.client.TusUpload;
 import io.tus.java.client.TusUploader;
 // CHECKSTYLE:ON
 import org.jetbrains.annotations.TestOnly;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -470,7 +471,7 @@ public class Assembly extends OptionsBuilder {
                 }
 
                 @Override
-                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+                public void onFileUploadFinished(JSONObject uploadInformation) {
 
                 }
 
@@ -490,12 +491,12 @@ public class Assembly extends OptionsBuilder {
                 }
 
                 @Override
-                public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+                public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
 
                 }
 
                 @Override
-                public void onAssemblyResultFinished(String stepName, JSONObject result) {
+                public void onAssemblyResultFinished(JSONArray result) {
 
                 }
             };
@@ -568,11 +569,12 @@ public class Assembly extends OptionsBuilder {
      */
     private void listenToServerSentEvents(AssemblyResponse response) throws LocalOperationException {
         final URI sseUpdateStreamUrl = URI.create(response.getUpdateStreamUrl());
-        final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl).connectTimeout(10, TimeUnit.SECONDS).readTimeout(2, TimeUnit.MINUTES);
-        final RetryDelayStrategy retryStrategy = RetryDelayStrategy.defaultStrategy().maxDelay(1, TimeUnit.SECONDS);
+        final ConnectStrategy connectStrategy = ConnectStrategy.http(sseUpdateStreamUrl)
+                .connectTimeout(30, TimeUnit.SECONDS).readTimeout(1, TimeUnit.MINUTES);
+        final RetryDelayStrategy retryStrategy = RetryDelayStrategy.defaultStrategy().maxDelay(3, TimeUnit.SECONDS);
         final ErrorStrategy errorStrategy = ErrorStrategy.alwaysContinue();
         final EventsourceRunnable eventsourceRunnable =
-                new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, retryStrategy, errorStrategy);
+                new EventsourceRunnable(transloadit, response, assemblyListener, connectStrategy, retryStrategy, errorStrategy, false);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(eventsourceRunnable);

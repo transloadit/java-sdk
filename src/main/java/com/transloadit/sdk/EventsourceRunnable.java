@@ -32,15 +32,19 @@ public class EventsourceRunnable implements Runnable {
      * @param connectStrategy  The {@link ConnectStrategy} to be used by the {@link EventSource} instance.
      * @param retryStrategy    The {@link RetryDelayStrategy} to be used by the {@link EventSource} instance.
      * @param errorStrategy    The {@link ErrorStrategy} to be used by the {@link EventSource} instance.
+     * @param printDebug       Boolean to enable debug output.
      */
     public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener,
-                               ConnectStrategy connectStrategy, RetryDelayStrategy retryStrategy, ErrorStrategy errorStrategy) {
+                               ConnectStrategy connectStrategy, RetryDelayStrategy retryStrategy, ErrorStrategy errorStrategy, Boolean printDebug) {
         this.transloadit = transloadit;
         this.response = response;
         this.assemblyListener = assemblyListener;
 
         EventSource.Builder builder = new EventSource.Builder(connectStrategy).retryDelayStrategy(retryStrategy).errorStrategy(errorStrategy);
-        builder.logger(LDLogger.withAdapter(Logs.toConsole(), "SSELogger"));
+        if (printDebug) {
+            builder.logger(LDLogger.withAdapter(Logs.toConsole(), "SSELogger"));
+        }
+
         this.eventSource = builder.build();
     }
 
@@ -108,22 +112,21 @@ public class EventsourceRunnable implements Runnable {
                     assemblyListener.onAssemblyUploadFinished();
                     break;
                 default:
-                    LocalOperationException e = new LocalOperationException("Unknown SSE message: " + data);
-                    assemblyListener.onError(e);
+                    // Default - Do nothing with unknown events.
+
+                    // Debug output, uncomment if necessary:
+                    // System.out.printf("Unknown Message: %s\n", data);
             }
         } else {
             switch (eventName) {
                 case "assembly_upload_finished":
                     JSONObject payload = new JSONObject(data);
-                    String fileName = payload.getString("name");
-                    assemblyListener.onFileUploadFinished(fileName, payload);
+                    assemblyListener.onFileUploadFinished(payload);
                     break;
 
                 case "assembly_result_finished":
-                    JSONArray result = new JSONArray(data);
-                    String stepName = result.getString(0);
-                    JSONObject stepResult = result.getJSONObject(1);
-                    assemblyListener.onAssemblyResultFinished(stepName, stepResult);
+                    JSONArray resultArray = new JSONArray(data);
+                    assemblyListener.onAssemblyResultFinished(resultArray);
                     break;
 
                 case "assembly_error":
@@ -133,27 +136,12 @@ public class EventsourceRunnable implements Runnable {
 
                 case "assembly_execution_progress":
                     JSONObject executionProgress = new JSONObject(data);
-                    double overallProgress;
-                    // Address the case where the progress_combined key is not present in the JSON object
-                    try {
-                        overallProgress = executionProgress.getDouble("progress_combined");
-                    } catch (Exception e) {
-                        overallProgress = 0;
-                    }
 
-                    // Address the case where the progress_per_original_file key is not present in the JSON object
-                    JSONObject progressPerOriginalFile;
-                    try {
-                        progressPerOriginalFile = executionProgress.getJSONObject("progress_per_original_file");
-                    } catch (Exception e) {
-                        progressPerOriginalFile = new JSONObject();
-                    }
-
-                    assemblyListener.onAssemblyProgress(overallProgress, progressPerOriginalFile);
+                    assemblyListener.onAssemblyProgress(executionProgress);
                     break;
                 default:
-                    LocalOperationException e = new LocalOperationException("Unknown SSE message: " + data);
-                    assemblyListener.onError(e);
+                    // Debug output, uncomment if needed
+                    // System.out.printf("Unknown Event: %s\n", data);
             }
         }
 
