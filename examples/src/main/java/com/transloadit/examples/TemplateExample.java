@@ -34,9 +34,16 @@ public final class TemplateExample {
             System.out.println("waiting for assembly to finish ...");
             while (!response.isFinished()) {
                 response = transloadit.getAssemblyByUrl(response.getSslUrl());
+
+                // wait for 500ms before checking again in order to avoid hitting the rate limit
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
-            String resultUrl = response.getStepResult("resize").getJSONObject(0).getString("ssl_url");
+            String resultUrl = response.getSslUrl();
             System.out.println("Here's your assembly result: " + resultUrl);
 
         } catch (RequestException | LocalOperationException e) {
