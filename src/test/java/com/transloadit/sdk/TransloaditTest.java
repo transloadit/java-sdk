@@ -16,6 +16,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 //CHECKSTYLE:OFF
 import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
@@ -280,6 +283,20 @@ public class TransloaditTest extends MockHttpService {
                 "^[a-z-]*[:]([0-9]+)\\.([0-9]+)\\.([0-9]+)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = versionPattern.matcher(info);
         Assertions.assertTrue(matcher.find());
+    }
+
+    @Test
+    public void getSignedSmartCDNURL() throws LocalOperationException {
+        Transloadit client = new Transloadit("foo_key", "foo_secret");
+        client.clock = Clock.fixed(Instant.parse("2024-05-01T00:00:00.000Z"), ZoneOffset.UTC);
+        String url = client.getSignedSmartCDNUrl(
+                "foo_workspace",
+                "foo_template",
+                "foo/input",
+                Map.of("foo", "bar", "aaa", "42")
+        );
+
+        Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256:995dd1aae135fb77fa98b0e6946bd9768e0443a6028eba0361c03807e8fb68a5", url);
     }
 }
 
