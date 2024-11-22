@@ -292,11 +292,15 @@ public class TransloaditTest extends MockHttpService {
     public void getSignedSmartCDNURL() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
         client.clock = Clock.fixed(Instant.parse("2024-05-01T00:00:00.000Z"), ZoneOffset.UTC);
+        Map<String, String> params = new HashMap<>();
+        params.put("foo", "bar");
+        params.put("aaa", "42"); // Must be sorted to be the first URL param
+
         String url = client.getSignedSmartCDNUrl(
                 "foo_workspace",
                 "foo_template",
                 "foo/input",
-                Map.of("foo", "bar", "aaa", "42")
+                params
         );
 
         //CHECKSTYLE:OFF
