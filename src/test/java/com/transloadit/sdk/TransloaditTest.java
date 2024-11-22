@@ -285,6 +285,9 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertTrue(matcher.find());
     }
 
+    /**
+     * Test if the SDK can generate a correct signed Smart CDN URL.
+     */
     @Test
     public void getSignedSmartCDNURL() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
@@ -296,7 +299,9 @@ public class TransloaditTest extends MockHttpService {
                 Map.of("foo", "bar", "aaa", "42")
         );
 
+        //CHECKSTYLE:OFF
         Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256:995dd1aae135fb77fa98b0e6946bd9768e0443a6028eba0361c03807e8fb68a5", url);
+        //CHECKSTYLE:ON
     }
 }
 
