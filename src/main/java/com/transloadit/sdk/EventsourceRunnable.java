@@ -1,6 +1,15 @@
 package com.transloadit.sdk;
 
-import com.launchdarkly.eventsource.*;
+import com.launchdarkly.eventsource.CommentEvent;
+import com.launchdarkly.eventsource.ConnectStrategy;
+import com.launchdarkly.eventsource.ErrorStrategy;
+import com.launchdarkly.eventsource.EventSource;
+import com.launchdarkly.eventsource.FaultEvent;
+import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.RetryDelayStrategy;
+import com.launchdarkly.eventsource.StartedEvent;
+import com.launchdarkly.eventsource.StreamEvent;
+import com.launchdarkly.eventsource.StreamException;
 import com.launchdarkly.logging.LDLogger;
 import com.launchdarkly.logging.Logs;
 import com.transloadit.sdk.exceptions.LocalOperationException;
@@ -23,7 +32,7 @@ public class EventsourceRunnable implements Runnable {
     /**
      * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
      * {@link Runnable} in order to make it usable by a {@link java.util.concurrent.ExecutorService}.
-     * This constructor lets the user define the used {@link ConnectStrategy} and does not need a {@link URI} to the
+     * This constructor lets the user define the used {@link ConnectStrategy} and does not need an URI to the
      * status endpoint of the assembly, as it is inculded in the {@link ConnectStrategy} object.
      *
      * @param transloadit      The {@link Transloadit} instance to be used to fetch the assembly response.
