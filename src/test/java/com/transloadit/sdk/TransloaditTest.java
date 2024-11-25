@@ -19,10 +19,8 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.HashMap;
+import java.util.*;
 //CHECKSTYLE:OFF
-import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 //CHECKSTYLE:ON
@@ -292,9 +290,9 @@ public class TransloaditTest extends MockHttpService {
     public void getSignedSmartCDNURL() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
         client.clock = Clock.fixed(Instant.parse("2024-05-01T00:00:00.000Z"), ZoneOffset.UTC);
-        Map<String, String> params = new HashMap<>();
-        params.put("foo", "bar");
-        params.put("aaa", "42"); // Must be sorted to be the first URL param
+        Map<String, List<String>> params = new HashMap<>();
+        params.put("foo", Collections.singletonList("bar"));
+        params.put("aaa", Arrays.asList("42", "21")); // Must be sorted before `foo`
 
         String url = client.getSignedSmartCDNUrl(
                 "foo_workspace",
@@ -304,7 +302,7 @@ public class TransloaditTest extends MockHttpService {
         );
 
         //CHECKSTYLE:OFF
-        Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256:995dd1aae135fb77fa98b0e6946bd9768e0443a6028eba0361c03807e8fb68a5", url);
+        Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519", url);
         //CHECKSTYLE:ON
     }
 }

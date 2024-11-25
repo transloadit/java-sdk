@@ -449,7 +449,7 @@ public class Transloadit {
      * @return The signed Smart CDN URL
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
-                                       @Nullable Map<String, String> urlParams) throws LocalOperationException {
+                                       @Nullable Map<String, List<String>> urlParams) throws LocalOperationException {
         // 1 hours default expiration
         return getSignedSmartCDNUrl(workspace, template, input, urlParams, 60 * 60 * 1000);
     }
@@ -465,7 +465,7 @@ public class Transloadit {
      * @return The signed Smart CDN URL
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
-                                       @Nullable Map<String, String> urlParams, int expiresIn) throws LocalOperationException {
+                                       @Nullable Map<String, List<String>> urlParams, int expiresIn) throws LocalOperationException {
 
         try {
             String workspaceSlug = URLEncoder.encode(workspace, StandardCharsets.UTF_8.name());
@@ -473,14 +473,17 @@ public class Transloadit {
             String inputField = URLEncoder.encode(input, StandardCharsets.UTF_8.name());
 
             // Use TreeMap to ensure keys in URL params are sorted.
-            SortedMap<String, String> params = new TreeMap<>(urlParams);
-            params.put("auth_key", this.key);
-            params.put("exp", String.valueOf(clock.millis() + expiresIn));
+            SortedMap<String, List<String>> params = new TreeMap<>(urlParams);
+            params.put("auth_key", Collections.singletonList(this.key));
+            params.put("exp", Collections.singletonList(String.valueOf(clock.millis() + expiresIn)));
 
             List<String> queryParts = new ArrayList<>(params.size());
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                queryParts.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name()) + "=" + URLEncoder.encode(
-                    entry.getValue(), StandardCharsets.UTF_8.name()));
+            for (Map.Entry<String, List<String>> entry : params.entrySet()) {
+                String key = entry.getKey();
+                for (String value : entry.getValue()) {
+                    queryParts.add(URLEncoder.encode(key, StandardCharsets.UTF_8.name()) + "=" + URLEncoder.encode(
+                            value, StandardCharsets.UTF_8.name()));
+                }
             }
 
             String queryString = String.join("&", queryParts);
@@ -493,9 +496,10 @@ public class Transloadit {
             byte[] signatureBytes = hmac.doFinal(stringToSign.getBytes());
             byte[] signatureHexBytes = new Hex().encode((signatureBytes));
             String signature = "sha256:" + new String(signatureHexBytes, StandardCharsets.UTF_8);
+            String signatureEncoded = URLEncoder.encode(signature, StandardCharsets.UTF_8.name());
 
             return "https://" + workspaceSlug + ".tlcdn.com/" + templateSlug + "/" + 
-                   inputField + "?" + queryString + "&sig=" + signature;
+                   inputField + "?" + queryString + "&sig=" + signatureEncoded;
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
             throw new LocalOperationException("Failed to create signature: " + e.getMessage());
         }
