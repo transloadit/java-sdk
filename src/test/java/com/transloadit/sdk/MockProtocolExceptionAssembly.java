@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 //CHECKSTYLE:OFF
 import com.transloadit.sdk.exceptions.LocalOperationException;  // needed for doc
 import com.transloadit.sdk.exceptions.RequestException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 //CHECKSTYLE:ON
 
@@ -60,7 +61,7 @@ public class MockProtocolExceptionAssembly extends Assembly {
                 }
 
                 @Override
-                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+                public void onFileUploadFinished(JSONObject uploadInformation) {
 
                 }
 
@@ -80,12 +81,12 @@ public class MockProtocolExceptionAssembly extends Assembly {
                 }
 
                 @Override
-                public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+                public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
 
                 }
 
                 @Override
-                public void onAssemblyResultFinished(String stepName, JSONObject result) {
+                public void onAssemblyResultFinished(JSONArray result) {
 
                 }
             };

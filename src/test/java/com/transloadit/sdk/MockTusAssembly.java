@@ -6,8 +6,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 /**
- * This class serves as a Mock to {@link Assembly}, which can be used to test
- * Assemblies with resumability enabled and provides a suitable {@link MockSocket}.
+ * This class serves as a Mock to {@link Assembly}, which can be used to test.
  */
 public class MockTusAssembly extends Assembly {
     /**
