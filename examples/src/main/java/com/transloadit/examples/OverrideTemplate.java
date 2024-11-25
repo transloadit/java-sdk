@@ -50,7 +50,8 @@ public final class OverrideTemplate {
             @Override
             public void onAssemblyFinished(AssemblyResponse response) {
                 System.out.println("Assembly finished");
-                System.out.println("Result: " + response.json().getJSONObject("results").getJSONArray("screenshot").getJSONObject(0).getString("ssl_url"));
+                System.out.println("Result: " + response.json().getJSONObject("results")
+                        .getJSONArray("screenshot").getJSONObject(0).getString("ssl_url"));
             }
 
             @Override
