@@ -192,8 +192,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST"), VerificationTimes.atLeast(3));
 
-        Assertions.assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+        Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", response.json().get("assembly_id"));
+        Assertions.assertEquals("ASSEMBLY_UPLOADING", response.json().get("ok"));
     }
 
     /**
@@ -295,7 +295,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         Mockito.verify(spyListener).onError(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
         String exceptionMessage = exceptionArgumentCaptor.getValue().getMessage();
-        Assertions.assertEquals(exceptionMessage, errorMessage);
+        Assertions.assertEquals(errorMessage, exceptionMessage);
     }
 
     /**
@@ -309,7 +309,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
 
         String uploadSize = "" + new File("LICENSE").length();
-        Assertions.assertEquals(uploadSize, "1077");  // verify, that test sizes can work
+        Assertions.assertEquals("1077", uploadSize);  // verify, that test sizes can work
         String uploadChunkSize = "1";
         assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
