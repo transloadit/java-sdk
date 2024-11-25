@@ -291,7 +291,6 @@ public class AssemblyTest extends MockHttpService {
             @Override
             public void onError(Exception error) {
                 emittedEvents.put("ASSEMBLY_ERROR", true);
-                System.err.println("No Mockserver Response");
             }
 
             @Override
