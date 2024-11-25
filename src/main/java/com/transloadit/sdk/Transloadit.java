@@ -21,8 +21,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * This class serves as a client interface to the Transloadit API.
@@ -439,7 +446,8 @@ public class Transloadit {
     }
 
     /**
-     * Construct a signed Smart CDN URL. See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
+     * Construct a signed Smart CDN URL.
+     * See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
      * Same as {@link Transloadit#getSignedSmartCDNUrl(String, String, String, Map, int)}, but with an expiration in 1 hour.
      *
      * @param workspace Workspace slug
@@ -455,7 +463,8 @@ public class Transloadit {
     }
 
     /**
-     * Construct a signed Smart CDN URL. See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
+     * Construct a signed Smart CDN URL.
+     * See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
      *
      * @param workspace Workspace slug
      * @param template Template slug or template ID
@@ -494,8 +503,8 @@ public class Transloadit {
             byte[] signatureHexBytes = new Hex().encode((signatureBytes));
             String signature = "sha256:" + new String(signatureHexBytes, StandardCharsets.UTF_8);
 
-            return "https://" + workspaceSlug + ".tlcdn.com/" + templateSlug + "/" + 
-                   inputField + "?" + queryString + "&sig=" + signature;
+            return "https://" + workspaceSlug + ".tlcdn.com/" + templateSlug + "/"
+                    + inputField + "?" + queryString + "&sig=" + signature;
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
             throw new LocalOperationException("Failed to create signature: " + e.getMessage());
         }
