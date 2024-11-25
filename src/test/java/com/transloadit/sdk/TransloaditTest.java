@@ -19,11 +19,15 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
-//CHECKSTYLE:OFF
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-//CHECKSTYLE:ON
+
 
 
 
@@ -287,6 +291,7 @@ public class TransloaditTest extends MockHttpService {
      * Test if the SDK can generate a correct signed Smart CDN URL.
      */
     @Test
+    @SuppressWarnings("checkstyle:linelength")
     public void getSignedSmartCDNURL() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
         client.clock = Clock.fixed(Instant.parse("2024-05-01T00:00:00.000Z"), ZoneOffset.UTC);
@@ -300,10 +305,7 @@ public class TransloaditTest extends MockHttpService {
                 "foo/input",
                 params
         );
-
-        //CHECKSTYLE:OFF
         Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519", url);
-        //CHECKSTYLE:ON
     }
 }
 
