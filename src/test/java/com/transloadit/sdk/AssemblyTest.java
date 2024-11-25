@@ -4,6 +4,7 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.junit.jupiter.api.Assertions;
@@ -63,7 +64,7 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * Assigns a new {@link Assembly} instance to the {@link AssemblyTest#assembly} variable before each individual test
-     * and resets the mockServerClient. Also sets {@link AssemblyTest#state} {@code = ASSEMBLY_NOT_STARTED}.
+     * and resets the mockServerClient.
      */
     @BeforeEach
     public void setUp() {
@@ -154,7 +155,7 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(new File("LICENSE"), "file_name");
 
         AssemblyResponse savedAssembly = assembly.save(false);
-        Assertions.assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
+        Assertions.assertEquals("ASSEMBLY_EXECUTING", savedAssembly.json().get("ok"));
     }
 
     /**
@@ -174,7 +175,7 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(Files.newInputStream(new File("LICENSE").toPath()), "file_name");
 
         AssemblyResponse savedAssembly = assembly.save(false);
-        Assertions.assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
+        Assertions.assertEquals("ASSEMBLY_COMPLETED", savedAssembly.json().get("ok"));
     }
 
     /**
@@ -200,7 +201,7 @@ public class AssemblyTest extends MockHttpService {
         assembly.setShouldWaitForCompletion(true);
 
         AssemblyResponse savedAssembly = assembly.save(false);
-        Assertions.assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
+        Assertions.assertEquals("ASSEMBLY_COMPLETED", savedAssembly.json().get("ok"));
     }
 
     /**
@@ -225,8 +226,8 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
-        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-        Assertions.assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_UPLOADING");
+        Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", resumableAssembly.json().get("assembly_id"));
+        Assertions.assertEquals("ASSEMBLY_UPLOADING", resumableAssembly.json().get("ok"));
     }
 
     /**
@@ -239,7 +240,7 @@ public class AssemblyTest extends MockHttpService {
      */
     @Test
     public void saveWithTusListenSSE() throws Exception {
-        String sseBody = getJson("sse_response_body");
+        String sseBody = getJson("sse_response_body.txt");
         MockTusAssembly assembly = getMockTusAssembly();
 
         mockServerClient.when(request()
@@ -260,19 +261,19 @@ public class AssemblyTest extends MockHttpService {
 
         AssemblyResponse response = assembly.save(true);
 
-        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FINISHED"), false);
+        Assertions.assertEquals("ASSEMBLY_UPLOADING", response.json().get("ok"));
+        Assertions.assertEquals(false, emittedEvents.get("ASSEMBLY_FINISHED"));
 
         // Wait for the assembly to finish and the SSE events to be processed
         Thread.sleep(1000);
 
         // Check if SSE events triggered the correct events
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED"), true);
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED"), true);
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED"), true);
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_PROGRESS"), true);
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_RESULT_FINISHED"), true);
-        Assertions.assertEquals(emittedEvents.get("ASSEMBLY_FINISHED"), true);
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED"));
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED"));
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED"));
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_PROGRESS"));
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_RESULT_FINISHED"));
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FINISHED"));
 
     }
 
@@ -283,8 +284,8 @@ public class AssemblyTest extends MockHttpService {
             @Override
             public void onAssemblyFinished(AssemblyResponse response) {
                 emittedEvents.put("ASSEMBLY_FINISHED", true);
-                Assertions.assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-                Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_COMPLETED");
+                Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", response.json().get("assembly_id"));
+                Assertions.assertEquals("ASSEMBLY_COMPLETED", response.json().get("ok"));
             }
 
             @Override
@@ -304,7 +305,7 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(JSONObject uploadInformation) {
                 emittedEvents.put("ASSEMBLY_FILE_UPLOAD_FINISHED", true);
             }
 
@@ -324,12 +325,12 @@ public class AssemblyTest extends MockHttpService {
             }
 
             @Override
-            public void onAssemblyProgress(double combinedProgress, JSONObject progressPerOriginalFile) {
+            public void onAssemblyProgress(JSONObject progress) {
                 emittedEvents.put("ASSEMBLY_PROGRESS", true);
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyResultFinished(JSONArray result) {
                 emittedEvents.put("ASSEMBLY_RESULT_FINISHED", true);
             }
 
@@ -363,8 +364,8 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
-        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-        Assertions.assertEquals(resumableAssembly.json().get("ok"), "ASSEMBLY_COMPLETED");
+        Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", resumableAssembly.json().get("assembly_id"));
+        Assertions.assertEquals("ASSEMBLY_COMPLETED", resumableAssembly.json().get("ok"));
     }
 
     /**
@@ -386,7 +387,7 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly.json")));
 
         AssemblyResponse resumableAssembly = assembly.save(true);
-        Assertions.assertEquals(resumableAssembly.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
+        Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", resumableAssembly.json().get("assembly_id"));
     }
 
     /**
@@ -411,7 +412,7 @@ public class AssemblyTest extends MockHttpService {
         assembly.addFile(new File("LICENSE"), "file_name");
         AssemblyResponse savedAssembly = assembly.save(false);
         // check if assembly was successfully retried
-        Assertions.assertEquals(savedAssembly.json().get("ok"), "ASSEMBLY_EXECUTING");
+        Assertions.assertEquals("ASSEMBLY_EXECUTING", savedAssembly.json().get("ok"));
     }
 
 
@@ -437,7 +438,7 @@ public class AssemblyTest extends MockHttpService {
         Assertions.assertThrows(LocalOperationException.class, () -> assembly.setAssemblyId(uuidWrongChar));
         Assertions.assertThrows(LocalOperationException.class, () -> assembly.setAssemblyId(uuidLong));
         assembly.setAssemblyId(uuid);
-        Assertions.assertEquals(assembly.getClientSideGeneratedAssemblyID(), uuid);
+        Assertions.assertEquals(uuid, assembly.getClientSideGeneratedAssemblyID());
     }
 
     /**
