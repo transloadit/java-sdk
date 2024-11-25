@@ -63,9 +63,9 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     }
     /**
      * Saves a multithreaded upload and verifies that the requests are sent.
-     * @throws IOException
-     * @throws LocalOperationException
-     * @throws RequestException
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
@@ -261,9 +261,9 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     /**
      * Verifies, that {@link Assembly#abortUploads()} gets called in case of an upload error.
      * And if the {@link AssemblyListener} gets notified.
-     * @throws LocalOperationException
-     * @throws RequestException
-     * @throws IOException
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void abortUploads() throws LocalOperationException, RequestException, IOException, InterruptedException {
@@ -300,9 +300,9 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
     /**
      * Checks, if uploading threads are getting paused by {@link Assembly#pauseUploads()}.
-     * @throws IOException
-     * @throws LocalOperationException
-     * @throws RequestException
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void pauseUploads() throws IOException, LocalOperationException, RequestException {

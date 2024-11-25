@@ -25,7 +25,7 @@ public class MockProtocolExceptionAssembly extends Assembly {
 
     /**
      * Mocks an {@link Assembly} but causes always a {@link ProtocolException} if tus files are getting uploaded.
-     * @param transloadit
+     * @param transloadit The {@link Transloadit} client.
      */
     public MockProtocolExceptionAssembly(Transloadit transloadit) {
         super(transloadit);
@@ -33,8 +33,8 @@ public class MockProtocolExceptionAssembly extends Assembly {
 
     /**
      * Mocks tus file handling and upload.
-     * @throws IOException
-     * @throws ProtocolException
+     * @throws IOException - Thrown if an I/O error occurs while uploading the files. (e.g. file not found)
+     * @throws ProtocolException - Thrown if an error occurs while uploading the files. (e.g. aborted upload)
      */
     @Override
     protected void uploadTusFiles() throws IOException, ProtocolException {
@@ -93,7 +93,7 @@ public class MockProtocolExceptionAssembly extends Assembly {
         }
         uploadSize = getUploadSize();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        while (uploads.size() > 0) {
+        while (!uploads.isEmpty()) {
             final TusUpload tusUpload = uploads.remove(0);
             MockTusUploadRunnable tusUploadRunnable = new MockTusUploadRunnable(
                     tusClient, tusUpload, uploadChunkSize, this);

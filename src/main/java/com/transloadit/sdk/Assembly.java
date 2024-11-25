@@ -663,8 +663,9 @@ public class Assembly extends OptionsBuilder {
         this.runnableAssemblyListener = runnableAssemblyListener;
     }
 
-    /**
-     * This Method is used to pause running parallel File uploads.
+    /***
+     * This Method is used to pause parallel File uploads.
+     * @throws LocalOperationException - If the pause operation fails inside the upload runnable.
      */
     public void pauseUploads() throws LocalOperationException {
         for (TusUploadRunnable thread : threadList) {
@@ -673,8 +674,10 @@ public class Assembly extends OptionsBuilder {
         }
     }
 
-    /**
-     * This Method is used to pause parallel File uploads.
+    /***
+     * This Method is used to resume parallel File uploads.
+     * @throws LocalOperationException - If the resume operation fails inside the upload runnable.
+     * @throws RequestException - If the resume operation fails on the server side.
      */
     public void resumeUploads() throws LocalOperationException, RequestException {
         for (TusUploadRunnable thread : threadList) {

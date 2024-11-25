@@ -132,6 +132,7 @@ public class TusUploadRunnable implements Runnable {
     /**
      * Sets {@link #isPaused} {@code = true}.
      * This results in pausing the thread after uploading the current chunk.
+     * @throws LocalOperationException - If resuming has been disabled.
      */
     public void setPaused() throws LocalOperationException {
         if (!tusClient.resumingEnabled()) {
@@ -143,6 +144,8 @@ public class TusUploadRunnable implements Runnable {
     /**
      * Sets {@link #isPaused} {@code = false}.
      * This results in resuming the upload with the next chunk.
+     * @throws LocalOperationException - If resuming has been disabled or the upload has not been started.
+     * @throws RequestException - If the upload could not be resumed due to a request error
      */
     public void setUnPaused() throws LocalOperationException, RequestException {
         if (uploadHasBeenStarted && !isFinishedPermanently) {  // prohibits an attempt of resuming a finished upload.
