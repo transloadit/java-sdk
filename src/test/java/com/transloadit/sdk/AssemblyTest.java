@@ -3,6 +3,9 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+// CHECKSTYLE:OFF
+import io.tus.java.client.TusUpload;
+// CHECKSTYLE:ON
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,7 +18,6 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.io.File;
@@ -49,17 +51,17 @@ public class AssemblyTest extends MockHttpService {
     /**
      * Keeps track of events fired by the {@link AssemblyListener}.
      */
-    private final HashMap<String, Boolean> emittedEvents = new HashMap<String, Boolean>() {{
-        put("ASSEMBLY_ERROR", false);
-        put("ASSEMBLY_META_DATA_EXTRACTED", false);
-        put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", false);
-        put("ASSEMBLY_FILE_UPLOAD_FINISHED", false);
-        put("ASSEMBLY_FILE_UPLOAD_PAUSED", false);
-        put("ASSEMBLY_FILE_UPLOAD_RESUMED", false);
-        put("ASSEMBLY_FILE_UPLOAD_PROGRESS", false);
-        put("ASSEMBLY_PROGRESS", false);
-        put("ASSEMBLY_RESULT_FINISHED", false);
-        put("ASSEMBLY_FINISHED", false);
+    private final HashMap<String, Object[]> emittedEvents = new HashMap<String, Object[]>() {{
+        put("ASSEMBLY_ERROR", new Object[]{false, 0});
+        put("ASSEMBLY_META_DATA_EXTRACTED", new Object[]{false, 0});
+        put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", new Object[]{false, 0});
+        put("ASSEMBLY_FILE_UPLOAD_FINISHED", new Object[]{false, 0});
+        put("ASSEMBLY_FILE_UPLOAD_PAUSED", new Object[]{false, 0});
+        put("ASSEMBLY_FILE_UPLOAD_RESUMED", new Object[]{false, 0});
+        put("ASSEMBLY_FILE_UPLOAD_PROGRESS", new Object[]{false, 0});
+        put("ASSEMBLY_PROGRESS", new Object[]{false, 0});
+        put("ASSEMBLY_RESULT_FINISHED", new Object[]{false, 0});
+        put("ASSEMBLY_FINISHED", new Object[]{false, 0});
     }};
 
     /**
@@ -138,7 +140,7 @@ public class AssemblyTest extends MockHttpService {
      * <ul>
      * <li>The {@link Assembly Assembly's} file(s) are provided as {@link File}.</li>
      * <li>The {@link Assembly#save(boolean)} methods parameter {@code isResumable = false}, indicating that
-     * the {@link io.tus.java.client.TusUpload TUS Uploader} should not be used.</li>
+     * the {@link TusUpload TUS Uploader} should not be used.</li>
      * </ul>
      * @throws IOException if Test resource "assembly_executing.json" is missing.
      * @throws LocalOperationException if building the request goes wrong
@@ -206,7 +208,7 @@ public class AssemblyTest extends MockHttpService {
 
     /**
      * This test checks the functionality of the {@link Assembly#save(boolean)} method with parameter
-     * {@code isResumable = true}, indicating a {@link io.tus.java.client.TusUpload TUSUpload}. The Test passes if the
+     * {@code isResumable = true}, indicating a {@link TusUpload TUSUpload}. The Test passes if the
      * POST - request matches the expected pattern and the corresponding {@link AssemblyResponse} stores the "server's"
      * Response correctly.
      * @throws Exception if communication with the server goes wrong, if building the request goes wrong or
@@ -255,26 +257,44 @@ public class AssemblyTest extends MockHttpService {
                 .respond(HttpResponse.response().withBody(sseBody));
 
         // When the assembly is finished (finished status)
-        mockServerClient.when(HttpRequest.request()
+        mockServerClient.when(request()
                 .withPath("/assemblies/02ce6150ea2811e6a35a8d1e061a5b71").withMethod("GET"))
                 .respond(HttpResponse.response().withBody(getJson("resumable_assembly_complete.json")));
 
         AssemblyResponse response = assembly.save(true);
 
         Assertions.assertEquals("ASSEMBLY_UPLOADING", response.json().get("ok"));
-        Assertions.assertEquals(false, emittedEvents.get("ASSEMBLY_FINISHED"));
+        Assertions.assertEquals(false, emittedEvents.get("ASSEMBLY_FINISHED")[0]);
 
         // Wait for the assembly to finish and the SSE events to be processed
         Thread.sleep(1000);
 
-        // Check if SSE events triggered the correct events
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED"));
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED"));
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED"));
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_PROGRESS"));
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_RESULT_FINISHED"));
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FINISHED"));
+        // Check if SSE events triggered the correct events and make sure they were triggered often enough:
 
+        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_ERROR")[0]);
+
+        // We are not doing here actual file uploads, so the next three should not appear:
+        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PROGRESS")[0]);
+        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_RESUMED")[0]);
+        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PAUSED")[0]);
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED")[0]);
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED")[1]);
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED")[0]);
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED")[1]);
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED")[0]);
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED")[1]);
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_PROGRESS")[0]);
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_PROGRESS")[1]);
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_RESULT_FINISHED")[0]);
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_RESULT_FINISHED")[1]); // as we only have one event
+
+        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FINISHED")[0]);
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_FINISHED")[1]);
     }
 
     private @NotNull MockTusAssembly getMockTusAssembly() {
@@ -283,54 +303,119 @@ public class AssemblyTest extends MockHttpService {
         assembly.setAssemblyListener(new AssemblyListener() {
             @Override
             public void onAssemblyFinished(AssemblyResponse response) {
-                emittedEvents.put("ASSEMBLY_FINISHED", true);
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_FINISHED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_FINISHED", currentValue);
+
                 Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", response.json().get("assembly_id"));
                 Assertions.assertEquals("ASSEMBLY_COMPLETED", response.json().get("ok"));
             }
 
             @Override
             public void onError(Exception error) {
-                emittedEvents.put("ASSEMBLY_ERROR", true);
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_ERROR");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_ERROR", currentValue);
             }
 
             @Override
             public void onMetadataExtracted() {
-                emittedEvents.put("ASSEMBLY_META_DATA_EXTRACTED", true);
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_META_DATA_EXTRACTED", currentValue);
             }
 
             @Override
             public void onAssemblyUploadFinished() {
-                emittedEvents.put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", true);
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", currentValue);
             }
 
             @Override
             public void onFileUploadFinished(JSONObject uploadInformation) {
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_FINISHED", true);
+                Assertions.assertNotNull(uploadInformation);
+
+                Assertions.assertTrue(uploadInformation.getString("ssl_url")
+                        .matches("https://tmp-eu-west-1\\.transloadit\\.net/(\\w{32}/){2}\\w{32}\\.mp3"));
+                Assertions.assertTrue(uploadInformation.getString("name").matches(".*\\.mp3"));
+                Assertions.assertTrue(uploadInformation.getString("field").matches("file"));
+
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_FINISHED", currentValue);
             }
 
             @Override
             public void onFileUploadPaused(String name) {
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PAUSED", true);
+                // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PAUSED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PAUSED", currentValue);
             }
 
             @Override
             public void onFileUploadResumed(String name) {
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_RESUMED", true);
+                // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_RESUMED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_RESUMED", currentValue);
             }
 
             @Override
             public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PROGRESS", false);
+                // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PROGRESS");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PROGRESS", currentValue);
             }
 
             @Override
             public void onAssemblyProgress(JSONObject progress) {
-                emittedEvents.put("ASSEMBLY_PROGRESS", true);
+                Assertions.assertNotNull(progress);
+
+                int progressCombined = progress.getInt("progress_combined");
+                Assertions.assertTrue(String.valueOf(progressCombined).matches("50|100"));
+
+                if (progressCombined < 100) {
+                    String progressPerOriginalFile = progress.getJSONArray("progress_per_original_file")
+                            .toString().replaceAll("\\s+", "");
+                    Assertions.assertTrue(progressPerOriginalFile
+                            .matches("\\[(\\{\"progress\":\\d*,\"original_id\":\"\\w{32}\"}.){2}"));
+                }
+
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_PROGRESS");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_PROGRESS", currentValue);
             }
 
             @Override
             public void onAssemblyResultFinished(JSONArray result) {
-                emittedEvents.put("ASSEMBLY_RESULT_FINISHED", true);
+                Assertions.assertNotNull(result);
+
+                String stepName = result.getString(0);
+                JSONObject resultMeta = result.getJSONObject(1);
+
+                Assertions.assertEquals("waveformed", stepName);
+                Assertions.assertTrue(resultMeta.getString("ssl_url")
+                        .matches("https://tmp-eu-west-1\\.transloadit\\.net/(\\w{32}/){2}\\w{32}\\.png"));
+                Assertions.assertTrue(resultMeta.getString("mime").matches("image/png"));
+                Assertions.assertTrue(resultMeta.getInt("cost") > 0);
+                Assertions.assertTrue(resultMeta.getString("id").matches("\\w{32}"));
+
+                Object[] currentValue = emittedEvents.get("ASSEMBLY_RESULT_FINISHED");
+                currentValue[0] = true;
+                currentValue[1] = (int) currentValue[1] + 1;
+                emittedEvents.put("ASSEMBLY_RESULT_FINISHED", currentValue);
             }
 
         });
