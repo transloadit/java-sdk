@@ -1,4 +1,6 @@
-### Unreleased ###
+### 1.0.1 / 2024-11-28 ###
+* Added SDK support for generating signed Smart CDN URLs (see https://transloadit.com/docs/topics/signature-authentication/#smart-cdn).
+  This functionality ships as Transloadit#getSignedSmartCDNUrl() - Method.
 * Migrated test suite from JUnit4 to JUnit 5
 * Upgrade okhttp to 4.12.0 as a security update
 
