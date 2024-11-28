@@ -21,8 +21,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.*;
-import java.time.Clock;
 
 /**
  * This class serves as a client interface to the Transloadit API.
@@ -42,7 +42,6 @@ public class Transloadit {
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
     protected String versionInfo;
-    Clock clock = Clock.systemUTC(); // for faking time in tests
 
     /**
      * A new instance to transloadit client.
@@ -440,7 +439,7 @@ public class Transloadit {
 
     /**
      * Construct a signed Smart CDN URL. See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
-     * Same as {@link Transloadit#getSignedSmartCDNUrl(String, String, String, Map, int)}, but with an expiration in 1 hour.
+     * Same as {@link Transloadit#getSignedSmartCDNUrl(String, String, String, Map, long)}, but with an expiration in 1 hour.
      *
      * @param workspace Workspace slug
      * @param template Template slug or template ID
@@ -451,7 +450,8 @@ public class Transloadit {
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
                                        @Nullable Map<String, List<String>> urlParams) throws LocalOperationException {
         // 1 hours default expiration
-        return getSignedSmartCDNUrl(workspace, template, input, urlParams, 60 * 60 * 1000);
+        long expiresAt = Instant.now().toEpochMilli() + 60 * 60 * 1000;
+        return getSignedSmartCDNUrl(workspace, template, input, urlParams, expiresAt);
     }
 
     /**
@@ -461,11 +461,11 @@ public class Transloadit {
      * @param template Template slug or template ID
      * @param input Input value that is provided as ${fields.input} in the template
      * @param urlParams Additional parameters for the URL query string (optional)
-     * @param expiresIn Expiration time of the signature in milliseconds. Defaults to 1 hour.
+     * @param expiresAt Expiration timestamp of the signature in milliseconds since the UNIX epoch.
      * @return The signed Smart CDN URL
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
-                                       @Nullable Map<String, List<String>> urlParams, int expiresIn) throws LocalOperationException {
+                                       @Nullable Map<String, List<String>> urlParams, long expiresAt) throws LocalOperationException {
 
         try {
             String workspaceSlug = URLEncoder.encode(workspace, StandardCharsets.UTF_8.name());
@@ -475,7 +475,7 @@ public class Transloadit {
             // Use TreeMap to ensure keys in URL params are sorted.
             SortedMap<String, List<String>> params = new TreeMap<>(urlParams);
             params.put("auth_key", Collections.singletonList(this.key));
-            params.put("exp", Collections.singletonList(String.valueOf(clock.millis() + expiresIn)));
+            params.put("exp", Collections.singletonList(String.valueOf(expiresAt)));
 
             List<String> queryParts = new ArrayList<>(params.size());
             for (Map.Entry<String, List<String>> entry : params.entrySet()) {

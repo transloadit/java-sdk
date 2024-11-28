@@ -16,9 +16,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.*;
 //CHECKSTYLE:OFF
 import java.util.regex.Matcher;
@@ -289,7 +287,6 @@ public class TransloaditTest extends MockHttpService {
     @Test
     public void getSignedSmartCDNURL() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
-        client.clock = Clock.fixed(Instant.parse("2024-05-01T00:00:00.000Z"), ZoneOffset.UTC);
         Map<String, List<String>> params = new HashMap<>();
         params.put("foo", Collections.singletonList("bar"));
         params.put("aaa", Arrays.asList("42", "21")); // Must be sorted before `foo`
@@ -298,7 +295,8 @@ public class TransloaditTest extends MockHttpService {
                 "foo_workspace",
                 "foo_template",
                 "foo/input",
-                params
+                params,
+                Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli()
         );
 
         //CHECKSTYLE:OFF
