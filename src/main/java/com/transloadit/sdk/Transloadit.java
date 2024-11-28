@@ -8,15 +8,28 @@ import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import com.transloadit.sdk.response.ListResponse;
 import com.transloadit.sdk.response.Response;
+import org.apache.commons.codec.binary.Hex;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * This class serves as a client interface to the Transloadit API.
@@ -428,6 +441,76 @@ public class Transloadit {
             throw new LocalOperationException("Timeout invalid. Values > 0 are expected");
         } else {
             this.retryDelay = delay;
+        }
+    }
+
+    /**
+     * Construct a signed Smart CDN URL.
+     * See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
+     * Same as {@link Transloadit#getSignedSmartCDNUrl(String, String, String, Map, long)}, but with an expiration in 1 hour.
+     *
+     * @param workspace Workspace slug
+     * @param template Template slug or template ID
+     * @param input Input value that is provided as ${fields.input} in the template
+     * @param urlParams Additional parameters for the URL query string (optional)
+     * @return The signed Smart CDN URL
+     */
+    public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
+                                       @Nullable Map<String, List<String>> urlParams) throws LocalOperationException {
+        // 1 hours default expiration
+        long expiresAt = Instant.now().toEpochMilli() + 60 * 60 * 1000;
+        return getSignedSmartCDNUrl(workspace, template, input, urlParams, expiresAt);
+    }
+
+    /**
+     * Construct a signed Smart CDN URL.
+     * See the <a href="https://transloadit.com/docs/topics/signature-authentication/#smart-cdn">API documentation</a>.
+     *
+     * @param workspace Workspace slug
+     * @param template Template slug or template ID
+     * @param input Input value that is provided as ${fields.input} in the template
+     * @param urlParams Additional parameters for the URL query string (optional)
+     * @param expiresAt Expiration timestamp of the signature in milliseconds since the UNIX epoch.
+     * @return The signed Smart CDN URL
+     */
+    public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
+                                       @Nullable Map<String, List<String>> urlParams, long expiresAt) throws LocalOperationException {
+
+        try {
+            String workspaceSlug = URLEncoder.encode(workspace, StandardCharsets.UTF_8.name());
+            String templateSlug = URLEncoder.encode(template, StandardCharsets.UTF_8.name());
+            String inputField = URLEncoder.encode(input, StandardCharsets.UTF_8.name());
+
+            // Use TreeMap to ensure keys in URL params are sorted.
+            SortedMap<String, List<String>> params = new TreeMap<>(urlParams);
+            params.put("auth_key", Collections.singletonList(this.key));
+            params.put("exp", Collections.singletonList(String.valueOf(expiresAt)));
+
+            List<String> queryParts = new ArrayList<>(params.size());
+            for (Map.Entry<String, List<String>> entry : params.entrySet()) {
+                String key = entry.getKey();
+                for (String value : entry.getValue()) {
+                    queryParts.add(URLEncoder.encode(key, StandardCharsets.UTF_8.name()) + "=" + URLEncoder.encode(
+                            value, StandardCharsets.UTF_8.name()));
+                }
+            }
+
+            String queryString = String.join("&", queryParts);
+            String stringToSign = workspaceSlug + "/" + templateSlug + "/" + inputField + "?" + queryString;
+
+            Mac hmac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(
+                this.secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            hmac.init(secretKey);
+            byte[] signatureBytes = hmac.doFinal(stringToSign.getBytes());
+            byte[] signatureHexBytes = new Hex().encode((signatureBytes));
+            String signature = "sha256:" + new String(signatureHexBytes, StandardCharsets.UTF_8);
+            String signatureEncoded = URLEncoder.encode(signature, StandardCharsets.UTF_8.name());
+
+            return "https://" + workspaceSlug + ".tlcdn.com/" + templateSlug + "/"
+                    + inputField + "?" + queryString + "&sig=" + signatureEncoded;
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new LocalOperationException("Failed to create signature: " + e.getMessage());
         }
     }
 }
