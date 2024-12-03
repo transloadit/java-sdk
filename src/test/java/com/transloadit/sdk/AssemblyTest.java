@@ -51,17 +51,17 @@ public class AssemblyTest extends MockHttpService {
     /**
      * Keeps track of events fired by the {@link AssemblyListener}.
      */
-    private final HashMap<String, Object[]> emittedEvents = new HashMap<String, Object[]>() {{
-        put("ASSEMBLY_ERROR", new Object[]{false, 0});
-        put("ASSEMBLY_META_DATA_EXTRACTED", new Object[]{false, 0});
-        put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", new Object[]{false, 0});
-        put("ASSEMBLY_FILE_UPLOAD_FINISHED", new Object[]{false, 0});
-        put("ASSEMBLY_FILE_UPLOAD_PAUSED", new Object[]{false, 0});
-        put("ASSEMBLY_FILE_UPLOAD_RESUMED", new Object[]{false, 0});
-        put("ASSEMBLY_FILE_UPLOAD_PROGRESS", new Object[]{false, 0});
-        put("ASSEMBLY_PROGRESS", new Object[]{false, 0});
-        put("ASSEMBLY_RESULT_FINISHED", new Object[]{false, 0});
-        put("ASSEMBLY_FINISHED", new Object[]{false, 0});
+    private final HashMap<String, Integer> emittedEvents = new HashMap<String, Integer>() {{
+        put("ASSEMBLY_ERROR", 0);
+        put("ASSEMBLY_META_DATA_EXTRACTED", 0);
+        put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", 0);
+        put("ASSEMBLY_FILE_UPLOAD_FINISHED", 0);
+        put("ASSEMBLY_FILE_UPLOAD_PAUSED", 0);
+        put("ASSEMBLY_FILE_UPLOAD_RESUMED", 0);
+        put("ASSEMBLY_FILE_UPLOAD_PROGRESS", 0);
+        put("ASSEMBLY_PROGRESS", 0);
+        put("ASSEMBLY_RESULT_FINISHED", 0);
+        put("ASSEMBLY_FINISHED", 0);
     }};
 
     /**
@@ -264,37 +264,24 @@ public class AssemblyTest extends MockHttpService {
         AssemblyResponse response = assembly.save(true);
 
         Assertions.assertEquals("ASSEMBLY_UPLOADING", response.json().get("ok"));
-        Assertions.assertEquals(false, emittedEvents.get("ASSEMBLY_FINISHED")[0]);
+        Assertions.assertEquals(0, emittedEvents.get("ASSEMBLY_FINISHED"));
 
         // Wait for the assembly to finish and the SSE events to be processed
         Thread.sleep(1000);
 
         // Check if SSE events triggered the correct events and make sure they were triggered often enough:
-
-        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_ERROR")[0]);
+        Assertions.assertEquals(0, emittedEvents.get("ASSEMBLY_ERROR"));
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED"));
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED"));
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED"));
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_PROGRESS"));
+        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_RESULT_FINISHED")); // as we only have one event
+        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_FINISHED"));
 
         // We are not doing here actual file uploads, so the next three should not appear:
-        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PROGRESS")[0]);
-        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_RESUMED")[0]);
-        Assertions.assertFalse((Boolean) emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PAUSED")[0]);
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED")[0]);
-        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED")[1]);
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED")[0]);
-        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED")[1]);
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED")[0]);
-        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED")[1]);
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_PROGRESS")[0]);
-        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_PROGRESS")[1]);
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_RESULT_FINISHED")[0]);
-        Assertions.assertEquals(2, emittedEvents.get("ASSEMBLY_RESULT_FINISHED")[1]); // as we only have one event
-
-        Assertions.assertEquals(true, emittedEvents.get("ASSEMBLY_FINISHED")[0]);
-        Assertions.assertEquals(1, emittedEvents.get("ASSEMBLY_FINISHED")[1]);
+        Assertions.assertEquals(0, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PROGRESS"));
+        Assertions.assertEquals(0, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_RESUMED"));
+        Assertions.assertEquals(0, emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PAUSED"));
     }
 
     private @NotNull MockTusAssembly getMockTusAssembly() {
@@ -303,10 +290,7 @@ public class AssemblyTest extends MockHttpService {
         assembly.setAssemblyListener(new AssemblyListener() {
             @Override
             public void onAssemblyFinished(AssemblyResponse response) {
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_FINISHED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_FINISHED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_FINISHED");
 
                 Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", response.json().get("assembly_id"));
                 Assertions.assertEquals("ASSEMBLY_COMPLETED", response.json().get("ok"));
@@ -314,26 +298,17 @@ public class AssemblyTest extends MockHttpService {
 
             @Override
             public void onError(Exception error) {
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_ERROR");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_ERROR", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_ERROR");
             }
 
             @Override
             public void onMetadataExtracted() {
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_META_DATA_EXTRACTED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_META_DATA_EXTRACTED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_META_DATA_EXTRACTED");
             }
 
             @Override
             public void onAssemblyUploadFinished() {
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_INSTRUCTION_UPLOAD_FINISHED");
             }
 
             @Override
@@ -345,37 +320,25 @@ public class AssemblyTest extends MockHttpService {
                 Assertions.assertTrue(uploadInformation.getString("name").matches(".*\\.mp3"));
                 Assertions.assertTrue(uploadInformation.getString("field").matches("file"));
 
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_FINISHED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_FINISHED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_FILE_UPLOAD_FINISHED");
             }
 
             @Override
             public void onFileUploadPaused(String name) {
                 // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PAUSED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PAUSED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_FILE_UPLOAD_PAUSED");
             }
 
             @Override
             public void onFileUploadResumed(String name) {
                 // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_RESUMED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_RESUMED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_FILE_UPLOAD_RESUMED");
             }
 
             @Override
             public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
                 // Should not be called in terms of the mock assembly as this is not part of the SSE functionality.
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_FILE_UPLOAD_PROGRESS");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_FILE_UPLOAD_PROGRESS", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_FILE_UPLOAD_PROGRESS");
             }
 
             @Override
@@ -392,10 +355,7 @@ public class AssemblyTest extends MockHttpService {
                             .matches("\\[(\\{\"progress\":\\d*,\"original_id\":\"\\w{32}\"}.){2}"));
                 }
 
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_PROGRESS");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_PROGRESS", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_PROGRESS");
             }
 
             @Override
@@ -412,10 +372,7 @@ public class AssemblyTest extends MockHttpService {
                 Assertions.assertTrue(resultMeta.getInt("cost") > 0);
                 Assertions.assertTrue(resultMeta.getString("id").matches("\\w{32}"));
 
-                Object[] currentValue = emittedEvents.get("ASSEMBLY_RESULT_FINISHED");
-                currentValue[0] = true;
-                currentValue[1] = (int) currentValue[1] + 1;
-                emittedEvents.put("ASSEMBLY_RESULT_FINISHED", currentValue);
+                increaseEmittedEventCounter("ASSEMBLY_RESULT_FINISHED");
             }
 
         });
@@ -578,4 +535,15 @@ public class AssemblyTest extends MockHttpService {
 
         Assertions.assertEquals(2, assembly.getNumberOfFiles());
     }
+
+    /**
+     * Increases the event counter on the specified object key.
+     * @param key - Key in @{@link AssemblyTest#emittedEvents}
+     */
+    public synchronized void increaseEmittedEventCounter(String key) {
+        int currentValue = emittedEvents.get(key);
+        currentValue += 1;
+        emittedEvents.put(key, currentValue);
+    }
+
 }
