@@ -105,7 +105,7 @@ public final class OverrideTemplate {
                 String stepName = result.getString(0);
                 JSONObject resultData = result.getJSONObject(1);
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("Step name: " + stepName + "\nFile: " + resultData.get("name") + "."
+                System.out.println("Step name: " + stepName + "\nFile: " + resultData.get("name") + ".");
                 System.out.println("Download link: " + resultData.getString("ssl_url") + "\n");
             }
         });

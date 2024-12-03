@@ -37,7 +37,6 @@ class KotlinExample {
                     .put("text","Kotlin Example")
                     .put("color","#e61010")
                     .put("font","Ubuntu-Mono-Bold")
-                    // .put("font","Helvetica") You can put Helvetica here in order to test the error handling
                     .put("size", 15)
             )
 
