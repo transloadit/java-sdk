@@ -81,11 +81,11 @@ class KotlinExample {
                 }
 
                 override fun onFileUploadPaused(name: String?) {
-                    println("Upload$name has been paused")
+                    println("Upload $name has been paused")
                 }
 
                 override fun onFileUploadResumed(name: String?) {
-                    println("Upload$name has been resumed")
+                    println("Upload $name has been resumed")
                 }
 
                 override fun onFileUploadProgress(uploadedBytes: Long, totalBytes: Long) {

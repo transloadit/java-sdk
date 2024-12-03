@@ -67,7 +67,7 @@ public final class OverrideTemplate {
 
             @Override
             public void onAssemblyUploadFinished() {
-                System.out.println("Assembly Upload complete. Executing ...");
+                System.out.println("Assembly upload complete. Executing...");
             }
 
             @Override
@@ -89,7 +89,7 @@ public final class OverrideTemplate {
 
             @Override
             public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
-                System.out.println("Uploaded " + uploadedBytes + "/" + totalBytes + " Bytes");
+                System.out.println("Uploaded " + uploadedBytes + "/" + totalBytes + " bytes");
 
             }
 
@@ -97,7 +97,7 @@ public final class OverrideTemplate {
             public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
                 double combinedProgress = progressPerOriginalFile.getDouble("bytes_processed")
                         / progressPerOriginalFile.getDouble("bytes_expected");
-                System.out.println("Assembly Execution Progress: " + combinedProgress);
+                System.out.println("Assembly Execution Progress: " + combinedProgress + "%");
             }
 
             @Override
@@ -105,8 +105,7 @@ public final class OverrideTemplate {
                 String stepName = result.getString(0);
                 JSONObject resultData = result.getJSONObject(1);
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("StepName: " + stepName + "\nFile: " + resultData.get("basename") + "."
-                        + resultData.get("ext"));
+                System.out.println("Step name: " + stepName + "\nFile: " + resultData.get("name") + "."
                 System.out.println("Download link: " + resultData.getString("ssl_url") + "\n");
             }
         });

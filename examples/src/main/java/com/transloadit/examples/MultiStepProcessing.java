@@ -131,7 +131,7 @@ public final class MultiStepProcessing {
             public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
                 double combinedProgress = progressPerOriginalFile.getDouble("bytes_processed")
                         / progressPerOriginalFile.getDouble("bytes_expected");
-                System.out.println("Assembly Execution Progress: " + combinedProgress);
+                System.out.println("Assembly Execution Progress: " + combinedProgress + "%");
             }
 
             @Override
@@ -139,8 +139,7 @@ public final class MultiStepProcessing {
                 String stepName = result.getString(0);
                 JSONObject resultData = result.getJSONObject(1);
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("StepName: " + stepName + "\nFile: " + resultData.get("basename") + "."
-                        + resultData.get("ext"));
+                System.out.println("Step name: " + stepName + "\nFile: " + resultData.get("name"));
                 System.out.println("Download link: " + resultData.getString("ssl_url") + "\n");
             }
         });
