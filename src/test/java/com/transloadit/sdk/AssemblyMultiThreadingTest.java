@@ -3,6 +3,7 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,59 +63,64 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
     }
     /**
      * Saves a multithreaded upload and verifies that the requests are sent.
-     * @throws IOException
-     * @throws LocalOperationException
-     * @throws RequestException
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void saveMultiThreadedUpload() throws IOException, LocalOperationException, RequestException {
         MockTusAssemblyMultiThreading assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
         assembly.setRunnableAssemblyListener(new AssemblyListener() {
-                    @Override
-                    public void onAssemblyFinished(AssemblyResponse response) {
+            @Override
+            public void onAssemblyFinished(AssemblyResponse response) {
 
-                    }
+            }
 
-                    @Override
-                    public void onError(Exception error) {
+            @Override
+            public void onError(Exception error) {
 
-                    }
+            }
 
-                    @Override
-                    public void onMetadataExtracted() {
+            @Override
+            public void onMetadataExtracted() {
 
-                    }
+            }
 
-                    @Override
-                    public void onAssemblyUploadFinished() {
+            @Override
+            public void onAssemblyUploadFinished() {
 
-                    }
+            }
 
-                    @Override
-                    public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            @Override
+            public void onFileUploadFinished(JSONObject uploadInformation) {
 
-                    }
+            }
 
-                    @Override
-                    public void onFileUploadPaused(String name) {
+            @Override
+            public void onFileUploadPaused(String name) {
 
-                    }
+            }
 
-                    @Override
-                    public void onFileUploadResumed(String name) {
+            @Override
+            public void onFileUploadResumed(String name) {
 
-                    }
+            }
 
-                    @Override
-                    public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
+            @Override
+            public void onFileUploadProgress(long uploadedBytes, long totalBytes) {
 
-                    }
+            }
 
-                    @Override
-                    public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            @Override
+            public void onAssemblyProgress(JSONObject progress) {
 
-                    }
+            }
+
+            @Override
+            public void onAssemblyResultFinished(JSONArray result) {
+
+            }
         });
 
         assembly.addFile(new File("LICENSE"), "file_name1");
@@ -186,8 +192,8 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/resumable/files").withMethod("POST"), VerificationTimes.atLeast(3));
 
-        Assertions.assertEquals(response.json().get("assembly_id"), "02ce6150ea2811e6a35a8d1e061a5b71");
-        Assertions.assertEquals(response.json().get("ok"), "ASSEMBLY_UPLOADING");
+        Assertions.assertEquals("02ce6150ea2811e6a35a8d1e061a5b71", response.json().get("assembly_id"));
+        Assertions.assertEquals("ASSEMBLY_UPLOADING", response.json().get("ok"));
     }
 
     /**
@@ -218,7 +224,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(JSONObject uploadInformation) {
 
             }
 
@@ -238,9 +244,15 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyProgress(JSONObject progress) {
 
             }
+
+            @Override
+            public void onAssemblyResultFinished(JSONArray result) {
+
+            }
+
         };
         assembly.setRunnableAssemblyListener(listener);
         Assertions.assertEquals(listener, assembly.getRunnableAssemblyListener());
@@ -248,10 +260,10 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
 
     /**
      * Verifies, that {@link Assembly#abortUploads()} gets called in case of an upload error.
-     * And if the {@link UploadProgressListener} gets notified.
-     * @throws LocalOperationException
-     * @throws RequestException
-     * @throws IOException
+     * And if the {@link AssemblyListener} gets notified.
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void abortUploads() throws LocalOperationException, RequestException, IOException, InterruptedException {
@@ -283,21 +295,21 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
         Mockito.verify(spyListener).onError(exceptionArgumentCaptor.capture());
         String errorMessage = "Uploads aborted";
         String exceptionMessage = exceptionArgumentCaptor.getValue().getMessage();
-        Assertions.assertEquals(exceptionMessage, errorMessage);
+        Assertions.assertEquals(errorMessage, exceptionMessage);
     }
 
     /**
      * Checks, if uploading threads are getting paused by {@link Assembly#pauseUploads()}.
-     * @throws IOException
-     * @throws LocalOperationException
-     * @throws RequestException
+     * @throws IOException - Thrown if an I/O error occurs while loading test resources.
+     * @throws LocalOperationException - If a local non-http operation fails.
+     * @throws RequestException -  If a request to Transloadit server fails.
      */
     @Test
     public void pauseUploads() throws IOException, LocalOperationException, RequestException {
 
 
         String uploadSize = "" + new File("LICENSE").length();
-        Assertions.assertEquals(uploadSize, "1077");  // verify, that test sizes can work
+        Assertions.assertEquals("1077", uploadSize);  // verify, that test sizes can work
         String uploadChunkSize = "1";
         assembly = new MockTusAssemblyMultiThreading(transloadit);
         assembly.wipeAssemblyID();
@@ -389,7 +401,7 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(JSONObject uploadInformation) {
 
             }
 
@@ -409,7 +421,12 @@ public class AssemblyMultiThreadingTest extends MockHttpService {
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyProgress(JSONObject progress) {
+
+            }
+
+            @Override
+            public void onAssemblyResultFinished(JSONArray result) {
 
             }
         };

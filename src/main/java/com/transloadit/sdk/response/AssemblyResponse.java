@@ -60,6 +60,14 @@ public class AssemblyResponse extends Response {
     }
 
     /**
+     * Retruns the upstream url needed for Server Sent Events.
+     * @return upstream url
+     */
+    public String getUpdateStreamUrl() {
+        return this.json().getString("update_stream_url");
+    }
+
+    /**
      * Returns the URL of the websocket used in the Assembly execution.
      * @return assembly websocket url
      */

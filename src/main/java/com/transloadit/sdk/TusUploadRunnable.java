@@ -16,7 +16,7 @@ import java.io.IOException;
 /**
  * This class provides a TusUpload as Thread in order to enable parallel Uploads.
  */
-public class TusUploadRunnable implements Runnable {
+class TusUploadRunnable implements Runnable {
     protected TusUploader tusUploader;
     protected TusUpload tusUpload;
     protected TusClient tusClient;
@@ -41,7 +41,7 @@ public class TusUploadRunnable implements Runnable {
      * @param assembly The calling Assembly instance
      * @param uploadChunkSize The size of an uploadable chunk
      */
-   public TusUploadRunnable(TusClient tusClient, TusUpload tusUpload, int uploadChunkSize, Assembly assembly) {
+   TusUploadRunnable(TusClient tusClient, TusUpload tusUpload, int uploadChunkSize, Assembly assembly) {
         this.tusClient = tusClient;
         this.tusUpload = tusUpload;
         this.assembly = assembly;
@@ -132,6 +132,7 @@ public class TusUploadRunnable implements Runnable {
     /**
      * Sets {@link #isPaused} {@code = true}.
      * This results in pausing the thread after uploading the current chunk.
+     * @throws LocalOperationException - If resuming has been disabled.
      */
     public void setPaused() throws LocalOperationException {
         if (!tusClient.resumingEnabled()) {
@@ -143,6 +144,8 @@ public class TusUploadRunnable implements Runnable {
     /**
      * Sets {@link #isPaused} {@code = false}.
      * This results in resuming the upload with the next chunk.
+     * @throws LocalOperationException - If resuming has been disabled or the upload has not been started.
+     * @throws RequestException - If the upload could not be resumed due to a request error
      */
     public void setUnPaused() throws LocalOperationException, RequestException {
         if (uploadHasBeenStarted && !isFinishedPermanently) {  // prohibits an attempt of resuming a finished upload.

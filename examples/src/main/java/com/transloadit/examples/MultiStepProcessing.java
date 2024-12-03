@@ -28,7 +28,7 @@ public final class MultiStepProcessing {
      */
     public static void main(String[] args) throws FileNotFoundException {
         // New Transloadit Instance
-        Transloadit transloadit = new Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET");
+        Transloadit transloadit = new Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"));
         Assembly assembly = transloadit.newAssembly();
 
         // Add Files and define Field name
@@ -87,14 +87,6 @@ public final class MultiStepProcessing {
             public void onAssemblyFinished(AssemblyResponse response) {
                 System.out.println("Assembly finished");
             }
-            public void printStatus(JSONArray status) {
-                for (int i = 0; i < status.length(); i++) {
-                    JSONObject obj = status.getJSONObject(i);
-                    System.out.printf(
-                            "Resulting file: %s %s, Download at:\n %s%n",
-                            obj.getString("basename"), obj.getString("ext"), obj.getString("ssl_url"));
-                }
-            }
 
             @Override
             public void onError(Exception error) {
@@ -113,7 +105,8 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+            public void onFileUploadFinished(JSONObject uploadInformation) {
+                String fileName = uploadInformation.getString("name");
                 System.out.println("File uploaded: " + fileName);
             }
 
@@ -135,11 +128,19 @@ public final class MultiStepProcessing {
             }
 
             @Override
-            public void onAssemblyResultFinished(String stepName, JSONObject result) {
+            public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
+                double combinedProgress = progressPerOriginalFile.getDouble("bytes_processed")
+                        / progressPerOriginalFile.getDouble("bytes_expected");
+                System.out.println("Assembly Execution Progress: " + combinedProgress + "%");
+            }
+
+            @Override
+            public void onAssemblyResultFinished(JSONArray result) {
+                String stepName = result.getString(0);
+                JSONObject resultData = result.getJSONObject(1);
                 System.out.println("\n ---- Step Result for Step: ---- ");
-                System.out.println("StepName: " + stepName + "\nFile: " + result.get("basename") + "."
-                        + result.get("ext"));
-                System.out.println("Download link: " + result.getString("ssl_url") + "\n");
+                System.out.println("Step name: " + stepName + "\nFile: " + resultData.get("name"));
+                System.out.println("Download link: " + resultData.getString("ssl_url") + "\n");
             }
         });
         try {
@@ -154,7 +155,6 @@ public final class MultiStepProcessing {
             Thread.sleep(3000);
             assembly.resumeUploads();
 
-            System.out.println("Assembly ID: " + assembly.getClientSideGeneratedAssemblyID());
          } catch (LocalOperationException | RequestException | InterruptedException e) {
             e.printStackTrace();
         }

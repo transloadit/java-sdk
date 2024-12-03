@@ -1,6 +1,7 @@
 package com.transloadit.sdk;
 
 import com.transloadit.sdk.response.AssemblyResponse;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 
@@ -37,10 +38,9 @@ public interface AssemblyListener {
 
     /**
      * Callback to be executed if one of the Assembly's files has been uploaded.
-     * @param fileName Name of the file, which has been successfully uploaded.
      * @param uploadInformation {@link JSONObject}, which holds information about the uploaded file as Key-Value pairs.
      */
-    void onFileUploadFinished(String fileName, JSONObject uploadInformation);
+    void onFileUploadFinished(JSONObject uploadInformation);
 
     /**
      * Callback to be executed if an already running, parallel upload gets paused.
@@ -62,11 +62,17 @@ public interface AssemblyListener {
     void onFileUploadProgress(long uploadedBytes, long totalBytes);
 
     /**
+     * Callback to be executed if am assembly execution progress is propagated from the backend.
+     *
+     * @param progress JSONObject containing the progress information, pushed from the backend.
+     */
+    void onAssemblyProgress(JSONObject progress);
+
+    /**
      * Callback to be executed if there is an Assembly result.
-     * @param stepName name of the step, the result is part of
      * @param result {@link JSONObject} which holds information about the result as Key-Value pairs.
      */
-    void onAssemblyResultFinished(String stepName, JSONObject result);
+    void onAssemblyResultFinished(JSONArray result);
 
 
 
