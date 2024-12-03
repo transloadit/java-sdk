@@ -20,7 +20,7 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
-public class EventsourceRunnable implements Runnable {
+class EventsourceRunnable implements Runnable {
     protected boolean assemblyFinished;
     protected AssemblyListener assemblyListener;
 
@@ -43,7 +43,7 @@ public class EventsourceRunnable implements Runnable {
      * @param errorStrategy    The {@link ErrorStrategy} to be used by the {@link EventSource} instance.
      * @param printDebug       Boolean to enable debug output.
      */
-    public EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener,
+    EventsourceRunnable(Transloadit transloadit, AssemblyResponse response, AssemblyListener assemblyListener,
                                ConnectStrategy connectStrategy, RetryDelayStrategy retryStrategy, ErrorStrategy errorStrategy, Boolean printDebug) {
         this.transloadit = transloadit;
         this.response = response;

@@ -34,7 +34,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-// CHECKSTYLE:ON
 
 /**
  * This class represents a new assembly being created.
@@ -664,7 +663,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /***
-     * This Method is used to pause parallel File uploads.
+     * Pause parallel file uploads.
+     *
      * @throws LocalOperationException - If the pause operation fails inside the upload runnable.
      */
     public void pauseUploads() throws LocalOperationException {
@@ -675,7 +675,8 @@ public class Assembly extends OptionsBuilder {
     }
 
     /***
-     * This Method is used to resume parallel File uploads.
+     * Resume parallel file uploads.
+     *
      * @throws LocalOperationException - If the resume operation fails inside the upload runnable.
      * @throws RequestException - If the resume operation fails on the server side.
      */
