@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 //CHECKSTYLE:OFF
 import com.transloadit.sdk.exceptions.LocalOperationException;  // needed for doc
 import com.transloadit.sdk.exceptions.RequestException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 //CHECKSTYLE:ON
 
@@ -24,7 +25,7 @@ public class MockProtocolExceptionAssembly extends Assembly {
 
     /**
      * Mocks an {@link Assembly} but causes always a {@link ProtocolException} if tus files are getting uploaded.
-     * @param transloadit
+     * @param transloadit The {@link Transloadit} client.
      */
     public MockProtocolExceptionAssembly(Transloadit transloadit) {
         super(transloadit);
@@ -32,8 +33,8 @@ public class MockProtocolExceptionAssembly extends Assembly {
 
     /**
      * Mocks tus file handling and upload.
-     * @throws IOException
-     * @throws ProtocolException
+     * @throws IOException - Thrown if an I/O error occurs while uploading the files. (e.g. file not found)
+     * @throws ProtocolException - Thrown if an error occurs while uploading the files. (e.g. aborted upload)
      */
     @Override
     protected void uploadTusFiles() throws IOException, ProtocolException {
@@ -60,7 +61,7 @@ public class MockProtocolExceptionAssembly extends Assembly {
                 }
 
                 @Override
-                public void onFileUploadFinished(String fileName, JSONObject uploadInformation) {
+                public void onFileUploadFinished(JSONObject uploadInformation) {
 
                 }
 
@@ -80,14 +81,19 @@ public class MockProtocolExceptionAssembly extends Assembly {
                 }
 
                 @Override
-                public void onAssemblyResultFinished(String stepName, JSONObject result) {
+                public void onAssemblyProgress(JSONObject progressPerOriginalFile) {
+
+                }
+
+                @Override
+                public void onAssemblyResultFinished(JSONArray result) {
 
                 }
             };
         }
         uploadSize = getUploadSize();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxParallelUploads);
-        while (uploads.size() > 0) {
+        while (!uploads.isEmpty()) {
             final TusUpload tusUpload = uploads.remove(0);
             MockTusUploadRunnable tusUploadRunnable = new MockTusUploadRunnable(
                     tusClient, tusUpload, uploadChunkSize, this);

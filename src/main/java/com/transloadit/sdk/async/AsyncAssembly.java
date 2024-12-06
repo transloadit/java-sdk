@@ -160,10 +160,10 @@ public class AsyncAssembly extends Assembly {
      * Returns always false to indicate to the {@link Assembly#save} method that it should never wait for the Assembly
      * to be complete by observing the HTTP - Response.
      * @return false
-     * @see Assembly#shouldWaitWithoutSocket()
+     * @see Assembly#shouldWaitWithoutSSE()
      * @see Assembly#save(boolean)
      */
-    protected boolean shouldWaitWithoutSocket() {
+    protected boolean shouldWaitWithoutSSE() {
         return false;
     }
 
@@ -279,12 +279,10 @@ public class AsyncAssembly extends Assembly {
 
             if (state == State.UPLOAD_COMPLETE) {
                 getUploadListener().onUploadFinished();
-                if (!shouldWaitWithSocket() && shouldWaitForCompletion && (getListener() != null)) {
+                if (!shouldWaitWithSSE() && shouldWaitForCompletion && (getListener() != null)) {
                     try {
                         getListener().onAssemblyFinished(watchStatus());
-                    } catch (LocalOperationException e) {
-                        getListener().onAssemblyStatusUpdateFailed(e);
-                    } catch (RequestException e) {
+                    } catch (LocalOperationException | RequestException e) {
                         getListener().onAssemblyStatusUpdateFailed(e);
                     } finally {
                         executor.stop();

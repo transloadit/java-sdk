@@ -3,6 +3,7 @@
   "assembly_id":"76fe5df1c93a0a530f3e583805cf98b4",
   "assembly_url":"http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4",
   "assembly_ssl_url":"http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4",
+  "update_stream_url": "https://api2-genet.transloadit.com/ws20176?assembly=f9ac84dafb46460ca344078d90b83832",
   "bytes_received":95355,
   "bytes_expected":95355,
   "client_agent":"Transloadit Ruby SDK 0.1.2",

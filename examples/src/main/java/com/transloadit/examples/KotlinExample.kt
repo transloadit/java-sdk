@@ -20,7 +20,7 @@ class KotlinExample {
         @JvmStatic
         fun main(args: Array<String>) {
             // Setup the TransloaditClient and a new Assembly
-            val transloadit = Transloadit("TRANSLOADIT_KEY", "TRANSLOADIT_SECRET")
+            val transloadit = Transloadit(System.getenv("TRANSLOADIT_KEY"), System.getenv("TRANSLOADIT_SECRET"))
 
             val assembly: Assembly = transloadit.newAssembly()
             val kotlinExample = KotlinExample()
@@ -36,7 +36,7 @@ class KotlinExample {
                     JSONObject()
                     .put("text","Kotlin Example")
                     .put("color","#e61010")
-                    .put("font","Helvetica")
+                    .put("font","Ubuntu-Mono-Bold")
                     .put("size", 15)
             )
 
@@ -47,7 +47,8 @@ class KotlinExample {
             // Add Assembly Listener to receive notifications.
             assembly.assemblyListener = object : AssemblyListener {
                 override fun onAssemblyFinished(response: AssemblyResponse?) {
-                    println("Download Results")
+                    println("--- Assembly finished ---")
+                    println("You can download the following result files:")
                     if (response != null) {
                        val resultJson: JSONArray = response.getStepResult("convert_and_text");
                         for ( i in 0 until resultJson.length()){
@@ -73,27 +74,31 @@ class KotlinExample {
                     println("Assembly uploaded, executing ...")
                 }
 
-                override fun onFileUploadFinished(fileName: String?, uploadInformation: JSONObject?) {
-                    println("File " + fileName + "has been uploaded successfully")
+                override fun onFileUploadFinished(uploadInformation: JSONObject?) {
+                    val fileName = uploadInformation!!.getString("name")
+                    println("File $fileName has been uploaded successfully")
                 }
 
                 override fun onFileUploadPaused(name: String?) {
-                    println("Upload" + name + "has been paused")
+                    println("Upload $name has been paused")
                 }
 
                 override fun onFileUploadResumed(name: String?) {
-                    println("Upload" + name + "has been resumed")
+                    println("Upload $name has been resumed")
                 }
 
                 override fun onFileUploadProgress(uploadedBytes: Long, totalBytes: Long) {
                     println("Uploaded $uploadedBytes from $totalBytes bytes")
                 }
 
-                override fun onAssemblyResultFinished(stepName: String?, result: JSONObject?) {
-                    println("Step Result available: ")
-                    println(
-                        """StepName: $stepName File: ${result!!.getString("basename")}.${result.getString("ext")}
-                    """.trimIndent())
+                override fun onAssemblyProgress(progress: JSONObject?) {
+                    println("Assembly Progress: $progress")
+                }
+
+
+                override fun onAssemblyResultFinished(result: JSONArray) {
+                    val stepName = result.getString(0)
+                    println("Step - $stepName - has a result")
                 }
             }
 
