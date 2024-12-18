@@ -1,3 +1,7 @@
+### Not released yet ###
+* Exchange the Socket based assembly status fetching with a Server-Sent-Events (SSE) solution.
+* Added new methods to the AssemblyListener interface to provide more information about the assembly status. e.g. encoding progress with AssemblyListener#onAssemblyProgress().
+* Changed existing methods in the AssemblyListener interface to provide the bare JSON response from the api instead of pre-parsed data.
 ### 1.0.1 / 2024-11-28 ###
 * Added SDK support for generating signed Smart CDN URLs (see https://transloadit.com/docs/topics/signature-authentication/#smart-cdn).
   This functionality ships as Transloadit#getSignedSmartCDNUrl() - Method.
