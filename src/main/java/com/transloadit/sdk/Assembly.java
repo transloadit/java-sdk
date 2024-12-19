@@ -819,13 +819,4 @@ public class Assembly extends OptionsBuilder {
             return "/assemblies/" + assemblyId;
         }
     }
-
-    /**
-     * Returns the current Thread List.
-     *
-     * @return List of Type TusUploadRunnable
-     */
-    protected ArrayList<TusUploadRunnable> getThreadList() {
-        return threadList;
-    }
 }
