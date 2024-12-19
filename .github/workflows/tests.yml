@@ -23,17 +23,27 @@ jobs:
       steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
           distribution: 'adopt'
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Build with Gradle
         run: ./gradlew assemble
+
       - name: Run Tests
         run: ./gradlew check
+
+      - name: Upload coverage to Codecov
+        if: matrix.java == '11'
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     slack-on-failure:
       needs: [Java]
