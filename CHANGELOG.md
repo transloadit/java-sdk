@@ -6,12 +6,12 @@
 * Removed the deprecated AsyncAssemblies class and functionality.
 
 ##### Breaking Changes - Upgrade Guide
-* The AssemblyListener Interface has been upgraded. As a result you will have to (re-) implement the following methods:
+* The AssemblyListener interface has been upgraded. As a result you will have to implement the following methods:
   - `onFileUploadFinished(JSONObject uploadInformation);`
   - `onAssemblyProgress(JSONObject progress)`
   - `onAssemblyResultFinished(JSONArray result)`
 
-* The AsyncAssemblies class has been removed. If you were using it, you will have to switch to the regular Assembly class.
+* The AsyncAssembly class has been removed. If you were using it, you will have to switch to the regular Assembly class.
   It has been extended with asynchronous upload capabilities in the past. 
 The Example under `examples/src/main/java/com/transloadit/examples/MultiStepProcessing.java` shows how to use the new features.
 ### 1.0.1 / 2024-11-28 ###
@@ -21,7 +21,7 @@ The Example under `examples/src/main/java/com/transloadit/examples/MultiStepProc
 * Upgrade okhttp to 4.12.0 as a security update
 
 ### 1.0.0 / 2022-12-14 ###
-#### Major Release 
+#### Major Release
 Warning: This version includes breaking changes and some experimental features, please keep that in mind when using it.
 
 If you encounter any problems because of the upgrade, please do not hesitate to contact support@transloadit.com 
