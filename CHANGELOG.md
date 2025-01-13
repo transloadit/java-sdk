@@ -1,7 +1,19 @@
 ### Not released yet ###
+#### Major Release 
 * Exchange the Socket based assembly status fetching with a Server-Sent-Events (SSE) solution.
 * Added new methods to the AssemblyListener interface to provide more information about the assembly status. e.g. encoding progress with AssemblyListener#onAssemblyProgress().
 * Changed existing methods in the AssemblyListener interface to provide the bare JSON response from the api instead of pre-parsed data.
+* Removed the deprecated AsyncAssemblies class and functionality.
+
+##### Breaking Changes - Upgrade Guide
+* The AssemblyListener interface has been upgraded. As a result you will have to implement the following methods:
+  - `onFileUploadFinished(JSONObject uploadInformation);`
+  - `onAssemblyProgress(JSONObject progress)`
+  - `onAssemblyResultFinished(JSONArray result)`
+
+* The AsyncAssembly class has been removed. If you were using it, you will have to switch to the regular Assembly class.
+  It has been extended with asynchronous upload capabilities in the past. 
+The Example under `examples/src/main/java/com/transloadit/examples/MultiStepProcessing.java` shows how to use the new features.
 ### 1.0.1 / 2024-11-28 ###
 * Added SDK support for generating signed Smart CDN URLs (see https://transloadit.com/docs/topics/signature-authentication/#smart-cdn).
   This functionality ships as Transloadit#getSignedSmartCDNUrl() - Method.
