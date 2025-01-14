@@ -1,4 +1,4 @@
-### Not released yet ###
+### 2.0.0 / 2024-01-14 ###
 #### Major Release 
 * Exchange the Socket based assembly status fetching with a Server-Sent-Events (SSE) solution.
 * Added new methods to the AssemblyListener interface to provide more information about the assembly status. e.g. encoding progress with AssemblyListener#onAssemblyProgress().
