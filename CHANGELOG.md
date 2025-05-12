@@ -1,3 +1,7 @@
+### 2.0.1 / 2025-05-12 ###
+
+* Update tus-java-client dependency to 0.5.1
+
 ### 2.0.0 / 2024-01-14 ###
 #### Major Release 
 * Exchange the Socket based assembly status fetching with a Server-Sent-Events (SSE) solution.
