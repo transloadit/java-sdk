@@ -220,6 +220,34 @@ public class Transloadit {
         return this.versionInfo;
     }
 
+    /**
+     * Exposes the configured API key to subclasses.
+     *
+     * @return Transloadit key associated with this client
+     */
+    protected String getKeyInternal() {
+        return key;
+    }
+
+    /**
+     * Exposes the configured API secret to subclasses.
+     *
+     * @return the secret or {@code null} if not set
+     */
+    @Nullable
+    protected String getSecretInternal() {
+        return secret;
+    }
+
+    /**
+     * Indicates whether request signing is currently enabled.
+     *
+     * @return {@code true} if signature generation is active
+     */
+    protected boolean isSigningEnabledInternal() {
+        return shouldSignRequest;
+    }
+
 
     /**
      * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
