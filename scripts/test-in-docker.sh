@@ -32,10 +32,16 @@ GRADLE_CMD+=("${GRADLE_ARGS[@]}")
 
 printf -v GRADLE_CMD_STRING '%q ' "${GRADLE_CMD[@]}"
 
-exec docker run --rm \
-  --user "$(id -u):$(id -g)" \
-  -e GRADLE_USER_HOME=/workspace/$CACHE_DIR \
-  -v "$PWD":/workspace \
-  -w /workspace \
-  "$IMAGE_NAME" \
-  bash -lc "$GRADLE_CMD_STRING"
+DOCKER_ARGS=(
+  --rm
+  --user "$(id -u):$(id -g)"
+  -e GRADLE_USER_HOME=/workspace/$CACHE_DIR
+  -v "$PWD":/workspace
+  -w /workspace
+)
+
+if [[ -f .env ]]; then
+  DOCKER_ARGS+=(--env-file "$PWD/.env")
+fi
+
+exec docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "$GRADLE_CMD_STRING"
