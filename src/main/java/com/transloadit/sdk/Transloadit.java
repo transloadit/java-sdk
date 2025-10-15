@@ -1,8 +1,5 @@
 package com.transloadit.sdk;
 
-import com.transloadit.sdk.async.AsyncAssembly;
-import com.transloadit.sdk.async.AssemblyProgressListener;
-import com.transloadit.sdk.async.UploadProgressListener;
 import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.response.AssemblyResponse;
@@ -223,34 +220,6 @@ public class Transloadit {
         return this.versionInfo;
     }
 
-    /**
-     * Exposes the configured API key to subclasses.
-     *
-     * @return the Transloadit key associated with this client
-     */
-    protected String getKeyInternal() {
-        return key;
-    }
-
-    /**
-     * Exposes the configured API secret to subclasses.
-     *
-     * @return the Transloadit secret, or {@code null} when not configured
-     */
-    @Nullable
-    protected String getSecretInternal() {
-        return secret;
-    }
-
-    /**
-     * Indicates whether request signing is currently enabled.
-     *
-     * @return {@code true} when requests will be signed
-     */
-    protected boolean isSigningEnabledInternal() {
-        return shouldSignRequest;
-    }
-
 
     /**
      * Adjusts number of retry attempts that should be taken if a "RATE_LIMIT_REACHED" error appears
@@ -320,32 +289,6 @@ public class Transloadit {
      */
     public Assembly newAssembly() {
         return new Assembly(this);
-    }
-
-    /**
-     * Returns an AsyncAssembly instance that can be used to create a new assembly asynchronously.
-     * This method is good for running assemblies in the background
-     *
-     * @param listener an implementation of {@link UploadProgressListener} to serve as a callback
-     *                 for the asynchronous assembly.
-     * @return {@link AsyncAssembly}
-     */
-    public AsyncAssembly newAssembly(UploadProgressListener listener) {
-        return new AsyncAssembly(this, listener);
-    }
-
-    /**
-     * Returns an AsyncAssembly instance that can be used to create a new assembly asynchronously.
-     * This method is good for running assemblies in the background
-     *
-     * @param listener an implementation of {@link AssemblyProgressListener} to serve as a callback
-     *                 for the asynchronous assembly.
-     * @deprecated use {@link #newAssembly(UploadProgressListener)} instead
-     * @return {@link AsyncAssembly}
-     */
-    @Deprecated
-    public AsyncAssembly newAssembly(AssemblyProgressListener listener) {
-        return new AsyncAssembly(this, listener);
     }
 
     /**

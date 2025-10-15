@@ -5,7 +5,6 @@
   - Enables secure signature generation on backend servers for client applications and mobile apps
   - Added unit tests covering the new signing flow
 - Replaced the Nix-based developer environment with a lightweight Docker workflow (`scripts/test-in-docker.sh`) for consistent, fast test runs across platforms
-- Restored the deprecated `async` package (`AsyncAssembly`, listeners, tests) to ease migration paths for consumers still relying on the legacy asynchronous API (e.g. Android SDK)
 
 ### 2.0.1 / 2025-05-12
 
