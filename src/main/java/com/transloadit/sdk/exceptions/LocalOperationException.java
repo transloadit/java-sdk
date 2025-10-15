@@ -19,4 +19,13 @@ public class LocalOperationException extends Exception {
     public LocalOperationException(String msg) {
         super(msg);
     }
+
+    /**
+     * Constructs a new LocalOperationException with the specified message and cause.
+     * @param msg detail message
+     * @param cause root cause
+     */
+    public LocalOperationException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 }

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -46,6 +47,7 @@ public class Transloadit {
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
     protected String versionInfo;
+    private SignatureProvider signatureProvider;
 
     /**
      * A new instance to transloadit client.
@@ -98,15 +100,94 @@ public class Transloadit {
     }
 
     /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param duration for how long (in seconds) the request should be valid.
+     * @param hostUrl the host url to the transloadit service.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, long duration, String hostUrl) {
+        this(key, (String) null, duration, hostUrl);  // Explicit cast to avoid ambiguity
+        setSignatureProvider(Objects.requireNonNull(signatureProvider, "signatureProvider must not be null"));
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param duration for how long (in seconds) the request should be valid.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, long duration) {
+        this(key, signatureProvider, duration, DEFAULT_HOST_URL);
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param hostUrl the host url to the transloadit service.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, String hostUrl) {
+        this(key, signatureProvider, 5 * 60, hostUrl);
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider) {
+        this(key, signatureProvider, 5 * 60, DEFAULT_HOST_URL);
+    }
+
+    /**
      * Enable/Disable request signing.
      * @param flag the boolean value to set it to.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public void setRequestSigning(boolean flag) throws LocalOperationException {
-        if (flag && secret == null) {
-            throw new LocalOperationException("Cannot enable request signing with null secret.");
+        if (flag && secret == null && signatureProvider == null) {
+            throw new LocalOperationException("Cannot enable request signing with null secret and no signature provider.");
         } else {
             shouldSignRequest = flag;
+        }
+    }
+
+    /**
+     * Gets the signature provider if one has been set.
+     *
+     * @return The signature provider, or null if using built-in signature generation
+     * @since 2.1.0
+     */
+    public SignatureProvider getSignatureProvider() {
+        return signatureProvider;
+    }
+
+    /**
+     * Sets a signature provider for external signature generation.
+     *
+     * <p>When a signature provider is set, it will be used instead of the built-in
+     * signature generation. This allows you to generate signatures on your backend
+     * server for improved security.</p>
+     *
+     * @param signatureProvider The signature provider to use, or null to use built-in generation
+     *                          (disabling signing entirely when no secret is configured)
+     * @since 2.1.0
+     */
+    public void setSignatureProvider(@Nullable SignatureProvider signatureProvider) {
+        this.signatureProvider = signatureProvider;
+        if (signatureProvider != null) {
+            this.shouldSignRequest = true;
+        } else {
+            this.shouldSignRequest = this.secret != null;
         }
     }
 

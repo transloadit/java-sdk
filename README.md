@@ -20,7 +20,7 @@ Existing users should take note of the [JCenter shutdown](https://jfrog.com/blog
 **Gradle:**
 
 ```groovy
-implementation 'com.transloadit.sdk:transloadit:2.0.1'
+implementation 'com.transloadit.sdk:transloadit:2.1.0'
 ```
 
 **Maven:**
@@ -29,13 +29,60 @@ implementation 'com.transloadit.sdk:transloadit:2.0.1'
 <dependency>
   <groupId>com.transloadit.sdk</groupId>
   <artifactId>transloadit</artifactId>
-  <version>2.0.1</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
 ## Usage
 
 All interactions with the SDK begin with the `com.transloadit.sdk.Transloadit` class.
+
+### Authentication
+
+The SDK supports two methods of authentication:
+
+#### 1. Using API Key and Secret
+
+This is the traditional method where you provide both your API key and secret:
+
+```java
+Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
+```
+
+#### 2. Using External Signature Provider (Since v2.1.0)
+
+For enhanced security in client applications, you can provide signatures from an external source (like your backend server) instead of including the secret in your application:
+
+```java
+import com.transloadit.sdk.SignatureProvider;
+
+// Implement a signature provider that fetches signatures from your backend
+SignatureProvider signatureProvider = new SignatureProvider() {
+    @Override
+    public String generateSignature(String paramsJson) throws Exception {
+        // Make a request to your backend to sign the parameters
+        // This example uses a hypothetical HTTP client
+        HttpResponse response = httpClient.post("https://your-backend.com/sign")
+            .body(paramsJson)
+            .execute();
+
+        if (response.isSuccessful()) {
+            return response.body().getString("signature");
+        } else {
+            throw new Exception("Failed to get signature from backend");
+        }
+    }
+};
+
+// Initialize Transloadit with the signature provider
+Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", signatureProvider);
+```
+
+This approach is particularly useful for:
+
+- Mobile applications (Android, JavaFX) where you don't want to ship secrets
+- Client-side applications that need to maintain security
+- Scenarios where you want centralized control over request authorization
 
 ### Create an Assembly
 
@@ -52,6 +99,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
+        // Using traditional authentication (for backend applications)
         Transloadit transloadit = new Transloadit("YOUR_TRANSLOADIT_KEY", "YOUR_TRANSLOADIT_SECRET");
 
         Assembly assembly = transloadit.newAssembly();
@@ -81,7 +129,7 @@ public class Main {
 
 ### Get an Assembly
 
-The method, `getAssembly`,  retrieves the JSON status of an assembly identified by the given `assembly_Id`.
+The method, `getAssembly`, retrieves the JSON status of an assembly identified by the given `assembly_Id`.
 
 ```java
 import com.transloadit.sdk.Transloadit;
@@ -105,7 +153,6 @@ public class Main {
     }
 }
 ```
-
 
 You may also get an assembly by url with the `getAssemblyByUrl` method.
 
@@ -355,6 +402,16 @@ public class Main {
 
 For fully working examples take a look at [/examples](https://github.com/transloadit/java-sdk/tree/main/examples).
 
+## Development
+
+Use the provided Docker tooling to run the test suite without installing Java locally:
+
+```bash
+./scripts/test-in-docker.sh
+```
+
+The script builds a tiny `eclipse-temurin:17-jdk` based image, mounts the repository in the container, and caches Gradle downloads inside `.gradle-docker/` so follow-up runs stay fast. Pass additional Gradle arguments after the script name if you need something other than `test`.
+
 ## Documentation
 
 See [Javadoc](https://javadoc.io/doc/com.transloadit.sdk/transloadit) for full API documentation.
@@ -363,9 +420,9 @@ See [Javadoc](https://javadoc.io/doc/com.transloadit.sdk/transloadit) for full A
 
 [The MIT License](LICENSE).
 
-## Verfication 
-Releases can be verified with our GPG Release Signing Key:
+## Verfication
 
+Releases can be verified with our GPG Release Signing Key:
 
 `User ID: Transloadit Release Signing Key <keys@transloadit.com>`
 

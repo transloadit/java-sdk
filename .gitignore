@@ -7,6 +7,10 @@
 *.war
 *.ear
 
+# Local logs
+*.log
+*-output.txt
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
@@ -20,6 +24,7 @@ hs_err_pid*
 local.properties
 build/
 /examples/build
+.gradle-docker/
 
 # Gradle
 .gradle/
