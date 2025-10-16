@@ -535,6 +535,7 @@ public class Transloadit {
      * @param input Input value that is provided as ${fields.input} in the template
      * @param urlParams Additional parameters for the URL query string (optional)
      * @return The signed Smart CDN URL
+     * @throws LocalOperationException if URL encoding fails or signing cannot be performed
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
                                        @Nullable Map<String, List<String>> urlParams) throws LocalOperationException {
@@ -553,6 +554,7 @@ public class Transloadit {
      * @param urlParams Additional parameters for the URL query string (optional)
      * @param expiresAt Expiration timestamp of the signature in milliseconds since the UNIX epoch.
      * @return The signed Smart CDN URL
+     * @throws LocalOperationException if URL encoding fails or signing cannot be performed
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
                                        @Nullable Map<String, List<String>> urlParams, long expiresAt) throws LocalOperationException {
