@@ -7,13 +7,13 @@ Context: After reintroducing signature provider support and overhauling the Andr
 ### java-sdk
 - ✅ Fix SignatureProvider Javadoc (done).
 - ✅ Add package-info and clear checkstyle warnings for integration tests (done).
-- [ ] Re-run docker test (`./scripts/test-in-docker.sh`) after the latest fixes and ensure it runs `assemble` + `check` with `--stacktrace`.
+- [x] Re-run docker test (`./scripts/test-in-docker.sh`) after the latest fixes and ensure it runs `assemble` + `check` with `--stacktrace` (passes locally on Oct 16, 2025).
 - [ ] Confirm CI after pushes (should now pass once local docker test is clean).
 
 ### android-sdk
 - ✅ settings.gradle fallback to Git source dependency for java-sdk (done).
 - ✅ Docker script updated to run `assemble` + `check`.
-- [ ] Docker run still flakes (Gradle daemon “disappeared” when running assemble). Need to investigate (maybe reduce Gradle parallelism or memory?). Perhaps run assemble and check sequentially in separate invocations within same container, or pass `--no-daemon`/`org.gradle.daemon=false` via `GRADLE_OPTS`.
+- [ ] Docker run still fails: `./scripts/test-in-docker.sh check` dies on `:examples:generateDebugAndroidTestLintModel` because the composite build cannot resolve `/java-sdk/build/libs/transloadit-2.1.0.jar`. Need to ensure the included java-sdk artifact is built/accessible (maybe trigger `:java-sdk:assemble` within the container, adjust lint inputs, or point lint to the workspace copy).
 - [ ] Once docker script is stable, ensure CI passes.
 
 ### General
@@ -21,5 +21,5 @@ Context: After reintroducing signature provider support and overhauling the Andr
 - [ ] Keep docker scripts almost identical across repos going forward so fixes apply to both.
 
 ## Notes for future session
-- The Android docker build currently uses the same container to build both java-sdk (composite build) and android modules. The failure seems related to Gradle daemon/FS watchers. Consider setting `org.gradle.daemon=false` or running with `--no-daemon` explicitly (currently already on command). Maybe reduce concurrency with `--max-workers=2`.
+- Android docker build currently fails because lint cannot locate the included java-sdk jar when generating the debug AndroidTest model. Investigate running `./gradlew :java-sdk:assemble` first, wiring lint to the workspace output, or disabling that lint variant in Docker builds.
 - Keep an eye on `.android` analytics warning (Gradle complaining about metrics). Possibly set `ANDROID_HOME`/`ANDROID_SDK_ROOT` or disable analytics via env `ANDROID_SDK_ROOT` etc.
