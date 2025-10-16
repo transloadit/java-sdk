@@ -364,6 +364,18 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
+     * Smart CDN signing works when no optional parameters are provided.
+     */
+    @Test
+    @SuppressWarnings("checkstyle:linelength")
+    public void getSignedSmartCDNUrlHandlesNullParams() throws LocalOperationException {
+        Transloadit client = new Transloadit("foo_key", "foo_secret");
+        String url = client.getSignedSmartCDNUrl("foo_workspace", "foo_template", "foo/input", null);
+        Assertions.assertTrue(url.contains("auth_key=foo_key"));
+        Assertions.assertTrue(url.contains("sig=sha256"));
+    }
+
+    /**
      * Test if the SDK can generate a correct signed Smart CDN URL.
      */
     @Test
