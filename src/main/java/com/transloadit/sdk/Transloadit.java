@@ -560,12 +560,19 @@ public class Transloadit {
                                        @Nullable Map<String, List<String>> urlParams, long expiresAt) throws LocalOperationException {
 
         try {
+            if (this.secret == null) {
+                throw new LocalOperationException("Cannot sign Smart CDN URLs without a secret");
+            }
+
             String workspaceSlug = URLEncoder.encode(workspace, StandardCharsets.UTF_8.name());
             String templateSlug = URLEncoder.encode(template, StandardCharsets.UTF_8.name());
             String inputField = URLEncoder.encode(input, StandardCharsets.UTF_8.name());
 
             // Use TreeMap to ensure keys in URL params are sorted.
-            SortedMap<String, List<String>> params = new TreeMap<>(urlParams);
+            SortedMap<String, List<String>> params = new TreeMap<>();
+            if (urlParams != null) {
+                params.putAll(urlParams);
+            }
             params.put("auth_key", Collections.singletonList(this.key));
             params.put("exp", Collections.singletonList(String.valueOf(expiresAt)));
 

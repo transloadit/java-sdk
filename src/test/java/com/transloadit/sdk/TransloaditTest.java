@@ -351,6 +351,19 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
+     * Smart CDN signing should fail when no secret is configured.
+     */
+    @Test
+    public void getSignedSmartCDNUrlWithoutSecretThrows() {
+        Transloadit client = new Transloadit("foo_key", params -> "ignored");
+        Map<String, List<String>> params = new HashMap<>();
+        params.put("foo", Collections.singletonList("bar"));
+
+        Assertions.assertThrows(LocalOperationException.class, () ->
+                client.getSignedSmartCDNUrl("workspace", "template", "input", params));
+    }
+
+    /**
      * Test if the SDK can generate a correct signed Smart CDN URL.
      */
     @Test
