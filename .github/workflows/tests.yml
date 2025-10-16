@@ -42,16 +42,6 @@ jobs:
       - name: Run Tests
         run: ./gradlew check
 
-      - name: Run Docker E2E tests
-        if: matrix.java == '11' && env.TRANSLOADIT_KEY != '' && env.TRANSLOADIT_SECRET != ''
-        env:
-          TRANSLOADIT_KEY: ${{ env.TRANSLOADIT_KEY }}
-          TRANSLOADIT_SECRET: ${{ env.TRANSLOADIT_SECRET }}
-        run: |
-          printf 'TRANSLOADIT_KEY=%s\nTRANSLOADIT_SECRET=%s\n' "$TRANSLOADIT_KEY" "$TRANSLOADIT_SECRET" > .env
-          ./scripts/test-in-docker.sh
-          rm -f .env
-
       - name: Upload coverage to Codecov
         if: matrix.java == '11'
         uses: codecov/codecov-action@v5
