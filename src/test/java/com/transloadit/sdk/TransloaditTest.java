@@ -62,6 +62,9 @@ public class TransloaditTest extends MockHttpService {
      * @throws IOException             if Test resource "assembly.json" is missing.
      */
 
+    /**
+     * Verifies constructor overload that accepts a SignatureProvider enables signing.
+     */
     @Test
     public void constructorWithSignatureProviderEnablesSigning() {
         SignatureProvider provider = params -> "signature";
@@ -72,6 +75,9 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertNull(client.secret);
     }
 
+    /**
+     * Ensures setSignatureProvider flips signing state depending on secret availability.
+     */
     @Test
     public void setSignatureProviderTogglesSigningBasedOnSecret() {
         Transloadit noSecret = new Transloadit("KEY", (String) null, 5 * 60, "http://localhost:" + PORT);
@@ -148,6 +154,9 @@ public class TransloaditTest extends MockHttpService {
      * @throws LocalOperationException if building the request goes wrong.
      * @throws RequestException        if communication with the server goes wrong.
      * @throws IOException             if Test resource "assemblies.json" is missing.
+     */
+    /**
+     * Checks listAssemblies parses the returned JSON into count and items correctly.
      */
     @Test
     public void listAssembliesParsesItems() throws RequestException, LocalOperationException, IOException {

@@ -17,7 +17,6 @@ import org.mockserver.model.HttpResponse;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import static org.mockserver.model.HttpError.error;
 
@@ -175,9 +174,8 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
-     * Test secure nonce generation with.
+     * Verifies that Request routes params through the custom SignatureProvider.
      */
-
     @Test
     public void postUsesSignatureProviderWhenPresent() throws Exception {
         final boolean[] invoked = {false};
@@ -203,9 +201,14 @@ public class RequestTest extends MockHttpService {
         Assertions.assertTrue(body.contains(expectedSignature), "Signature should come from provider");
     }
 
+    /**
+     * Ensures provider exceptions are surfaced as LocalOperationException.
+     */
     @Test
     public void signatureProviderExceptionIsWrapped() {
-        SignatureProvider provider = params -> { throw new Exception("boom"); };
+        SignatureProvider provider = params -> {
+            throw new Exception("boom");
+        };
         Transloadit client = new Transloadit("KEY", provider, "http://localhost:" + PORT);
         Request providerRequest = new Request(client);
 
@@ -213,6 +216,9 @@ public class RequestTest extends MockHttpService {
                 providerRequest.post("/signature-error", new HashMap<>()));
     }
 
+    /**
+     * Test secure nonce generation with.
+     */
     @Test
     public void getNonce() {
         String cipher = "Blowfish";
