@@ -18,8 +18,8 @@ public class AssemblyIntegrationTest {
     void createAssemblyAndWaitForCompletion() throws Exception {
         String key = System.getenv("TRANSLOADIT_KEY");
         String secret = System.getenv("TRANSLOADIT_SECRET");
-        Assumptions.assumeTrue(key != null && !key.isBlank(), "TRANSLOADIT_KEY env var required");
-        Assumptions.assumeTrue(secret != null && !secret.isBlank(), "TRANSLOADIT_SECRET env var required");
+        Assumptions.assumeTrue(key != null && !key.trim().isEmpty(), "TRANSLOADIT_KEY env var required");
+        Assumptions.assumeTrue(secret != null && !secret.trim().isEmpty(), "TRANSLOADIT_SECRET env var required");
 
         Transloadit client = new Transloadit(key, secret);
         Assembly assembly = client.newAssembly();
