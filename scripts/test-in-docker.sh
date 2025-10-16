@@ -36,16 +36,15 @@ ensure_docker
 configure_platform
 
 if [[ $# -eq 0 ]]; then
-  GRADLE_ARGS=(test)
+  RUN_CMD='set -e; ./gradlew --no-daemon assemble --stacktrace && ./gradlew --no-daemon check --stacktrace'
 else
-  GRADLE_ARGS=("$@")
+  GRADLE_CMD=("./gradlew" "--no-daemon")
+  GRADLE_CMD+=("$@")
+  GRADLE_CMD+=("--stacktrace")
+  printf -v RUN_CMD '%q ' "${GRADLE_CMD[@]}"
 fi
 
 mkdir -p "$CACHE_DIR"
-
-GRADLE_CMD=("./gradlew" "--no-daemon")
-GRADLE_CMD+=("${GRADLE_ARGS[@]}")
-printf -v GRADLE_CMD_STRING '%q ' "${GRADLE_CMD[@]}"
 
 BUILD_ARGS=()
 if [[ -n "${DOCKER_PLATFORM:-}" ]]; then
@@ -71,4 +70,4 @@ if [[ -f .env ]]; then
   DOCKER_ARGS+=(--env-file "$PWD/.env")
 fi
 
-exec docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "$GRADLE_CMD_STRING"
+exec docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "$RUN_CMD"
