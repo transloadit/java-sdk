@@ -80,6 +80,15 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
+     * Throws when enabling signing without secret or provider.
+     */
+    @Test
+    public void setRequestSigningWithoutCredentialsThrows() {
+        Transloadit client = new Transloadit("KEY", (String) null, 5 * 60, "http://localhost:" + PORT);
+        Assertions.assertThrows(LocalOperationException.class, () -> client.setRequestSigning(true));
+    }
+
+    /**
      * Ensures setSignatureProvider flips signing state depending on secret availability.
      */
     @Test

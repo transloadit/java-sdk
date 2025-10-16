@@ -202,6 +202,25 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
+     * When signing is disabled, no signature parameter should be added.
+     */
+    @Test
+    public void toPayloadOmitsSignatureWhenSigningDisabled() throws Exception {
+        Transloadit client = new Transloadit("KEY", "SECRET", "http://localhost:" + PORT);
+        client.setRequestSigning(false);
+        Request localRequest = new Request(client);
+
+        mockServerClient.when(HttpRequest.request().withPath("/no-sign").withMethod("POST"))
+                .respond(HttpResponse.response().withStatusCode(200));
+
+        localRequest.post("/no-sign", new HashMap<>());
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/no-sign").withMethod("POST"));
+        Assertions.assertFalse(recorded[0].getBodyAsString().contains("signature"));
+    }
+
+    /**
      * Ensures provider exceptions are surfaced as LocalOperationException.
      */
     @Test
