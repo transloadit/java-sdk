@@ -370,7 +370,8 @@ public class TransloaditTest extends MockHttpService {
     @SuppressWarnings("checkstyle:linelength")
     public void getSignedSmartCDNUrlHandlesNullParams() throws LocalOperationException {
         Transloadit client = new Transloadit("foo_key", "foo_secret");
-        String url = client.getSignedSmartCDNUrl("foo_workspace", "foo_template", "foo/input", null);
+        long expiresAt = Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli();
+        String url = client.getSignedSmartCDNUrl("foo_workspace", "foo_template", "foo/input", null, expiresAt);
         Assertions.assertTrue(url.contains("auth_key=foo_key"));
         Assertions.assertTrue(url.contains("sig=sha256"));
     }
@@ -386,14 +387,16 @@ public class TransloaditTest extends MockHttpService {
         params.put("foo", Collections.singletonList("bar"));
         params.put("aaa", Arrays.asList("42", "21")); // Must be sorted before `foo`
 
+        long expiresAt = Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli();
         String url = client.getSignedSmartCDNUrl(
                 "foo_workspace",
                 "foo_template",
                 "foo/input",
                 params,
-                Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli()
+                expiresAt
         );
-        Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519", url);
+        String expectedUrl = "https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519";
+        Assertions.assertEquals(expectedUrl, url);
     }
 }
 

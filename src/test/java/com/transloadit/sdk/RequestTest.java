@@ -3,11 +3,12 @@ package com.transloadit.sdk;
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-
+import org.json.JSONObject;
 import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
@@ -16,6 +17,9 @@ import org.mockserver.model.HttpResponse;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.mockserver.model.HttpError.error;
@@ -45,6 +49,60 @@ public class RequestTest extends MockHttpService {
         mockServerClient.reset();
     }
 
+    private JSONObject runSmartSig(String paramsJson, String key, String secret) throws Exception {
+        ProcessBuilder builder = new ProcessBuilder("npx", "--yes", "transloadit@4.0.4", "smart_sig");
+        builder.environment().put("TRANSLOADIT_KEY", key);
+        builder.environment().put("TRANSLOADIT_SECRET", secret);
+
+        Process process;
+        try {
+            process = builder.start();
+        } catch (IOException e) {
+            Assumptions.assumeTrue(false, "npx not available: " + e.getMessage());
+            return new JSONObject();
+        }
+
+        try (OutputStream os = process.getOutputStream()) {
+            os.write(paramsJson.getBytes(StandardCharsets.UTF_8));
+        }
+
+        String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        int status = process.waitFor();
+        if (status != 0) {
+            Assertions.fail("smart_sig CLI failed: " + stderr);
+        }
+        return new JSONObject(stdout);
+    }
+
+    private String extractMultipartField(String body, String fieldName) {
+        String token = "name=\"" + fieldName + "\"";
+        int nameIndex = body.indexOf(token);
+        if (nameIndex == -1) {
+            return null;
+        }
+
+        int headerEnd = body.indexOf("\r\n\r\n", nameIndex);
+        int delimiterLength = 4;
+        if (headerEnd == -1) {
+            headerEnd = body.indexOf("\n\n", nameIndex);
+            delimiterLength = 2;
+        }
+        if (headerEnd == -1) {
+            return null;
+        }
+
+        int valueStart = headerEnd + delimiterLength;
+        int boundaryIndex = body.indexOf("\r\n--", valueStart);
+        if (boundaryIndex == -1) {
+            boundaryIndex = body.indexOf("\n--", valueStart);
+        }
+        if (boundaryIndex == -1) {
+            boundaryIndex = body.length();
+        }
+
+        return body.substring(valueStart, boundaryIndex).trim();
+    }
 
     /**
      * Checks the result of the {@link Request#get(String)}  method by verifying the format of the GET request
@@ -54,7 +112,6 @@ public class RequestTest extends MockHttpService {
     @Test
     public void get() throws Exception {
         request.get("/foo");
-
 
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo")
@@ -75,7 +132,6 @@ public class RequestTest extends MockHttpService {
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo").withMethod("POST"));
     }
-
 
     /**
      * Checks the result of the {@link Request#delete(String, Map)} )}  method by verifying the format of the
@@ -150,7 +206,6 @@ public class RequestTest extends MockHttpService {
 
         //mockServerClient.verify(HttpRequest.request("/foo").withMethod("GET"));
 
-
         // POST REQUESTS
         testRequest = new Request(transloadit2);
         mockServerClient.when(HttpRequest.request()
@@ -199,6 +254,37 @@ public class RequestTest extends MockHttpService {
 
         Assertions.assertTrue(invoked[0], "Signature provider should be called");
         Assertions.assertTrue(body.contains(expectedSignature), "Signature should come from provider");
+    }
+
+    /**
+     * Built-in signing should match the Node smart_sig CLI output.
+     */
+    @Test
+    public void payloadSignatureMatchesSmartSigCli() throws Exception {
+        String key = "cli_key";
+        String secret = "cli_secret";
+        Transloadit client = new Transloadit(key, secret, "http://localhost:" + PORT);
+        Request localRequest = new Request(client);
+
+        HashMap<String, Object> params = new HashMap<String, Object>();
+
+        mockServerClient.when(HttpRequest.request().withPath("/cli-sign").withMethod("POST"))
+                .respond(HttpResponse.response().withStatusCode(200));
+
+        localRequest.post("/cli-sign", params);
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/cli-sign").withMethod("POST"));
+        String body = recorded[0].getBodyAsString();
+        String paramsJson = extractMultipartField(body, "params");
+        String signature = extractMultipartField(body, "signature");
+
+        Assertions.assertNotNull(paramsJson, "params payload missing: " + body);
+        Assertions.assertNotNull(signature, "signature missing: " + body);
+
+        JSONObject cliResult = runSmartSig(paramsJson, key, secret);
+        Assertions.assertEquals(paramsJson, cliResult.getString("params"), "CLI params mismatch: " + cliResult);
+        Assertions.assertEquals(signature, cliResult.getString("signature"), "CLI signature mismatch: " + cliResult + " javaParams=" + paramsJson);
     }
 
     /**

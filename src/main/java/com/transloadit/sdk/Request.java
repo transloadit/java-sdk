@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -349,7 +350,7 @@ public class Request {
      * @return Map containing authentication key and the time it expires
      */
     private Map<String, String> getAuthData() {
-        Map<String, String> authData = new HashMap<String, String>();
+        Map<String, String> authData = new LinkedHashMap<String, String>();
         authData.put("key", transloadit.key);
 
         Instant expiryTime = Instant.now().plus(transloadit.duration * 1000);
