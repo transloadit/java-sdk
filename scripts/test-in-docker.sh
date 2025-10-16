@@ -42,6 +42,7 @@ else
   GRADLE_CMD+=("$@")
   GRADLE_CMD+=("--stacktrace")
   printf -v RUN_CMD '%q ' "${GRADLE_CMD[@]}"
+  RUN_CMD="set -e; ${RUN_CMD}"
 fi
 
 mkdir -p "$CACHE_DIR"
