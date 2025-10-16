@@ -17,7 +17,9 @@ import org.mockserver.model.HttpResponse;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -66,13 +68,28 @@ public class RequestTest extends MockHttpService {
             os.write(paramsJson.getBytes(StandardCharsets.UTF_8));
         }
 
-        String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        String stdout;
+        String stderr;
+        try (InputStream stdoutStream = process.getInputStream();
+             InputStream stderrStream = process.getErrorStream()) {
+            stdout = readStream(stdoutStream).trim();
+            stderr = readStream(stderrStream).trim();
+        }
         int status = process.waitFor();
         if (status != 0) {
             Assertions.fail("smart_sig CLI failed: " + stderr);
         }
         return new JSONObject(stdout);
+    }
+
+    private String readStream(InputStream stream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] chunk = new byte[8192];
+        int read;
+        while ((read = stream.read(chunk)) != -1) {
+            buffer.write(chunk, 0, read);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
     }
 
     private String extractMultipartField(String body, String fieldName) {
