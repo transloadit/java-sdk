@@ -17,8 +17,11 @@ jobs:
       strategy:
         matrix:
          java: ['8','11']
-         
+
       runs-on: ubuntu-latest
+      env:
+        TRANSLOADIT_KEY: ${{ secrets.TRANSLOADIT_KEY }}
+        TRANSLOADIT_SECRET: ${{ secrets.TRANSLOADIT_SECRET }}
 
       steps:
       - name: Checkout Repository
@@ -29,6 +32,13 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: 'adopt'
+
+      # This allows us to test Smart CDN Signatures against the Node SDK reference
+      # implementation for parity.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

@@ -61,6 +61,58 @@ public class TransloaditTest extends MockHttpService {
      * @throws RequestException        if communication with the server goes wrong.
      * @throws IOException             if Test resource "assembly.json" is missing.
      */
+
+    /**
+     * Verifies constructor overload that accepts a SignatureProvider enables signing.
+     */
+    @Test
+    public void constructorWithSignatureProviderEnablesSigning() {
+        SignatureProvider provider = params -> "signature";
+        Transloadit urlClient = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+        Transloadit defaultClient = new Transloadit("KEY", provider);
+
+        Assertions.assertSame(provider, urlClient.getSignatureProvider());
+        Assertions.assertSame(provider, defaultClient.getSignatureProvider());
+        Assertions.assertTrue(urlClient.shouldSignRequest);
+        Assertions.assertTrue(defaultClient.shouldSignRequest);
+        Assertions.assertNull(urlClient.secret);
+        Assertions.assertNull(defaultClient.secret);
+    }
+
+    /**
+     * Throws when enabling signing without secret or provider.
+     */
+    @Test
+    public void setRequestSigningWithoutCredentialsThrows() {
+        Transloadit client = new Transloadit("KEY", (String) null, 5 * 60, "http://localhost:" + PORT);
+        Assertions.assertThrows(LocalOperationException.class, () -> client.setRequestSigning(true));
+    }
+
+    /**
+     * Ensures setSignatureProvider flips signing state depending on secret availability.
+     */
+    @Test
+    public void setSignatureProviderTogglesSigningBasedOnSecret() {
+        Transloadit noSecret = new Transloadit("KEY", (String) null, 5 * 60, "http://localhost:" + PORT);
+        Assertions.assertFalse(noSecret.shouldSignRequest);
+
+        SignatureProvider provider = params -> "signature";
+        noSecret.setSignatureProvider(provider);
+        Assertions.assertTrue(noSecret.shouldSignRequest);
+
+        noSecret.setSignatureProvider(null);
+        Assertions.assertFalse(noSecret.shouldSignRequest);
+
+        Transloadit withSecret = new Transloadit("KEY", "SECRET", "http://localhost:" + PORT);
+        withSecret.setSignatureProvider(null);
+        Assertions.assertTrue(withSecret.shouldSignRequest);
+
+        Transloadit withSecretDefaultUrl = new Transloadit("KEY", "SECRET");
+        withSecretDefaultUrl.setSignatureProvider(provider);
+        Assertions.assertTrue(withSecretDefaultUrl.shouldSignRequest);
+        Assertions.assertSame(provider, withSecretDefaultUrl.getSignatureProvider());
+    }
+
     @Test
     public void getAssembly() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()
@@ -121,6 +173,22 @@ public class TransloaditTest extends MockHttpService {
      * @throws RequestException        if communication with the server goes wrong.
      * @throws IOException             if Test resource "assemblies.json" is missing.
      */
+    /**
+     * Checks listAssemblies parses the returned JSON into count and items correctly.
+     */
+    @Test
+    public void listAssembliesParsesItems() throws RequestException, LocalOperationException, IOException {
+        mockServerClient.when(HttpRequest.request()
+                        .withPath("/assemblies").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("assemblies_with_items.json")));
+
+        ListResponse assemblies = transloadit.listAssemblies();
+        Assertions.assertEquals(2, assemblies.size());
+        Assertions.assertEquals(2, assemblies.getItems().length());
+        Assertions.assertEquals("abcd1234", assemblies.getItems().getJSONObject(0).getString("assembly_id"));
+        Assertions.assertEquals("efgh5678", assemblies.getItems().getJSONObject(1).getString("assembly_id"));
+    }
+
     @Test
     public void listAssemblies() throws RequestException, LocalOperationException, IOException {
 
@@ -283,6 +351,32 @@ public class TransloaditTest extends MockHttpService {
     }
 
     /**
+     * Smart CDN signing should fail when no secret is configured.
+     */
+    @Test
+    public void getSignedSmartCDNUrlWithoutSecretThrows() {
+        Transloadit client = new Transloadit("foo_key", params -> "ignored");
+        Map<String, List<String>> params = new HashMap<>();
+        params.put("foo", Collections.singletonList("bar"));
+
+        Assertions.assertThrows(LocalOperationException.class, () ->
+                client.getSignedSmartCDNUrl("workspace", "template", "input", params));
+    }
+
+    /**
+     * Smart CDN signing works when no optional parameters are provided.
+     */
+    @Test
+    @SuppressWarnings("checkstyle:linelength")
+    public void getSignedSmartCDNUrlHandlesNullParams() throws LocalOperationException {
+        Transloadit client = new Transloadit("foo_key", "foo_secret");
+        long expiresAt = Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli();
+        String url = client.getSignedSmartCDNUrl("foo_workspace", "foo_template", "foo/input", null, expiresAt);
+        Assertions.assertTrue(url.contains("auth_key=foo_key"));
+        Assertions.assertTrue(url.contains("sig=sha256"));
+    }
+
+    /**
      * Test if the SDK can generate a correct signed Smart CDN URL.
      */
     @Test
@@ -293,14 +387,16 @@ public class TransloaditTest extends MockHttpService {
         params.put("foo", Collections.singletonList("bar"));
         params.put("aaa", Arrays.asList("42", "21")); // Must be sorted before `foo`
 
+        long expiresAt = Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli();
         String url = client.getSignedSmartCDNUrl(
                 "foo_workspace",
                 "foo_template",
                 "foo/input",
                 params,
-                Instant.parse("2024-05-01T01:00:00.000Z").toEpochMilli()
+                expiresAt
         );
-        Assertions.assertEquals("https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519", url);
+        String expectedUrl = "https://foo_workspace.tlcdn.com/foo_template/foo%2Finput?aaa=42&aaa=21&auth_key=foo_key&exp=1714525200000&foo=bar&sig=sha256%3A9a8df3bb28eea621b46ec808a250b7903b2546be7e66c048956d4f30b8da7519";
+        Assertions.assertEquals(expectedUrl, url);
     }
 }
 

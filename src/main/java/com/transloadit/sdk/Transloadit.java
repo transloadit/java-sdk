@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -46,6 +47,7 @@ public class Transloadit {
     protected ArrayList<String> qualifiedErrorsForRetry;
     protected int retryDelay = 0; // default value
     protected String versionInfo;
+    private SignatureProvider signatureProvider;
 
     /**
      * A new instance to transloadit client.
@@ -98,15 +100,94 @@ public class Transloadit {
     }
 
     /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param duration for how long (in seconds) the request should be valid.
+     * @param hostUrl the host url to the transloadit service.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, long duration, String hostUrl) {
+        this(key, (String) null, duration, hostUrl);  // Explicit cast to avoid ambiguity
+        setSignatureProvider(Objects.requireNonNull(signatureProvider, "signatureProvider must not be null"));
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param duration for how long (in seconds) the request should be valid.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, long duration) {
+        this(key, signatureProvider, duration, DEFAULT_HOST_URL);
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @param hostUrl the host url to the transloadit service.
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider, String hostUrl) {
+        this(key, signatureProvider, 5 * 60, hostUrl);
+    }
+
+    /**
+     * A new instance to transloadit client with external signature generation.
+     *
+     * @param key User's transloadit key
+     * @param signatureProvider Provider for generating signatures externally
+     * @since 2.1.0
+     */
+    public Transloadit(String key, SignatureProvider signatureProvider) {
+        this(key, signatureProvider, 5 * 60, DEFAULT_HOST_URL);
+    }
+
+    /**
      * Enable/Disable request signing.
      * @param flag the boolean value to set it to.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
     public void setRequestSigning(boolean flag) throws LocalOperationException {
-        if (flag && secret == null) {
-            throw new LocalOperationException("Cannot enable request signing with null secret.");
+        if (flag && secret == null && signatureProvider == null) {
+            throw new LocalOperationException("Cannot enable request signing with null secret and no signature provider.");
         } else {
             shouldSignRequest = flag;
+        }
+    }
+
+    /**
+     * Gets the signature provider if one has been set.
+     *
+     * @return The signature provider, or null if using built-in signature generation
+     * @since 2.1.0
+     */
+    public SignatureProvider getSignatureProvider() {
+        return signatureProvider;
+    }
+
+    /**
+     * Sets a signature provider for external signature generation.
+     *
+     * <p>When a signature provider is set, it will be used instead of the built-in
+     * signature generation. This allows you to generate signatures on your backend
+     * server for improved security.</p>
+     *
+     * @param signatureProvider The signature provider to use, or null to use built-in generation
+     *                          (disabling signing entirely when no secret is configured)
+     * @since 2.1.0
+     */
+    public void setSignatureProvider(@Nullable SignatureProvider signatureProvider) {
+        this.signatureProvider = signatureProvider;
+        if (signatureProvider != null) {
+            this.shouldSignRequest = true;
+        } else {
+            this.shouldSignRequest = this.secret != null;
         }
     }
 
@@ -137,6 +218,34 @@ public class Transloadit {
      */
     String getVersionInfo() {
         return this.versionInfo;
+    }
+
+    /**
+     * Exposes the configured API key to subclasses.
+     *
+     * @return Transloadit key associated with this client
+     */
+    protected String getKeyInternal() {
+        return key;
+    }
+
+    /**
+     * Exposes the configured API secret to subclasses.
+     *
+     * @return the secret or {@code null} if not set
+     */
+    @Nullable
+    protected String getSecretInternal() {
+        return secret;
+    }
+
+    /**
+     * Indicates whether request signing is currently enabled.
+     *
+     * @return {@code true} if signature generation is active
+     */
+    protected boolean isSigningEnabledInternal() {
+        return shouldSignRequest;
     }
 
 
@@ -426,6 +535,7 @@ public class Transloadit {
      * @param input Input value that is provided as ${fields.input} in the template
      * @param urlParams Additional parameters for the URL query string (optional)
      * @return The signed Smart CDN URL
+     * @throws LocalOperationException if URL encoding fails or signing cannot be performed
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
                                        @Nullable Map<String, List<String>> urlParams) throws LocalOperationException {
@@ -444,17 +554,25 @@ public class Transloadit {
      * @param urlParams Additional parameters for the URL query string (optional)
      * @param expiresAt Expiration timestamp of the signature in milliseconds since the UNIX epoch.
      * @return The signed Smart CDN URL
+     * @throws LocalOperationException if URL encoding fails or signing cannot be performed
      */
     public String getSignedSmartCDNUrl(@NotNull String workspace, @NotNull String template, @NotNull String input,
                                        @Nullable Map<String, List<String>> urlParams, long expiresAt) throws LocalOperationException {
 
         try {
+            if (this.secret == null) {
+                throw new LocalOperationException("Cannot sign Smart CDN URLs without a secret");
+            }
+
             String workspaceSlug = URLEncoder.encode(workspace, StandardCharsets.UTF_8.name());
             String templateSlug = URLEncoder.encode(template, StandardCharsets.UTF_8.name());
             String inputField = URLEncoder.encode(input, StandardCharsets.UTF_8.name());
 
             // Use TreeMap to ensure keys in URL params are sorted.
-            SortedMap<String, List<String>> params = new TreeMap<>(urlParams);
+            SortedMap<String, List<String>> params = new TreeMap<>();
+            if (urlParams != null) {
+                params.putAll(urlParams);
+            }
             params.put("auth_key", Collections.singletonList(this.key));
             params.put("exp", Collections.singletonList(String.valueOf(expiresAt)));
 

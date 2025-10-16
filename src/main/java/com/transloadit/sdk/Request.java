@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -309,10 +310,25 @@ public class Request {
         dataClone.put("nonce", getNonce("AES", 256));
 
         Map<String, String> payload = new HashMap<String, String>();
-        payload.put("params", jsonifyData(dataClone));
+        String paramsJson = jsonifyData(dataClone);
+        payload.put("params", paramsJson);
 
         if (transloadit.shouldSignRequest) {
-            payload.put("signature", getSignature(jsonifyData(dataClone)));
+            String signature;
+
+            if (transloadit.getSignatureProvider() != null) {
+                // Use external signature provider
+                try {
+                    signature = transloadit.getSignatureProvider().generateSignature(paramsJson);
+                } catch (Exception e) {
+                    throw new LocalOperationException("Failed to generate signature using provider.", e);
+                }
+            } else {
+                // Use built-in signature generation
+                signature = getSignature(paramsJson);
+            }
+
+            payload.put("signature", signature);
         }
         return payload;
     }
@@ -334,7 +350,7 @@ public class Request {
      * @return Map containing authentication key and the time it expires
      */
     private Map<String, String> getAuthData() {
-        Map<String, String> authData = new HashMap<String, String>();
+        Map<String, String> authData = new LinkedHashMap<String, String>();
         authData.put("key", transloadit.key);
 
         Instant expiryTime = Instant.now().plus(transloadit.duration * 1000);
@@ -353,6 +369,9 @@ public class Request {
      * @return signature generate based on the message passed and the transloadit secret.
      */
     private String getSignature(String message) throws LocalOperationException {
+        if (transloadit.secret == null) {
+            throw new LocalOperationException("Cannot generate signature without a secret or signature provider.");
+        }
         byte[] kSecret = transloadit.secret.getBytes(Charset.forName("UTF-8"));
         byte[] rawHmac = hmacSHA384(kSecret, message);
         byte[] hexBytes = new Hex().encode(rawHmac);
