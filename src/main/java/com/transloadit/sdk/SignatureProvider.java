@@ -10,23 +10,26 @@ package com.transloadit.sdk;
  *
  * <p>Example implementation:</p>
  * <pre>{@code
- * SignatureProvider provider = new SignatureProvider() {
+ * public final class RemoteSignatureProvider implements SignatureProvider {
+ *     private final HttpClient httpClient;
+ *
+ *     public RemoteSignatureProvider(HttpClient httpClient) {
+ *         this.httpClient = httpClient;
+ *     }
+ *
  *     @Override
  *     public String generateSignature(String paramsJson) throws Exception {
- *         // Make a synchronous request to your backend
  *         HttpResponse response = httpClient.post("/api/sign")
  *             .body(paramsJson)
  *             .execute();
  *
- *         if (response.isSuccessful()) {
- *             return response.body().getString("signature");
- *         } else {
+ *         if (!response.isSuccessful()) {
  *             throw new Exception("Failed to generate signature: " + response.statusCode());
  *         }
+ *         return response.body().getString("signature");
  *     }
- * };
  * }
- * }</pre>
+ * </pre>
  *
  * <p>For asynchronous implementations, consider using CompletableFuture or similar patterns
  * to bridge async operations to this synchronous interface.</p>
