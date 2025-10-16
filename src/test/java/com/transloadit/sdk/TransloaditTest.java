@@ -150,6 +150,19 @@ public class TransloaditTest extends MockHttpService {
      * @throws IOException             if Test resource "assemblies.json" is missing.
      */
     @Test
+    public void listAssembliesParsesItems() throws RequestException, LocalOperationException, IOException {
+        mockServerClient.when(HttpRequest.request()
+                        .withPath("/assemblies").withMethod("GET"))
+                .respond(HttpResponse.response().withBody(getJson("assemblies_with_items.json")));
+
+        ListResponse assemblies = transloadit.listAssemblies();
+        Assertions.assertEquals(2, assemblies.size());
+        Assertions.assertEquals(2, assemblies.getItems().length());
+        Assertions.assertEquals("abcd1234", assemblies.getItems().getJSONObject(0).getString("assembly_id"));
+        Assertions.assertEquals("efgh5678", assemblies.getItems().getJSONObject(1).getString("assembly_id"));
+    }
+
+    @Test
     public void listAssemblies() throws RequestException, LocalOperationException, IOException {
 
         mockServerClient.when(HttpRequest.request()
