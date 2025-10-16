@@ -25,7 +25,8 @@ package com.transloadit.sdk;
  *         }
  *     }
  * };
- * }</pre>
+ * }
+ * }</code></pre>
  *
  * <p>For asynchronous implementations, consider using CompletableFuture or similar patterns
  * to bridge async operations to this synchronous interface.</p>

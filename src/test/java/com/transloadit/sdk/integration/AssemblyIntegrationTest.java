@@ -2,8 +2,6 @@ package com.transloadit.sdk.integration;
 
 import com.transloadit.sdk.Assembly;
 import com.transloadit.sdk.Transloadit;
-import com.transloadit.sdk.exceptions.LocalOperationException;
-import com.transloadit.sdk.exceptions.RequestException;
 import com.transloadit.sdk.response.AssemblyResponse;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Assertions;
