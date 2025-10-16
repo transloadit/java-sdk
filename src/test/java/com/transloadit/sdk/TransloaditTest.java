@@ -61,6 +61,34 @@ public class TransloaditTest extends MockHttpService {
      * @throws RequestException        if communication with the server goes wrong.
      * @throws IOException             if Test resource "assembly.json" is missing.
      */
+
+    @Test
+    public void constructorWithSignatureProviderEnablesSigning() {
+        SignatureProvider provider = params -> "signature";
+        Transloadit client = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+
+        Assertions.assertSame(provider, client.getSignatureProvider());
+        Assertions.assertTrue(client.shouldSignRequest);
+        Assertions.assertNull(client.secret);
+    }
+
+    @Test
+    public void setSignatureProviderTogglesSigningBasedOnSecret() {
+        Transloadit noSecret = new Transloadit("KEY", (String) null, 5 * 60, "http://localhost:" + PORT);
+        Assertions.assertFalse(noSecret.shouldSignRequest);
+
+        SignatureProvider provider = params -> "signature";
+        noSecret.setSignatureProvider(provider);
+        Assertions.assertTrue(noSecret.shouldSignRequest);
+
+        noSecret.setSignatureProvider(null);
+        Assertions.assertFalse(noSecret.shouldSignRequest);
+
+        Transloadit withSecret = new Transloadit("KEY", "SECRET", "http://localhost:" + PORT);
+        withSecret.setSignatureProvider(null);
+        Assertions.assertTrue(withSecret.shouldSignRequest);
+    }
+
     @Test
     public void getAssembly() throws LocalOperationException, RequestException, IOException {
         mockServerClient.when(HttpRequest.request()

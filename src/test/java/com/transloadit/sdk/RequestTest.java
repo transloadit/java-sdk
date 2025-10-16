@@ -2,8 +2,6 @@ package com.transloadit.sdk;
 
 import com.transloadit.sdk.exceptions.LocalOperationException;
 import com.transloadit.sdk.exceptions.RequestException;
-
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,15 +12,14 @@ import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
-//CHECKSTYLE:OFF
-import java.util.Map;  // Suppress warning as the Map import is needed for the JavaDoc Comments
+import java.util.Map;
 
 import static org.mockserver.model.HttpError.error;
-//CHECKSTYLE:ON
 
 /**
  * Unit test for {@link Request} class. Api-Responses are simulated by mocking the server's response.
@@ -180,6 +177,42 @@ public class RequestTest extends MockHttpService {
     /**
      * Test secure nonce generation with.
      */
+
+    @Test
+    public void postUsesSignatureProviderWhenPresent() throws Exception {
+        final boolean[] invoked = {false};
+        final String expectedSignature = "providedSignature";
+        SignatureProvider provider = params -> {
+            invoked[0] = true;
+            return expectedSignature;
+        };
+
+        Transloadit client = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+        Request providerRequest = new Request(client);
+
+        mockServerClient.when(HttpRequest.request().withPath("/signature-test").withMethod("POST"))
+                .respond(HttpResponse.response().withStatusCode(200));
+
+        providerRequest.post("/signature-test", new HashMap<>());
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/signature-test").withMethod("POST"));
+        String body = recorded[0].getBodyAsString();
+
+        Assertions.assertTrue(invoked[0], "Signature provider should be called");
+        Assertions.assertTrue(body.contains(expectedSignature), "Signature should come from provider");
+    }
+
+    @Test
+    public void signatureProviderExceptionIsWrapped() {
+        SignatureProvider provider = params -> { throw new Exception("boom"); };
+        Transloadit client = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+        Request providerRequest = new Request(client);
+
+        Assertions.assertThrows(LocalOperationException.class, () ->
+                providerRequest.post("/signature-error", new HashMap<>()));
+    }
+
     @Test
     public void getNonce() {
         String cipher = "Blowfish";
