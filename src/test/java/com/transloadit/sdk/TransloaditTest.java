@@ -68,11 +68,15 @@ public class TransloaditTest extends MockHttpService {
     @Test
     public void constructorWithSignatureProviderEnablesSigning() {
         SignatureProvider provider = params -> "signature";
-        Transloadit client = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+        Transloadit urlClient = new Transloadit("KEY", provider, "http://localhost:" + PORT);
+        Transloadit defaultClient = new Transloadit("KEY", provider);
 
-        Assertions.assertSame(provider, client.getSignatureProvider());
-        Assertions.assertTrue(client.shouldSignRequest);
-        Assertions.assertNull(client.secret);
+        Assertions.assertSame(provider, urlClient.getSignatureProvider());
+        Assertions.assertSame(provider, defaultClient.getSignatureProvider());
+        Assertions.assertTrue(urlClient.shouldSignRequest);
+        Assertions.assertTrue(defaultClient.shouldSignRequest);
+        Assertions.assertNull(urlClient.secret);
+        Assertions.assertNull(defaultClient.secret);
     }
 
     /**
@@ -93,6 +97,11 @@ public class TransloaditTest extends MockHttpService {
         Transloadit withSecret = new Transloadit("KEY", "SECRET", "http://localhost:" + PORT);
         withSecret.setSignatureProvider(null);
         Assertions.assertTrue(withSecret.shouldSignRequest);
+
+        Transloadit withSecretDefaultUrl = new Transloadit("KEY", "SECRET");
+        withSecretDefaultUrl.setSignatureProvider(provider);
+        Assertions.assertTrue(withSecretDefaultUrl.shouldSignRequest);
+        Assertions.assertSame(provider, withSecretDefaultUrl.getSignatureProvider());
     }
 
     @Test

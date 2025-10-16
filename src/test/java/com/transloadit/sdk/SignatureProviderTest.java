@@ -85,6 +85,17 @@ public class SignatureProviderTest {
     }
 
     @Test
+    void toPayloadFallsBackToBuiltInSignature() throws Exception {
+        Transloadit transloadit = new Transloadit("KEY", "SECRET");
+        Request request = new Request(transloadit);
+
+        Map<String, Object> data = new HashMap<>();
+        Map<String, String> payload = invokeToPayload(request, data);
+        Assertions.assertTrue(payload.containsKey("signature"));
+        Assertions.assertTrue(payload.get("signature").startsWith("sha384:"));
+    }
+
+    @Test
     void toPayloadWrapsProviderExceptions() throws Exception {
         SignatureProvider provider = params -> {
             throw new IllegalStateException("backend unavailable");
