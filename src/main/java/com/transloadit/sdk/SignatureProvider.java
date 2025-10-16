@@ -9,7 +9,7 @@ package com.transloadit.sdk;
  * on your backend server, preventing it from being exposed in client applications.</p>
  *
  * <p>Example implementation:</p>
- * <pre>{@code
+ * <pre><code>
  * public final class RemoteSignatureProvider implements SignatureProvider {
  *     private final HttpClient httpClient;
  *
@@ -17,7 +17,7 @@ package com.transloadit.sdk;
  *         this.httpClient = httpClient;
  *     }
  *
- *     @Override
+ *     {@literal @}Override
  *     public String generateSignature(String paramsJson) throws Exception {
  *         HttpResponse response = httpClient.post("/api/sign")
  *             .body(paramsJson)
@@ -29,7 +29,7 @@ package com.transloadit.sdk;
  *         return response.body().getString("signature");
  *     }
  * }
- * </pre>
+ * </code></pre>
  *
  * <p>For asynchronous implementations, consider using CompletableFuture or similar patterns
  * to bridge async operations to this synchronous interface.</p>
