@@ -12,8 +12,9 @@ Context: After reintroducing signature provider support and overhauling the Andr
 
 ### android-sdk
 - ✅ settings.gradle fallback to Git source dependency for java-sdk (done).
-- ✅ Docker script updated to run `assemble` + `check`.
-- [ ] Docker run still fails: `./scripts/test-in-docker.sh check` dies on `:examples:generateDebugAndroidTestLintModel` because the composite build cannot resolve `/java-sdk/build/libs/transloadit-2.1.0.jar`. Need to ensure the included java-sdk artifact is built/accessible (maybe trigger `:java-sdk:assemble` within the container, adjust lint inputs, or point lint to the workspace copy).
+- ✅ Docker script updated to run `assemble` + `check` (now also mounts the local `java-sdk` checkout by default but can be disabled via `ANDROID_SDK_USE_LOCAL_JAVA_SDK=0`).
+- ✅ Gradle dependencies temporarily point to `java-sdk`'s `sig-injection` branch via `version { branch = 'sig-injection' }`.
+- [ ] Docker run now fails on `:transloadit-android:generateReleaseLintModel` (complains “Could not find jar for project :java-sdk”) even though `:java-sdk:jar` runs. Need to teach lint where the composite build’s jar lives or generate/publish an artifact it accepts.
 - [ ] Once docker script is stable, ensure CI passes.
 
 ### General
@@ -21,5 +22,5 @@ Context: After reintroducing signature provider support and overhauling the Andr
 - [ ] Keep docker scripts almost identical across repos going forward so fixes apply to both.
 
 ## Notes for future session
-- Android docker build currently fails because lint cannot locate the included java-sdk jar when generating the debug AndroidTest model. Investigate running `./gradlew :java-sdk:assemble` first, wiring lint to the workspace output, or disabling that lint variant in Docker builds.
+- Lint still can’t resolve the composite `java-sdk` jar for release variants; explore copying the jar into a location lint expects, tweaking lint inputs, or supplying a synthetic `lintPublish` artifact. We should revert to the published `main` branch once java-sdk 2.1.0 is released.
 - Keep an eye on `.android` analytics warning (Gradle complaining about metrics). Possibly set `ANDROID_HOME`/`ANDROID_SDK_ROOT` or disable analytics via env `ANDROID_SDK_ROOT` etc.
