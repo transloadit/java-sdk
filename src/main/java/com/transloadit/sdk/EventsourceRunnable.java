@@ -202,8 +202,10 @@ class EventsourceRunnable implements Runnable {
     }
 
     protected void handleFaultEvent(FaultEvent faultEvent) {
-        stopRequested = true;
-        shutdownEventSource();
+        if (assemblyFinished) {
+            stopRequested = true;
+            shutdownEventSource();
+        }
         // Debug output, uncomment if needed
         // String data = faultEvent.toString();
         // System.out.printf("Fault: %s\n", data);
