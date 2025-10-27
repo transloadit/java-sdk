@@ -130,10 +130,11 @@ public class RequestTest extends MockHttpService {
     public void get() throws Exception {
         request.get("/foo");
 
+        String expectedClientHeader = transloadit.getVersionInfo();
         mockServerClient.verify(HttpRequest.request()
                 .withPath("/foo")
                 .withMethod("GET")
-                .withHeader("Transloadit-Client", "java-sdk:2.1.0"));
+                .withHeader("Transloadit-Client", expectedClientHeader));
 
     }
 
