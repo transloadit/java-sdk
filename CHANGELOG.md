@@ -1,3 +1,9 @@
+### 2.2.0 / 2025-10-27
+
+- Prevent the SSE client from reconnecting after `assembly_finished`, eliminating spurious `assembly_error` callbacks and timeouts.
+- Add regression coverage with a targeted unit test and a live SSE integration test executed via the Docker harness.
+- Confirm the new tests run in CI alongside the existing Gradle `check` workflow.
+
 ### 2.1.0 / 2025-10-15
 
 - Added support for external signature generation via `SignatureProvider` interface ([#19](https://github.com/transloadit/android-sdk/issues/19))

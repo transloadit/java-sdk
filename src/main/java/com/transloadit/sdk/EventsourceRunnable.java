@@ -101,6 +101,11 @@ class EventsourceRunnable implements Runnable {
         String eventName = messageEvent.getEventName();
         String data = messageEvent.getData();
 
+        if (assemblyFinished) {
+            shutdownEventSource();
+            return;
+        }
+
         // Check if the event is a message event without
         if (eventName.equals("message")) {
             switch (data) {
@@ -110,8 +115,9 @@ class EventsourceRunnable implements Runnable {
                         assemblyListener.onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
                     } catch (RequestException  | LocalOperationException e) {
                         assemblyListener.onError(e);
+                    } finally {
+                        shutdownEventSource();
                     }
-                    this.eventSource.close();
                     break;
                 case "assembly_upload_meta_data_extracted":
                     assemblyListener.onMetadataExtracted();
@@ -139,8 +145,12 @@ class EventsourceRunnable implements Runnable {
                     break;
 
                 case "assembly_error":
+                    if (assemblyFinished) {
+                        shutdownEventSource();
+                        break;
+                    }
                     assemblyListener.onError(new RequestException(data));
-                    this.eventSource.close();
+                    shutdownEventSource();
                     break;
 
                 case "assembly_execution_progress":
@@ -167,10 +177,29 @@ class EventsourceRunnable implements Runnable {
     }
 
     protected void handleFaultEvent(FaultEvent faultEvent) {
+        if (assemblyFinished) {
+            shutdownEventSource();
+        }
         // Debug output, uncomment if needed
         // String data = faultEvent.toString();
         // System.out.printf("Fault: %s\n", data);
         // System.out.println("Starting Over");
+    }
+
+    private void shutdownEventSource() {
+        if (this.eventSource == null) {
+            return;
+        }
+        try {
+            this.eventSource.stop();
+        } catch (Exception ignore) {
+            // Ignore cleanup exceptions
+        }
+        try {
+            this.eventSource.close();
+        } catch (Exception ignore) {
+            // Ignore cleanup exceptions
+        }
     }
 
 }
