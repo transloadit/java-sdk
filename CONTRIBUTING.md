@@ -40,7 +40,8 @@ High-level checklist for maintainers:
 
 1. Bump the version in `src/main/resources/java-sdk-version/version.properties` and update `CHANGELOG.md`.
 2. Merge the release branch into `main`.
-3. Create a git tag that matches the new version and publish a GitHub release (include the changelog). Tagging `main` triggers the release workflow.
-4. Wait for Sonatype to sync the artifact (this can take a few hours).
+3. Create a git tag for `main` that matches the new version
+4. Publish a GitHub release (include the changelog). This triggers the release workflow.
+5. Wait for Sonatype to sync the artifact (this can take a few hours).
 
 The required signing keys and credentials are stored as GitHub secrets. If you need access or spot an issue with the release automation, please reach out to the Transloadit team via the issue tracker or support channels.
