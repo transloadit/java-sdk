@@ -1,3 +1,8 @@
+### 2.2.1 / 2025-10-27
+
+- Ensure the SSE client drains pending events before shutdown while still tolerating transient network faults prior to completion.
+- Prevent duplicate `assembly_finished` callbacks by only stopping once and leaving reconnect handling to the client until completion.
+
 ### 2.2.0 / 2025-10-27
 
 - Prevent the SSE client from reconnecting after `assembly_finished`, eliminating spurious `assembly_error` callbacks and timeouts.

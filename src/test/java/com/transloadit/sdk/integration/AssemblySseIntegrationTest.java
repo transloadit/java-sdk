@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -51,6 +52,8 @@ class AssemblySseIntegrationTest {
             AtomicReference<AssemblyResponse> finishedResponse = new AtomicReference<>();
             CompletableFuture<Void> finishedFuture = new CompletableFuture<>();
             CompletableFuture<Exception> errorFuture = new CompletableFuture<>();
+            CountDownLatch resultLatch = new CountDownLatch(1);
+            AtomicReference<JSONArray> resultPayload = new AtomicReference<>();
 
             AssemblyListener listener = new AssemblyListener() {
                 @Override
@@ -97,6 +100,14 @@ class AssemblySseIntegrationTest {
 
                 @Override
                 public void onAssemblyResultFinished(JSONArray result) {
+                    System.out.println("[AssemblySseIntegrationTest] assembly_result_finished payload=" + result);
+                    if (result != null && result.length() >= 2) {
+                        String stepName = result.optString(0, null);
+                        if ("resize".equals(stepName)) {
+                            resultPayload.compareAndSet(null, cloneJsonArray(result));
+                            resultLatch.countDown();
+                        }
+                    }
                 }
             };
 
@@ -120,6 +131,12 @@ class AssemblySseIntegrationTest {
             assertTrue(completed.isFinished(), "Assembly should be finished");
             assertEquals("ASSEMBLY_COMPLETED", completed.json().optString("ok"));
 
+            boolean resultSeen = resultLatch.await(2, TimeUnit.MINUTES);
+            assertTrue(resultSeen, "Timed out waiting for assembly_result_finished event");
+            JSONArray resizePayload = resultPayload.get();
+            assertNotNull(resizePayload, "Resize SSE payload missing");
+            assertEquals("resize", resizePayload.optString(0));
+
             try {
                 Exception unexpected = errorFuture.get(30, TimeUnit.SECONDS);
                 fail("Unexpected SSE error after completion: " + unexpected);
@@ -132,6 +149,10 @@ class AssemblySseIntegrationTest {
             } catch (IOException ignore) {
             }
         }
+    }
+
+    private static JSONArray cloneJsonArray(JSONArray array) {
+        return array == null ? null : new JSONArray(array.toString());
     }
 
     private static Path createTempUpload() throws IOException {

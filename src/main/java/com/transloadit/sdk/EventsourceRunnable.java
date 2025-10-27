@@ -6,6 +6,7 @@ import com.launchdarkly.eventsource.ErrorStrategy;
 import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.FaultEvent;
 import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.ReadyState;
 import com.launchdarkly.eventsource.RetryDelayStrategy;
 import com.launchdarkly.eventsource.StartedEvent;
 import com.launchdarkly.eventsource.StreamEvent;
@@ -28,6 +29,8 @@ class EventsourceRunnable implements Runnable {
     protected EventSource eventSource;
 
     protected Transloadit transloadit;
+    protected boolean stopRequested;
+    protected boolean assemblyFinishedNotified;
 
     /**
      * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
@@ -64,16 +67,21 @@ class EventsourceRunnable implements Runnable {
     @Override
     public void run() {
         this.assemblyFinished = false;
+        this.stopRequested = false;
+        this.assemblyFinishedNotified = false;
         try {
             eventSource.start();
         } catch (StreamException e) {
             assemblyListener.onError(e);
+            stopRequested = true;
         }
 
-        while (!assemblyFinished) {
+        while (!stopRequested) {
+            boolean processedEvent = false;
             Iterable<StreamEvent> events = eventSource.anyEvents();
             Iterator<StreamEvent> eventIterator = events.iterator();
-            if (eventIterator.hasNext()) {
+            while (eventIterator.hasNext()) {
+                processedEvent = true;
                 StreamEvent streamEvent = eventIterator.next();
                 if (streamEvent instanceof MessageEvent) {
                     handleMessageEvent((MessageEvent) streamEvent);
@@ -85,7 +93,24 @@ class EventsourceRunnable implements Runnable {
                     handleFaultEvent((FaultEvent) streamEvent);
                 }
             }
+
+            if (!processedEvent) {
+                ReadyState state = eventSource.getState();
+                if (state == ReadyState.CLOSED || state == ReadyState.SHUTDOWN) {
+                    stopRequested = true;
+                }
+                if (!stopRequested) {
+                    try {
+                        Thread.sleep(25);
+                    } catch (InterruptedException interruptedException) {
+                        Thread.currentThread().interrupt();
+                        stopRequested = true;
+                    }
+                }
+            }
         }
+
+        shutdownEventSource();
     }
 
     /**
@@ -101,22 +126,22 @@ class EventsourceRunnable implements Runnable {
         String eventName = messageEvent.getEventName();
         String data = messageEvent.getData();
 
-        if (assemblyFinished) {
-            shutdownEventSource();
-            return;
-        }
-
         // Check if the event is a message event without
         if (eventName.equals("message")) {
             switch (data) {
                 case "assembly_finished":
                     assemblyFinished = true;
-                    try {
-                        assemblyListener.onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
-                    } catch (RequestException  | LocalOperationException e) {
-                        assemblyListener.onError(e);
-                    } finally {
-                        shutdownEventSource();
+                    stopRequested = true;
+                    if (!assemblyFinishedNotified) {
+                        assemblyFinishedNotified = true;
+                        try {
+                            assemblyListener.onAssemblyFinished(transloadit.getAssemblyByUrl(response.getSslUrl()));
+                        } catch (RequestException  | LocalOperationException e) {
+                            assemblyListener.onError(e);
+                        }
+                    }
+                    if (eventSource != null) {
+                        eventSource.stop();
                     }
                     break;
                 case "assembly_upload_meta_data_extracted":
@@ -146,10 +171,10 @@ class EventsourceRunnable implements Runnable {
 
                 case "assembly_error":
                     if (assemblyFinished) {
-                        shutdownEventSource();
                         break;
                     }
                     assemblyListener.onError(new RequestException(data));
+                    stopRequested = true;
                     shutdownEventSource();
                     break;
 
@@ -178,6 +203,7 @@ class EventsourceRunnable implements Runnable {
 
     protected void handleFaultEvent(FaultEvent faultEvent) {
         if (assemblyFinished) {
+            stopRequested = true;
             shutdownEventSource();
         }
         // Debug output, uncomment if needed
