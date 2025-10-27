@@ -1,3 +1,8 @@
+### 2.2.3 / 2025-10-27
+
+- Extend the SSE listener grace window to 10 seconds so `assembly_result_finished` payloads are not dropped after `assembly_finished`.
+- Add `EventsourceRunnableDelayedResultTest` to replay finish-before-result sequences and guard against regressions.
+
 ### 2.2.2 / 2025-10-27
 
 - Add regression coverage ensuring `assembly_result_finished` events are processed even if `assembly_finished` arrives first.
