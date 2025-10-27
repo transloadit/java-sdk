@@ -1,3 +1,8 @@
+### 2.2.2 / 2025-10-27
+
+- Add regression coverage ensuring `assembly_result_finished` events are processed even if `assembly_finished` arrives first.
+- Keep the SSE listener draining briefly after completion to capture trailing result payloads while tolerating reconnect-driven duplicates.
+
 ### 2.2.1 / 2025-10-27
 
 - Ensure the SSE client drains pending events before shutdown while still tolerating transient network faults prior to completion.
