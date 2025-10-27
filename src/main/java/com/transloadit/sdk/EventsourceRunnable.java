@@ -22,7 +22,7 @@ import org.json.JSONObject;
 import java.util.Iterator;
 
 class EventsourceRunnable implements Runnable {
-    private static final long FINISH_DRAIN_TIMEOUT_MS = 1500L;
+    private static final long FINISH_DRAIN_TIMEOUT_MS = 10000L;
 
     protected boolean assemblyFinished;
     protected AssemblyListener assemblyListener;
