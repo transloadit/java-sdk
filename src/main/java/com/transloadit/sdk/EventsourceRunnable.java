@@ -22,6 +22,8 @@ import org.json.JSONObject;
 import java.util.Iterator;
 
 class EventsourceRunnable implements Runnable {
+    private static final long FINISH_DRAIN_TIMEOUT_MS = 1500L;
+
     protected boolean assemblyFinished;
     protected AssemblyListener assemblyListener;
 
@@ -31,6 +33,7 @@ class EventsourceRunnable implements Runnable {
     protected Transloadit transloadit;
     protected boolean stopRequested;
     protected boolean assemblyFinishedNotified;
+    protected long assemblyFinishedAtMillis;
 
     /**
      * Constructor for {@link EventsourceRunnable}. It creates a new {@link EventSource} instance, wrapped in a
@@ -69,6 +72,7 @@ class EventsourceRunnable implements Runnable {
         this.assemblyFinished = false;
         this.stopRequested = false;
         this.assemblyFinishedNotified = false;
+        this.assemblyFinishedAtMillis = 0L;
         try {
             eventSource.start();
         } catch (StreamException e) {
@@ -96,9 +100,19 @@ class EventsourceRunnable implements Runnable {
 
             if (!processedEvent) {
                 ReadyState state = eventSource.getState();
-                if (state == ReadyState.CLOSED || state == ReadyState.SHUTDOWN) {
+                long now = System.currentTimeMillis();
+                if (assemblyFinished) {
+                    if (assemblyFinishedAtMillis == 0L) {
+                        assemblyFinishedAtMillis = now;
+                    }
+                    boolean graceExpired = now - assemblyFinishedAtMillis >= FINISH_DRAIN_TIMEOUT_MS;
+                    if (graceExpired || state == ReadyState.CLOSED || state == ReadyState.SHUTDOWN) {
+                        stopRequested = true;
+                    }
+                } else if (state == ReadyState.CLOSED || state == ReadyState.SHUTDOWN) {
                     stopRequested = true;
                 }
+
                 if (!stopRequested) {
                     try {
                         Thread.sleep(25);
@@ -131,7 +145,7 @@ class EventsourceRunnable implements Runnable {
             switch (data) {
                 case "assembly_finished":
                     assemblyFinished = true;
-                    stopRequested = true;
+                    assemblyFinishedAtMillis = System.currentTimeMillis();
                     if (!assemblyFinishedNotified) {
                         assemblyFinishedNotified = true;
                         try {
@@ -139,9 +153,6 @@ class EventsourceRunnable implements Runnable {
                         } catch (RequestException  | LocalOperationException e) {
                             assemblyListener.onError(e);
                         }
-                    }
-                    if (eventSource != null) {
-                        eventSource.stop();
                     }
                     break;
                 case "assembly_upload_meta_data_extracted":
