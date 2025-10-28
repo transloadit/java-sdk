@@ -56,7 +56,7 @@ public class AssemblyIntegrationTest {
 
     @Test
     void directUploadOriginalStepProducesResult() throws Exception {
-        Assumptions.assumeTrue("1".equals(System.getenv("JAVA_SDK_E2E_SMARTCDN")), "set JAVA_SDK_E2E_SMARTCDN=1 to run");
+        Assumptions.assumeTrue("1".equals(System.getenv("JAVA_SDK_E2E")), "set JAVA_SDK_E2E=1 to run");
 
         String key = System.getenv("TRANSLOADIT_KEY");
         String secret = System.getenv("TRANSLOADIT_SECRET");
