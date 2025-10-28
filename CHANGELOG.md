@@ -1,3 +1,8 @@
+### 2.2.4 / 2025-10-28
+
+- Bundle chameleon.jpg in the repository and enable the `directUploadOriginalStepProducesResult` integration test via `JAVA_SDK_E2E`.
+- Simplify the SSE listener by stopping immediately after `assembly_finished` now that trailing results are guaranteed.
+
 ### 2.2.3 / 2025-10-27
 
 - Extend the SSE listener grace window to 10 seconds so `assembly_result_finished` payloads are not dropped after `assembly_finished`.
