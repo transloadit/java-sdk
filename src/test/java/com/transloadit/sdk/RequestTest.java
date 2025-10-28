@@ -52,7 +52,7 @@ public class RequestTest extends MockHttpService {
     }
 
     private JSONObject runSmartSig(String paramsJson, String key, String secret) throws Exception {
-        ProcessBuilder builder = new ProcessBuilder("npx", "--yes", "transloadit@4.0.4", "smart_sig");
+        ProcessBuilder builder = new ProcessBuilder("npx", "--yes", "transloadit@4.0.5", "sig");
         builder.environment().put("TRANSLOADIT_KEY", key);
         builder.environment().put("TRANSLOADIT_SECRET", secret);
 
@@ -275,7 +275,7 @@ public class RequestTest extends MockHttpService {
     }
 
     /**
-     * Built-in signing should match the Node smart_sig CLI output.
+     * Built-in signing should match the Node `npx transloadit sig` CLI output.
      */
     @Test
     public void payloadSignatureMatchesSmartSigCli() throws Exception {
