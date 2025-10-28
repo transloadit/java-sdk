@@ -71,4 +71,13 @@ if [[ -f .env ]]; then
   DOCKER_ARGS+=(--env-file "$PWD/.env")
 fi
 
+
+EXTRA_ENVS=(JAVA_SDK_E2E_SMARTCDN TRANSLOADIT_HOST TRANSLOADIT_KEY TRANSLOADIT_SECRET)
+for var in "${EXTRA_ENVS[@]}"; do
+  value="${!var:-}"
+  if [[ -n "$value" ]]; then
+    DOCKER_ARGS+=(-e "$var=$value")
+  fi
+done
+
 exec docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "$RUN_CMD"
