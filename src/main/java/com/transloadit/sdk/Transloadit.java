@@ -320,6 +320,29 @@ public class Transloadit {
     }
 
     /**
+     * Creates an assembly.
+     *
+     * @param options a Map of options to create.
+     * @param extraData extra form data to create the assembly with.
+     * @return {@link AssemblyResponse}
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
+    // <api2-generated-endpoint createAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public AssemblyResponse createAssembly(Map<String, Object> options, Map<String, String> extraData)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new AssemblyResponse(request.post("/assemblies", options, extraData, null, null));
+    }
+
+    // </api2-generated-endpoint createAssembly>
+
+    /**
      * Returns a single assembly.
      *
      * @param id id of the Assembly to retrieve.

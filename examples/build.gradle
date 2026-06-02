@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     implementation rootProject
+    implementation 'io.tus.java.client:tus-java-client:0.5.1'
     implementation 'org.json:json:20231013'
 }
 buildscript {
@@ -42,4 +43,9 @@ compileTestKotlin {
 tasks.register('api2DevdockTemplateLifecycle', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.transloadit.examples.Api2DevdockTemplateLifecycle'
+}
+
+tasks.register('api2DevdockTusAssembly', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTusAssembly'
 }
