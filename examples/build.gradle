@@ -10,6 +10,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
@@ -36,4 +37,9 @@ compileTestKotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_1_8)
     }
+}
+
+tasks.register('api2DevdockTemplateLifecycle', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTemplateLifecycle'
 }

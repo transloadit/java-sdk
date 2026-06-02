@@ -419,6 +419,29 @@ public class Transloadit {
     }
 
     /**
+     * Creates a template.
+     *
+     * @param options a Map of options to create.
+     * @return {@link Response}
+     *
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
+    // <api2-generated-endpoint createTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createTemplate(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/templates", options));
+    }
+
+    // </api2-generated-endpoint createTemplate>
+
+    /**
      * Returns a single template.
      *
      * @param id id of the template to retrieve.
