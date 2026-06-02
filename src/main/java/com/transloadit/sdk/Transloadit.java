@@ -327,10 +327,18 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getAssemblyStatus>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse getAssembly(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get("/assemblies/" + id));
     }
+
+    // </api2-generated-endpoint getAssemblyStatus>
 
     /**
      * Returns a single assembly.
@@ -354,11 +362,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint cancelAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse cancelAssembly(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.delete(url, new HashMap<String, Object>()));
     }
+
+    // </api2-generated-endpoint cancelAssembly>
 
     /**
      * Returns a list of all assemblies under the user account.
@@ -368,11 +384,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint listAssemblies>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public ListResponse listAssemblies(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/assemblies", options));
     }
+
+    // </api2-generated-endpoint listAssemblies>
 
     /**
      * Returns a list of all assemblies under the user account.
@@ -403,10 +427,18 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response getTemplate(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/templates/" + id));
     }
+
+    // </api2-generated-endpoint getTemplate>
 
     /**
      * Updates the template with the specified id.
@@ -418,11 +450,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint updateTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response updateTemplate(String id, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.put("/templates/" + id, options));
     }
+
+    // </api2-generated-endpoint updateTemplate>
 
     /**
      * Deletes a template.
@@ -433,11 +473,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint deleteTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response deleteTemplate(String id)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
     }
+
+    // </api2-generated-endpoint deleteTemplate>
 
     /**
      * Returns a list of all templates under the user account.
@@ -448,11 +496,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint listTemplates>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public ListResponse listTemplates(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/templates", options));
     }
+
+    // </api2-generated-endpoint listTemplates>
 
     /**
      * Returns a list of all templates under the user account.
@@ -477,11 +533,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getBill>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response getBill(int month, int year)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/bill/" + year + String.format("-%02d", month)));
     }
+
+    // </api2-generated-endpoint getBill>
 
     /**
      * Returns Array List of String encoded Exceptions, which should be qualified for a retry attempt.
