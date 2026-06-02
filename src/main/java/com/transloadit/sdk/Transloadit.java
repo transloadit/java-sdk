@@ -371,6 +371,114 @@ public class Transloadit {
 
     // </api2-generated-feature createTusAssembly>
 
+    // <api2-generated-feature uploadTusAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Create a TUS-ready Assembly, upload one file with the TUS protocol, and wait for the Assembly to finish.
+     */
+    public UploadTusAssemblyResult uploadTusAssembly(int fileCount, byte[] content, String fieldname, String filename, Map<String, String> userMeta)
+            throws RequestException, LocalOperationException {
+        AssemblyResponse createdAssembly = createTusAssembly(fileCount);
+
+        java.net.URL endpointUrl;
+        try {
+            endpointUrl = new java.net.URL(createdAssembly.getTusUrl());
+        } catch (java.net.MalformedURLException error) {
+            throw new LocalOperationException(error);
+        }
+
+        Map<String, String> metadataMap = new HashMap<String, String>();
+        if (userMeta != null) {
+            for (Map.Entry<String, String> entry : userMeta.entrySet()) {
+                metadataMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        metadataMap.put("assembly_url", String.valueOf(createdAssembly.getUrl()));
+        metadataMap.put("fieldname", String.valueOf(fieldname));
+        metadataMap.put("filename", String.valueOf(filename));
+
+        okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient();
+
+        String uploadUrlText;
+        okhttp3.Request.Builder createRequestBuilder = new okhttp3.Request.Builder()
+                .url(endpointUrl)
+                .method("POST", okhttp3.RequestBody.create(null, new byte[0]));
+        createRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        createRequestBuilder.addHeader("Upload-Length", String.valueOf(content.length));
+        List<String> createMetadataParts = new ArrayList<String>();
+        for (Map.Entry<String, String> entry : metadataMap.entrySet()) {
+            createMetadataParts.add(entry.getKey() + " " + java.util.Base64.getEncoder().encodeToString(entry.getValue().getBytes(StandardCharsets.UTF_8)));
+        }
+        createRequestBuilder.addHeader("Upload-Metadata", String.join(",", createMetadataParts));
+        okhttp3.Request createRequest = createRequestBuilder.build();
+
+        okhttp3.Response createResponse;
+        try {
+            createResponse = httpClient.newCall(createRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (createResponse.code() != 201) {
+                throw new RequestException(String.format("TUS create returned HTTP %d, expected 201", createResponse.code()));
+            }
+            String uploadUrlLocation = createResponse.header("Location");
+            if (uploadUrlLocation == null || uploadUrlLocation.isEmpty()) {
+                throw new RequestException("TUS create did not return a Location header");
+            }
+            java.net.URL uploadUrl;
+            try {
+                uploadUrl = new java.net.URL(endpointUrl, uploadUrlLocation);
+            } catch (java.net.MalformedURLException error) {
+                throw new LocalOperationException(error);
+            }
+            uploadUrlText = uploadUrl.toString();
+        } finally {
+            createResponse.close();
+        }
+
+        okhttp3.Request.Builder uploadRequestBuilder = new okhttp3.Request.Builder()
+                .url(uploadUrlText)
+                .method("PATCH", okhttp3.RequestBody.create(null, content));
+        uploadRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        uploadRequestBuilder.addHeader("Upload-Offset", "0");
+        uploadRequestBuilder.addHeader("Content-Type", "application/offset+octet-stream");
+        okhttp3.Request uploadRequest = uploadRequestBuilder.build();
+
+        okhttp3.Response uploadResponse;
+        try {
+            uploadResponse = httpClient.newCall(uploadRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (uploadResponse.code() != 204) {
+                throw new RequestException(String.format("TUS upload returned HTTP %d, expected 204", uploadResponse.code()));
+            }
+            int remoteOffset;
+            try {
+                remoteOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
+            } catch (NumberFormatException error) {
+                throw new LocalOperationException(error);
+            }
+            if (remoteOffset != content.length) {
+                throw new RequestException(String.format("TUS upload offset %d, expected %d", remoteOffset, content.length));
+            }
+        } finally {
+            uploadResponse.close();
+        }
+
+        AssemblyResponse completedAssembly = waitForAssembly(createdAssembly.getSslUrl());
+
+        return new UploadTusAssemblyResult(completedAssembly, uploadUrlText);
+    }
+
+    // </api2-generated-feature uploadTusAssembly>
+
     /**
      * Returns a single assembly.
      *

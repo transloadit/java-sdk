@@ -1,19 +1,15 @@
 package com.transloadit.examples;
 
 import com.transloadit.sdk.Transloadit;
-import com.transloadit.sdk.response.AssemblyResponse;
-import io.tus.java.client.TusClient;
-import io.tus.java.client.TusUpload;
-import io.tus.java.client.TusUploader;
+import com.transloadit.sdk.UploadTusAssemblyResult;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -40,22 +36,27 @@ public final class Api2DevdockTusAssembly {
                 "feature-call")
                 .getJSONObject("input")
                 .getInt("file_count");
-        AssemblyResponse created = transloadit.createTusAssembly(fileCount);
-        JSONObject createResponse = created.json();
 
-        String uploadUrl = uploadScenarioBytes(scenario, createResponse);
-        AssemblyResponse completed = transloadit.waitForAssembly(
-                createResponse.getString("assembly_ssl_url"));
-        JSONObject status = completed.json();
+        JSONObject uploadConfig = scenario.getJSONObject("upload");
+        JSONObject source = uploadConfig.getJSONObject("source");
+        byte[] bytes = source.getString("value").getBytes(StandardCharsets.UTF_8);
+        UploadTusAssemblyResult uploadResult = transloadit.uploadTusAssembly(
+                fileCount,
+                bytes,
+                uploadConfig.getString("fieldName"),
+                uploadConfig.getString("fileName"),
+                uploadUserMeta(uploadConfig));
+        JSONObject status = uploadResult.getAssembly().json();
 
         JSONObject result = new JSONObject();
-        result.put("createResponse", createResponse);
+        result.put("createResponse", status);
         result.put("status", status);
-        result.put("uploadUrl", uploadUrl);
+        result.put("uploadUrl", uploadResult.getUploadUrl());
         writeResult(result);
 
         System.out.println("Java SDK devdock scenario " + scenario.getString("scenarioId")
-                + " uploaded to " + uploadUrl + " and finished with " + status.getString("ok"));
+                + " uploaded to " + uploadResult.getUploadUrl()
+                + " and finished with " + status.getString("ok"));
     }
 
     private static JSONObject loadScenario() throws Exception {
@@ -100,74 +101,19 @@ public final class Api2DevdockTusAssembly {
         return value;
     }
 
-    private static String uploadScenarioBytes(JSONObject scenario, JSONObject createResponse) throws Exception {
-        JSONObject uploadConfig = scenario.getJSONObject("upload");
-        JSONObject source = uploadConfig.getJSONObject("source");
-        byte[] bytes = source.getString("value").getBytes(StandardCharsets.UTF_8);
-
-        TusClient tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL(createResponse.getString("tus_url")));
-
-        TusUpload upload = new TusUpload();
-        upload.setInputStream(new ByteArrayInputStream(bytes));
-        upload.setSize(bytes.length);
-        upload.setFingerprint("api2-devdock-java-sdk-" + createResponse.getString("assembly_id"));
-        upload.setMetadata(uploadMetadata(scenario, createResponse));
-
-        TusUploader uploader = tusClient.createUpload(upload);
-        uploader.setChunkSize(bytes.length);
-        while (uploader.uploadChunk() > -1) {
-            // Upload the single scenario-owned source until tus-java-client reports completion.
-        }
-        uploader.finish(false);
-
-        return uploader.getUploadURL().toString();
-    }
-
-    private static Map<String, String> uploadMetadata(
-            JSONObject scenario,
-            JSONObject createResponse) {
+    private static Map<String, String> uploadUserMeta(JSONObject uploadConfig) {
         Map<String, String> metadata = new HashMap<String, String>();
-        JSONArray fields = scenario.getJSONObject("upload").getJSONArray("metadata");
-        for (int index = 0; index < fields.length(); index += 1) {
-            JSONObject field = fields.getJSONObject(index);
-            metadata.put(field.getString("name"), String.valueOf(resolveScenarioValue(
-                    field.getJSONObject("value"),
-                    scenario,
-                    createResponse)));
+        if (!uploadConfig.has("userMeta")) {
+            return metadata;
+        }
+
+        JSONObject userMeta = uploadConfig.getJSONObject("userMeta");
+        for (Iterator<String> keys = userMeta.keys(); keys.hasNext();) {
+            String key = keys.next();
+            metadata.put(key, String.valueOf(userMeta.get(key)));
         }
 
         return metadata;
-    }
-
-    private static Object resolveScenarioValue(
-            JSONObject value,
-            JSONObject scenario,
-            JSONObject createResponse) {
-        if (value.has("value")) {
-            return value.get("value");
-        }
-
-        JSONObject source = value.getJSONObject("source");
-        Object current;
-        if ("scenario".equals(source.getString("root"))) {
-            current = scenario;
-        } else if ("createResponse".equals(source.getString("root"))) {
-            current = createResponse;
-        } else {
-            throw new IllegalStateException("Unsupported scenario value root: " + source.getString("root"));
-        }
-
-        JSONArray path = source.getJSONArray("path");
-        for (int index = 0; index < path.length(); index += 1) {
-            if (!(current instanceof JSONObject)) {
-                throw new IllegalStateException("Cannot resolve scenario path through non-object value");
-            }
-
-            current = ((JSONObject) current).get(path.getString(index));
-        }
-
-        return current;
     }
 
     private static void writeResult(JSONObject result) throws Exception {
