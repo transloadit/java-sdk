@@ -400,11 +400,58 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getAssemblyStatus:urlAlternative>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse getAssemblyByUrl(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new AssemblyResponse(request.get(url));
     }
+
+    // </api2-generated-endpoint getAssemblyStatus:urlAlternative>
+
+    // <api2-generated-feature waitForAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Wait for an Assembly to finish uploading and executing.
+     * The assembly URL should be the assembly_ssl_url returned by createAssembly.
+     */
+    public AssemblyResponse waitForAssembly(String assemblyUrl)
+            throws RequestException, LocalOperationException {
+        List<String> responsePollValues = java.util.Arrays.asList(
+                "ASSEMBLY_UPLOADING", "ASSEMBLY_EXECUTING");
+        while (true) {
+            AssemblyResponse response = getAssemblyByUrl(assemblyUrl);
+            org.json.JSONObject responseJson = response.json();
+
+            // Abort polling if the assembly has entered an error state
+            if (!responseJson.optString("error").isEmpty()) {
+                return response;
+            }
+
+            // The polling is done if the assembly is not uploading or executing anymore.
+            if (!(responsePollValues.contains(responseJson.optString("ok")))) {
+                return response;
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                throw new LocalOperationException(error);
+            }
+        }
+    }
+
+    // </api2-generated-feature waitForAssembly>
 
     /**
      * cancels a running assembly.

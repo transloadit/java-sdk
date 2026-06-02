@@ -40,14 +40,18 @@ public final class Api2DevdockTusAssembly {
         JSONObject createResponse = created.json();
 
         String uploadUrl = uploadScenarioBytes(scenario, createResponse);
+        AssemblyResponse completed = transloadit.waitForAssembly(
+                createResponse.getString("assembly_ssl_url"));
+        JSONObject status = completed.json();
 
         JSONObject result = new JSONObject();
         result.put("createResponse", createResponse);
+        result.put("status", status);
         result.put("uploadUrl", uploadUrl);
         writeResult(result);
 
         System.out.println("Java SDK devdock scenario " + scenario.getString("scenarioId")
-                + " uploaded to " + uploadUrl);
+                + " uploaded to " + uploadUrl + " and finished with " + status.getString("ok"));
     }
 
     private static JSONObject loadScenario() throws Exception {
