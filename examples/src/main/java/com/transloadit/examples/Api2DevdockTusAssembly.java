@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -34,10 +33,10 @@ public final class Api2DevdockTusAssembly {
                 requiredEnv("TRANSLOADIT_SECRET"),
                 requiredEnv("TRANSLOADIT_ENDPOINT"));
 
-        JSONObject createRequest = scenario.getJSONObject("createTusAssembly").getJSONObject("request");
-        AssemblyResponse created = transloadit.createAssembly(
-                jsonObjectToMap(createRequest.getJSONObject("normalizedParams")),
-                jsonObjectToStringMap(createRequest.getJSONObject("formFields")));
+        int fileCount = scenario.getJSONObject("createTusAssembly")
+                .getJSONObject("input")
+                .getInt("file_count");
+        AssemblyResponse created = transloadit.createTusAssembly(fileCount);
         JSONObject createResponse = created.json();
 
         String uploadUrl = uploadScenarioBytes(scenario, createResponse);
@@ -138,30 +137,6 @@ public final class Api2DevdockTusAssembly {
         }
 
         return current;
-    }
-
-    private static Map<String, Object> jsonObjectToMap(JSONObject object) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        for (Iterator<String> keys = object.keys(); keys.hasNext();) {
-            String key = keys.next();
-            Object value = object.get(key);
-            if (value instanceof JSONObject) {
-                value = jsonObjectToMap((JSONObject) value);
-            }
-            map.put(key, value);
-        }
-
-        return map;
-    }
-
-    private static Map<String, String> jsonObjectToStringMap(JSONObject object) {
-        Map<String, String> map = new HashMap<String, String>();
-        for (Iterator<String> keys = object.keys(); keys.hasNext();) {
-            String key = keys.next();
-            map.put(key, String.valueOf(object.get(key)));
-        }
-
-        return map;
     }
 
     private static void writeResult(JSONObject result) throws Exception {

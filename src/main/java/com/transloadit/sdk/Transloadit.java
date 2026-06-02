@@ -342,6 +342,35 @@ public class Transloadit {
 
     // </api2-generated-endpoint createAssembly>
 
+    // <api2-generated-feature createTusAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Creates a TUS-ready Assembly that waits for the requested number of resumable uploads
+     * before execution continues.
+     */
+    public AssemblyResponse createTusAssembly(int fileCount)
+            throws RequestException, LocalOperationException {
+        Map<String, Object> options = new HashMap<String, Object>();
+        options.put("await", false);
+        Map<String, Object> optionsSteps = new HashMap<String, Object>();
+        Map<String, Object> optionsStepsOriginal = new HashMap<String, Object>();
+        optionsStepsOriginal.put("output_meta", true);
+        optionsStepsOriginal.put("result", "debug");
+        optionsStepsOriginal.put("robot", "/upload/handle");
+        optionsSteps.put(":original", optionsStepsOriginal);
+        options.put("steps", optionsSteps);
+        Map<String, String> extraData = new HashMap<String, String>();
+        extraData.put("num_expected_upload_files", String.valueOf(fileCount));
+
+        return createAssembly(options, extraData);
+    }
+
+    // </api2-generated-feature createTusAssembly>
+
     /**
      * Returns a single assembly.
      *
