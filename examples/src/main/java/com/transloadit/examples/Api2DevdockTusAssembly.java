@@ -33,7 +33,11 @@ public final class Api2DevdockTusAssembly {
                 requiredEnv("TRANSLOADIT_SECRET"),
                 requiredEnv("TRANSLOADIT_ENDPOINT"));
 
-        int fileCount = scenario.getJSONObject("createTusAssembly")
+        int fileCount = featureStep(
+                scenario,
+                "preparations",
+                "createTusAssembly",
+                "feature-call")
                 .getJSONObject("input")
                 .getInt("file_count");
         AssemblyResponse created = transloadit.createTusAssembly(fileCount);
@@ -62,6 +66,29 @@ public final class Api2DevdockTusAssembly {
 
         byte[] contents = Files.readAllBytes(Paths.get(scenarioPath));
         return new JSONObject(new String(contents, StandardCharsets.UTF_8));
+    }
+
+    private static JSONObject featureStep(
+            JSONObject scenario,
+            String collectionName,
+            String featureId,
+            String kind) {
+        JSONArray steps = scenario.getJSONArray(collectionName);
+        for (int index = 0; index < steps.length(); index += 1) {
+            JSONObject step = steps.getJSONObject(index);
+            if (!featureId.equals(step.getString("featureId"))) {
+                continue;
+            }
+            if (!kind.equals(step.getString("kind"))) {
+                throw new IllegalStateException(collectionName + "[" + index
+                        + "] must have kind " + kind);
+            }
+
+            return step;
+        }
+
+        throw new IllegalStateException("Scenario has no " + collectionName
+                + " step for feature " + featureId);
     }
 
     private static String requiredEnv(String name) {
