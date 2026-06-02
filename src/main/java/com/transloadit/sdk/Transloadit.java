@@ -459,14 +459,14 @@ public class Transloadit {
             if (uploadResponse.code() != 204) {
                 throw new RequestException(String.format("TUS upload returned HTTP %d, expected 204", uploadResponse.code()));
             }
-            int remoteOffset;
+            int uploadOffset;
             try {
-                remoteOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
+                uploadOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
             } catch (NumberFormatException error) {
                 throw new LocalOperationException(error);
             }
-            if (remoteOffset != content.length) {
-                throw new RequestException(String.format("TUS upload offset %d, expected %d", remoteOffset, content.length));
+            if (uploadOffset != content.length) {
+                throw new RequestException(String.format("TUS upload offset %d, expected %d", uploadOffset, content.length));
             }
         } finally {
             uploadResponse.close();
