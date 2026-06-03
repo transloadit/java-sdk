@@ -29,22 +29,16 @@ public final class Api2DevdockTusAssembly {
                 requiredEnv("TRANSLOADIT_SECRET"),
                 requiredEnv("TRANSLOADIT_ENDPOINT"));
 
-        int fileCount = featureStep(
-                scenario,
-                "preparations",
-                "createTusAssembly",
-                "feature-call")
-                .getJSONObject("input")
-                .getInt("file_count");
+        JSONObject input = sdkFeatureCall(scenario, "uploadTusAssembly").getJSONObject("input");
+        int fileCount = input.getInt("file_count");
 
-        JSONObject uploadConfig = scenario.getJSONObject("upload");
-        JSONObject source = uploadConfig.getJSONObject("source");
-        byte[] bytes = source.getString("value").getBytes(StandardCharsets.UTF_8);
+        JSONObject uploadConfig = input.getJSONObject("upload");
+        byte[] bytes = uploadConfig.getString("content").getBytes(StandardCharsets.UTF_8);
         UploadTusAssemblyResult uploadResult = transloadit.uploadTusAssembly(
                 fileCount,
                 bytes,
-                uploadConfig.getString("fieldName"),
-                uploadConfig.getString("fileName"),
+                uploadConfig.getString("fieldname"),
+                uploadConfig.getString("filename"),
                 uploadUserMeta(uploadConfig));
         JSONObject status = uploadResult.getAssembly().json();
 
@@ -69,27 +63,22 @@ public final class Api2DevdockTusAssembly {
         return new JSONObject(new String(contents, StandardCharsets.UTF_8));
     }
 
-    private static JSONObject featureStep(
-            JSONObject scenario,
-            String collectionName,
-            String featureId,
-            String kind) {
-        JSONArray steps = scenario.getJSONArray(collectionName);
-        for (int index = 0; index < steps.length(); index += 1) {
-            JSONObject step = steps.getJSONObject(index);
-            if (!featureId.equals(step.getString("featureId"))) {
+    private static JSONObject sdkFeatureCall(JSONObject scenario, String featureId) {
+        JSONArray featureCalls = scenario.getJSONArray("sdkFeatureCalls");
+        for (int index = 0; index < featureCalls.length(); index += 1) {
+            JSONObject featureCall = featureCalls.getJSONObject(index);
+            if (!featureId.equals(featureCall.getString("featureId"))) {
                 continue;
             }
-            if (!kind.equals(step.getString("kind"))) {
-                throw new IllegalStateException(collectionName + "[" + index
-                        + "] must have kind " + kind);
+            if (!"sdk-feature-call".equals(featureCall.getString("kind"))) {
+                throw new IllegalStateException("sdkFeatureCalls[" + index
+                        + "] must have kind sdk-feature-call");
             }
 
-            return step;
+            return featureCall;
         }
 
-        throw new IllegalStateException("Scenario has no " + collectionName
-                + " step for feature " + featureId);
+        throw new IllegalStateException("Scenario has no SDK feature call for feature " + featureId);
     }
 
     private static String requiredEnv(String name) {
@@ -103,11 +92,11 @@ public final class Api2DevdockTusAssembly {
 
     private static Map<String, String> uploadUserMeta(JSONObject uploadConfig) {
         Map<String, String> metadata = new HashMap<String, String>();
-        if (!uploadConfig.has("userMeta")) {
+        if (!uploadConfig.has("user_meta")) {
             return metadata;
         }
 
-        JSONObject userMeta = uploadConfig.getJSONObject("userMeta");
+        JSONObject userMeta = uploadConfig.getJSONObject("user_meta");
         for (Iterator<String> keys = userMeta.keys(); keys.hasNext();) {
             String key = keys.next();
             metadata.put(key, String.valueOf(userMeta.get(key)));
