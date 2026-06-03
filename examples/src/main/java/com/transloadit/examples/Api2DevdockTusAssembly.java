@@ -2,7 +2,6 @@ package com.transloadit.examples;
 
 import com.transloadit.sdk.Transloadit;
 import com.transloadit.sdk.UploadTusAssemblyResult;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
@@ -29,7 +28,10 @@ public final class Api2DevdockTusAssembly {
                 requiredEnv("TRANSLOADIT_SECRET"),
                 requiredEnv("TRANSLOADIT_ENDPOINT"));
 
-        JSONObject input = sdkFeatureCall(scenario, "uploadTusAssembly").getJSONObject("input");
+        JSONObject exampleInput = scenario.getJSONObject("exampleInput");
+        JSONObject input = exampleInput
+                .getJSONObject("sdkFeatureInputs")
+                .getJSONObject("uploadTusAssembly");
         int fileCount = input.getInt("file_count");
 
         JSONObject uploadConfig = input.getJSONObject("upload");
@@ -48,7 +50,7 @@ public final class Api2DevdockTusAssembly {
         result.put("uploadUrl", uploadResult.getUploadUrl());
         writeResult(result);
 
-        System.out.println("Java SDK devdock scenario " + scenario.getString("scenarioId")
+        System.out.println("Java SDK devdock scenario " + exampleInput.getString("scenarioId")
                 + " uploaded to " + uploadResult.getUploadUrl()
                 + " and finished with " + status.getString("ok"));
     }
@@ -61,24 +63,6 @@ public final class Api2DevdockTusAssembly {
 
         byte[] contents = Files.readAllBytes(Paths.get(scenarioPath));
         return new JSONObject(new String(contents, StandardCharsets.UTF_8));
-    }
-
-    private static JSONObject sdkFeatureCall(JSONObject scenario, String featureId) {
-        JSONArray featureCalls = scenario.getJSONArray("sdkFeatureCalls");
-        for (int index = 0; index < featureCalls.length(); index += 1) {
-            JSONObject featureCall = featureCalls.getJSONObject(index);
-            if (!featureId.equals(featureCall.getString("featureId"))) {
-                continue;
-            }
-            if (!"sdk-feature-call".equals(featureCall.getString("kind"))) {
-                throw new IllegalStateException("sdkFeatureCalls[" + index
-                        + "] must have kind sdk-feature-call");
-            }
-
-            return featureCall;
-        }
-
-        throw new IllegalStateException("Scenario has no SDK feature call for feature " + featureId);
     }
 
     private static String requiredEnv(String name) {
