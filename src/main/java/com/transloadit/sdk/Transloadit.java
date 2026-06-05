@@ -349,8 +349,7 @@ public class Transloadit {
     // belongs in the contract generator so all SDKs stay in sync.
 
     /**
-     * Creates a TUS-ready Assembly that waits for the requested number of resumable uploads
-     * before execution continues.
+     * Creates a TUS-ready Assembly that waits for the requested number of resumable uploads before execution continues.
      */
     public AssemblyResponse createTusAssembly(int fileCount)
             throws RequestException, LocalOperationException {
@@ -378,7 +377,7 @@ public class Transloadit {
     // belongs in the contract generator so all SDKs stay in sync.
 
     /**
-     * Create a TUS-ready Assembly, upload one file with the TUS protocol, and wait for the Assembly to finish.
+     * Creates a TUS-ready Assembly, uploads one file with the TUS protocol, and waits for the Assembly to finish.
      */
     public UploadTusAssemblyResult uploadTusAssembly(int fileCount, byte[] content, String fieldname, String filename, Map<String, String> userMeta)
             throws RequestException, LocalOperationException {
@@ -529,8 +528,8 @@ public class Transloadit {
     // belongs in the contract generator so all SDKs stay in sync.
 
     /**
-     * Wait for an Assembly to finish uploading and executing.
-     * The assembly URL should be the assembly_ssl_url returned by createAssembly.
+     * Waits for an Assembly to finish uploading and executing.
+     * Use the returned assembly_ssl_url as the assembly URL.
      */
     public AssemblyResponse waitForAssembly(String assemblyUrl)
             throws RequestException, LocalOperationException {
