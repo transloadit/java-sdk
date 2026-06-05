@@ -471,7 +471,11 @@ public class Transloadit {
             uploadResponse.close();
         }
 
-        AssemblyResponse completedAssembly = waitForAssembly(createdAssembly.getSslUrl());
+        String createdAssemblyAssemblySslUrl = createdAssembly.getSslUrl();
+        if (createdAssemblyAssemblySslUrl == null || createdAssemblyAssemblySslUrl.isEmpty()) {
+            throw new LocalOperationException("uploadTusAssembly needs createdAssembly.assembly_ssl_url");
+        }
+        AssemblyResponse completedAssembly = waitForAssembly(createdAssemblyAssemblySslUrl);
 
         return new UploadTusAssemblyResult(completedAssembly, uploadUrlText);
     }
