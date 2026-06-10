@@ -45,6 +45,11 @@ tasks.register('api2DevdockTemplateLifecycle', JavaExec) {
     mainClass = 'com.transloadit.examples.Api2DevdockTemplateLifecycle'
 }
 
+tasks.register('api2DevdockAssemblyLifecycle', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockAssemblyLifecycle'
+}
+
 tasks.register('api2DevdockTusAssembly', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.transloadit.examples.Api2DevdockTusAssembly'
