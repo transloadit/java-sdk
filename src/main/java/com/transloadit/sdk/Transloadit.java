@@ -396,7 +396,7 @@ public class Transloadit {
                 metadataMap.put(entry.getKey(), entry.getValue());
             }
         }
-        metadataMap.put("assembly_url", String.valueOf(createdAssembly.getUrl()));
+        metadataMap.put("assembly_url", String.valueOf(createdAssembly.getSslUrl()));
         metadataMap.put("fieldname", String.valueOf(fieldname));
         metadataMap.put("filename", String.valueOf(filename));
 
