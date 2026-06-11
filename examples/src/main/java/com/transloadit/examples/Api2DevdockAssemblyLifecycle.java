@@ -40,7 +40,16 @@ public final class Api2DevdockAssemblyLifecycle {
             Map<String, Object> listOptions = new HashMap<String, Object>();
             listOptions.put("assembly_id", created.getId());
             listOptions.put("pagesize", scenario.getJSONObject("list").getInt("pageSize"));
+            // The Assembly list is eventually consistent: the API acknowledges creation before
+            // the list storage row lands, so poll briefly until the created Assembly shows up.
             ListResponse listed = transloadit.listAssemblies(listOptions);
+            for (int attempt = 0; attempt < 20; attempt += 1) {
+                if (listContainsAssembly(listed.getItems(), created.getId())) {
+                    break;
+                }
+                Thread.sleep(500);
+                listed = transloadit.listAssemblies(listOptions);
+            }
 
             AssemblyResponse cancelled = transloadit.cancelAssembly(createdAssemblySslUrl);
             cancelAssembly = false;

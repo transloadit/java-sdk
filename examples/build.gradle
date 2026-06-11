@@ -54,3 +54,8 @@ tasks.register('api2DevdockTusAssembly', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.transloadit.examples.Api2DevdockTusAssembly'
 }
+
+tasks.register('api2DevdockTusResumeUpload', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTusResumeUpload'
+}

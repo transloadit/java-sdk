@@ -370,6 +370,94 @@ public class Transloadit {
 
     // </api2-generated-feature createTusAssembly>
 
+    // <api2-generated-feature resumeTusUpload>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Resumes an interrupted TUS upload from the server-reported offset and waits for the Assembly to finish.
+     */
+    public AssemblyResponse resumeTusUpload(String uploadUrl, byte[] content, String assemblySslUrl)
+            throws RequestException, LocalOperationException {
+        java.net.URL storedUploadUrl;
+        try {
+            storedUploadUrl = new java.net.URL(uploadUrl);
+        } catch (java.net.MalformedURLException error) {
+            throw new LocalOperationException(error);
+        }
+
+        okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient();
+
+        int resumeOffset;
+        okhttp3.Request.Builder offsetRequestBuilder = new okhttp3.Request.Builder()
+                .url(storedUploadUrl)
+                .method("HEAD", null);
+        offsetRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        okhttp3.Request offsetRequest = offsetRequestBuilder.build();
+
+        okhttp3.Response offsetResponse;
+        try {
+            offsetResponse = httpClient.newCall(offsetRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (offsetResponse.code() != 200) {
+                throw new RequestException(String.format("TUS offset returned HTTP %d, expected 200", offsetResponse.code()));
+            }
+            String resumeOffsetHeader = offsetResponse.header("Upload-Offset");
+            if (resumeOffsetHeader == null || resumeOffsetHeader.isEmpty()) {
+                throw new RequestException("TUS offset did not return a Upload-Offset header");
+            }
+            try {
+                resumeOffset = Integer.parseInt(resumeOffsetHeader);
+            } catch (NumberFormatException error) {
+                throw new RequestException("TUS offset returned an invalid Upload-Offset header");
+            }
+        } finally {
+            offsetResponse.close();
+        }
+
+        okhttp3.Request.Builder uploadRequestBuilder = new okhttp3.Request.Builder()
+                .url(storedUploadUrl)
+                .method("PATCH", okhttp3.RequestBody.create(null, java.util.Arrays.copyOfRange(content, resumeOffset, content.length)));
+        uploadRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        uploadRequestBuilder.addHeader("Upload-Offset", String.valueOf(resumeOffset));
+        uploadRequestBuilder.addHeader("Content-Type", "application/offset+octet-stream");
+        okhttp3.Request uploadRequest = uploadRequestBuilder.build();
+
+        okhttp3.Response uploadResponse;
+        try {
+            uploadResponse = httpClient.newCall(uploadRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (uploadResponse.code() != 204) {
+                throw new RequestException(String.format("TUS upload returned HTTP %d, expected 204", uploadResponse.code()));
+            }
+            int uploadOffset;
+            try {
+                uploadOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
+            } catch (NumberFormatException error) {
+                throw new LocalOperationException(error);
+            }
+            if (uploadOffset != content.length) {
+                throw new RequestException(String.format("TUS upload offset %d, expected %d", uploadOffset, content.length));
+            }
+        } finally {
+            uploadResponse.close();
+        }
+
+        AssemblyResponse completedAssembly = waitForAssembly(assemblySslUrl);
+
+        return completedAssembly;
+    }
+
+    // </api2-generated-feature resumeTusUpload>
+
     // <api2-generated-feature uploadTusAssembly>
 
     // This block is generated from Transloadit API2 contracts. If it looks wrong,
