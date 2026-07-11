@@ -988,4 +988,224 @@ public class Transloadit {
             throw new LocalOperationException("Failed to create signature: " + e.getMessage());
         }
     }
+
+    // <api2-generated-endpoint createAssemblyWithId>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createAssemblyWithId(String assemblyId, Map<String, Object> options, Map<String, String> extraData)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assemblies/" + assemblyId, options, extraData, null, null));
+    }
+
+    // </api2-generated-endpoint createAssemblyWithId>
+
+
+    // <api2-generated-endpoint replayAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response replayAssembly(String assemblyId, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assemblies/" + assemblyId + "/replay", options));
+    }
+
+    // </api2-generated-endpoint replayAssembly>
+
+
+    // <api2-generated-endpoint replayAssemblyNotification>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response replayAssemblyNotification(String assemblyId, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assembly_notifications/" + assemblyId + "/replay", options));
+    }
+
+    // </api2-generated-endpoint replayAssemblyNotification>
+
+
+    // <api2-generated-endpoint listAssemblyNotifications>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response listAssemblyNotifications(String assemblyId) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/assembly_notifications/" + assemblyId));
+    }
+
+    // </api2-generated-endpoint listAssemblyNotifications>
+
+
+    // <api2-generated-endpoint getBuiltinTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBuiltinTemplate(String builtinTemplateSlug) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/builtin/" + builtinTemplateSlug));
+    }
+
+    // </api2-generated-endpoint getBuiltinTemplate>
+
+
+    // <api2-generated-endpoint getTemplateFull>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getTemplateFull(String templateIdOrName) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/" + templateIdOrName + "/full"));
+    }
+
+    // </api2-generated-endpoint getTemplateFull>
+
+
+    // <api2-generated-endpoint getBuiltinTemplateFull>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBuiltinTemplateFull(String builtinTemplateSlug) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/builtin/" + builtinTemplateSlug + "/full"));
+    }
+
+    // </api2-generated-endpoint getBuiltinTemplateFull>
+
+
+    // <api2-generated-endpoint listPriorityJobSlots>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public ListResponse listPriorityJobSlots(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new ListResponse(request.get("/queues/job_slots", options));
+    }
+
+    // </api2-generated-endpoint listPriorityJobSlots>
+
+
+    // <api2-generated-endpoint listTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public ListResponse listTemplateCredentials(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new ListResponse(request.get("/template_credentials", options));
+    }
+
+    // </api2-generated-endpoint listTemplateCredentials>
+
+
+    // <api2-generated-endpoint listTemplateCredentialTypes>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public ListResponse listTemplateCredentialTypes(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new ListResponse(request.get("/template_credentials/types", options));
+    }
+
+    // </api2-generated-endpoint listTemplateCredentialTypes>
+
+
+    // <api2-generated-endpoint validateTemplateCredentialOauthOnCreate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response validateTemplateCredentialOauthOnCreate(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/template_credentials/validateOauthOnCreate", options));
+    }
+
+    // </api2-generated-endpoint validateTemplateCredentialOauthOnCreate>
+
+
+    // <api2-generated-endpoint createTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createTemplateCredentials(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/template_credentials", options));
+    }
+
+    // </api2-generated-endpoint createTemplateCredentials>
+
+
+    // <api2-generated-endpoint getTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getTemplateCredentials(String identifier) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/template_credentials/" + identifier));
+    }
+
+    // </api2-generated-endpoint getTemplateCredentials>
+
+
+    // <api2-generated-endpoint deleteTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response deleteTemplateCredentials(String identifier)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.delete("/template_credentials/" + identifier, new HashMap<String, Object>()));
+    }
+
+    // </api2-generated-endpoint deleteTemplateCredentials>
+
+
+    // <api2-generated-endpoint updateTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response updateTemplateCredentials(String identifier, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.put("/template_credentials/" + identifier, options));
+    }
+
+    // </api2-generated-endpoint updateTemplateCredentials>
+
 }
