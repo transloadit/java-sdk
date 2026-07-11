@@ -1096,10 +1096,10 @@ public class Transloadit {
     // please report the issue instead of editing this block by hand; the source fix
     // belongs in the contract generator so all SDKs stay in sync.
 
-    public ListResponse listPriorityJobSlots(Map<String, Object> options)
+    public Response listPriorityJobSlots(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new ListResponse(request.get("/queues/job_slots", options));
+        return new Response(request.get("/queues/job_slots", options));
     }
 
     // </api2-generated-endpoint listPriorityJobSlots>
@@ -1111,10 +1111,10 @@ public class Transloadit {
     // please report the issue instead of editing this block by hand; the source fix
     // belongs in the contract generator so all SDKs stay in sync.
 
-    public ListResponse listTemplateCredentials(Map<String, Object> options)
+    public Response listTemplateCredentials(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new ListResponse(request.get("/template_credentials", options));
+        return new Response(request.get("/template_credentials", options));
     }
 
     // </api2-generated-endpoint listTemplateCredentials>
@@ -1126,10 +1126,10 @@ public class Transloadit {
     // please report the issue instead of editing this block by hand; the source fix
     // belongs in the contract generator so all SDKs stay in sync.
 
-    public ListResponse listTemplateCredentialTypes(Map<String, Object> options)
+    public Response listTemplateCredentialTypes(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new ListResponse(request.get("/template_credentials/types", options));
+        return new Response(request.get("/template_credentials/types", options));
     }
 
     // </api2-generated-endpoint listTemplateCredentialTypes>
@@ -1228,14 +1228,24 @@ public class Transloadit {
             throw new LocalOperationException("Invalid bearer token endpoint.", error);
         }
         String endpointHost = endpoint.getHost();
-        boolean loopback = "localhost".equals(endpointHost)
-                || "::1".equals(endpointHost)
-                || (endpointHost != null && endpointHost.startsWith("127."));
+        String normalizedEndpointHost = endpointHost != null
+                && endpointHost.startsWith("[") && endpointHost.endsWith("]")
+                ? endpointHost.substring(1, endpointHost.length() - 1)
+                : endpointHost;
+        String octet = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
+        boolean numericIpv4Loopback = normalizedEndpointHost != null
+                && normalizedEndpointHost.matches("127\\." + octet + "\\." + octet + "\\." + octet);
+        boolean loopback = "localhost".equals(normalizedEndpointHost)
+                || "::1".equals(normalizedEndpointHost)
+                || numericIpv4Loopback;
         if (endpoint.getUserInfo() != null || endpointHost == null
                 || !("https".equals(endpoint.getScheme())
                 || ("http".equals(endpoint.getScheme()) && loopback))) {
             throw new LocalOperationException("Refusing to send credentials to an insecure bearer token endpoint.");
         }
+
+        String endpointPath = endpoint.getPath();
+        String tokenPath = (endpointPath.endsWith("/") ? endpointPath : endpointPath + "/") + "token";
 
         okhttp3.FormBody.Builder form = new okhttp3.FormBody.Builder();
         if (options != null && options.get("aud") != null) {
@@ -1249,7 +1259,7 @@ public class Transloadit {
         String credentials = java.util.Base64.getEncoder().encodeToString(
                 (this.key + ":" + this.secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(endpoint.resolve("/token").toString())
+                .url(endpoint.resolve(tokenPath).toString())
                 .post(form.build())
                 .addHeader("Accept", "application/json")
                 .addHeader("Authorization", "Basic " + credentials)

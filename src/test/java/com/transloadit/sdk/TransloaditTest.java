@@ -75,6 +75,15 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertEquals("abc", response.json().getString("access_token"));
     }
 
+    @Test
+    public void issueBearerTokenRejects127PrefixedDomain() {
+        Transloadit unsafe = new Transloadit("KEY", "SECRET", "http://127.attacker.com");
+
+        Assertions.assertThrows(
+                LocalOperationException.class,
+                () -> unsafe.issueBearerToken(Collections.<String, String>emptyMap()));
+    }
+
     /**
      * Tests if {@link Transloadit#getAssembly(String)} returns the specified Assembly's response
      * by verifying the assembly_id and host URL.
