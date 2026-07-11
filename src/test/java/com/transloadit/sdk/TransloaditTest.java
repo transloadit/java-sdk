@@ -53,6 +53,28 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertEquals(transloadit.getHostUrl(), "http://localhost:" + PORT);
     }
 
+    @Test
+    public void issueBearerTokenUsesBasicAuthAndFormEncoding()
+            throws LocalOperationException, RequestException {
+        mockServerClient.when(HttpRequest.request()
+                        .withPath("/token")
+                        .withMethod("POST")
+                        .withHeader("Authorization", "Basic S0VZOlNFQ1JFVA==")
+                        .withHeader("Content-Type", "application/x-www-form-urlencoded")
+                        .withBody("grant_type=client_credentials&scope=assemblies%3Aread"))
+                .respond(HttpResponse.response()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"access_token\":\"abc\",\"expires_in\":21600,"
+                                + "\"scope\":\"assemblies:read\",\"token_type\":\"Bearer\"}"));
+
+        Map<String, String> options = new HashMap<String, String>();
+        options.put("scope", "assemblies:read");
+        Response response = transloadit.issueBearerToken(options);
+
+        Assertions.assertEquals(200, response.status());
+        Assertions.assertEquals("abc", response.json().getString("access_token"));
+    }
+
     /**
      * Tests if {@link Transloadit#getAssembly(String)} returns the specified Assembly's response
      * by verifying the assembly_id and host URL.
@@ -399,4 +421,3 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertEquals(expectedUrl, url);
     }
 }
-

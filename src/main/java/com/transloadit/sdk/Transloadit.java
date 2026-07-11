@@ -1208,4 +1208,63 @@ public class Transloadit {
 
     // </api2-generated-endpoint updateTemplateCredentials>
 
+
+    // <api2-generated-endpoint issueBearerToken>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response issueBearerToken(Map<String, String> options)
+            throws RequestException, LocalOperationException {
+        if (this.secret == null) {
+            throw new LocalOperationException("Bearer token issuance requires an auth secret.");
+        }
+
+        java.net.URI endpoint;
+        try {
+            endpoint = java.net.URI.create(this.getHostUrl());
+        } catch (IllegalArgumentException error) {
+            throw new LocalOperationException("Invalid bearer token endpoint.", error);
+        }
+        String endpointHost = endpoint.getHost();
+        boolean loopback = "localhost".equals(endpointHost)
+                || "::1".equals(endpointHost)
+                || (endpointHost != null && endpointHost.startsWith("127."));
+        if (endpoint.getUserInfo() != null || endpointHost == null
+                || !("https".equals(endpoint.getScheme())
+                || ("http".equals(endpoint.getScheme()) && loopback))) {
+            throw new LocalOperationException("Refusing to send credentials to an insecure bearer token endpoint.");
+        }
+
+        okhttp3.FormBody.Builder form = new okhttp3.FormBody.Builder();
+        if (options != null && options.get("aud") != null) {
+            form.add("aud", options.get("aud"));
+        }
+        form.add("grant_type", "client_credentials");
+        if (options != null && options.get("scope") != null) {
+            form.add("scope", options.get("scope"));
+        }
+
+        String credentials = java.util.Base64.getEncoder().encodeToString(
+                (this.key + ":" + this.secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(endpoint.resolve("/token").toString())
+                .post(form.build())
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Basic " + credentials)
+                .addHeader("Transloadit-Client", this.versionInfo)
+                .build();
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder()
+                .followRedirects(false)
+                .build();
+        try {
+            return new Response(client.newCall(request).execute());
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+    }
+
+    // </api2-generated-endpoint issueBearerToken>
+
 }
