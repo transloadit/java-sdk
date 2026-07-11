@@ -1277,4 +1277,19 @@ public class Transloadit {
 
     // </api2-generated-endpoint issueBearerToken>
 
+
+    // <api2-generated-endpoint getBillForInvoice>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBillForInvoice(String date, String invoiceId)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/bill/" + date + "/" + invoiceId));
+    }
+
+    // </api2-generated-endpoint getBillForInvoice>
+
 }
