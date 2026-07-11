@@ -176,6 +176,20 @@ public class TransloaditTest extends MockHttpService {
 
         Assertions.assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
         Assertions.assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"));
+        Assertions.assertEquals(1, recorded.length);
+        Assertions.assertTrue(recorded[0].getQueryStringParameterList().isEmpty());
+        Assertions.assertNull(recorded[0].getBodyAsString());
+    }
+
+    @Test
+    public void getAssemblyByUrlRejectsUntrustedOrigins() {
+        Assertions.assertThrows(
+                LocalOperationException.class,
+                () -> transloadit.getAssemblyByUrl(
+                        "http://localhost:" + (PORT + 1) + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4"));
     }
 
     /**
@@ -195,6 +209,12 @@ public class TransloaditTest extends MockHttpService {
                 .cancelAssembly(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
 
         Assertions.assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("DELETE"));
+        Assertions.assertEquals(1, recorded.length);
+        Assertions.assertTrue(recorded[0].getQueryStringParameterList().isEmpty());
+        Assertions.assertNull(recorded[0].getBodyAsString());
     }
 
     /**

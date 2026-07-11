@@ -608,7 +608,7 @@ public class Transloadit {
     public AssemblyResponse getAssemblyByUrl(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.get(url));
+        return new AssemblyResponse(request.requestAssemblyUrl(url, "GET"));
     }
 
     // </api2-generated-endpoint getAssemblyStatus:urlAlternative>
@@ -669,7 +669,7 @@ public class Transloadit {
     public AssemblyResponse cancelAssembly(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.delete(url, new HashMap<String, Object>()));
+        return new AssemblyResponse(request.requestAssemblyUrl(url, "DELETE"));
     }
 
     // </api2-generated-endpoint cancelAssembly>
