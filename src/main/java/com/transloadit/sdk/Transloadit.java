@@ -467,9 +467,9 @@ public class Transloadit {
     /**
      * Creates a TUS-ready Assembly, uploads one file with the TUS protocol, and waits for the Assembly to finish.
      */
-    public UploadTusAssemblyResult uploadTusAssembly(int fileCount, byte[] content, String fieldname, String filename, Map<String, String> userMeta)
+    public UploadTusAssemblyResult uploadTusAssembly(byte[] content, String fieldname, String filename, Map<String, String> userMeta)
             throws RequestException, LocalOperationException {
-        AssemblyResponse createdAssembly = createTusAssembly(fileCount);
+        AssemblyResponse createdAssembly = createTusAssembly(1);
 
         java.net.URL endpointUrl;
         try {

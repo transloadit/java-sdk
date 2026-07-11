@@ -32,12 +32,9 @@ public final class Api2DevdockTusAssembly {
         JSONObject input = exampleInput
                 .getJSONObject("sdkFeatureInputs")
                 .getJSONObject("uploadTusAssembly");
-        int fileCount = input.getInt("file_count");
-
         JSONObject uploadConfig = input.getJSONObject("upload");
         byte[] bytes = uploadConfig.getString("content").getBytes(StandardCharsets.UTF_8);
         UploadTusAssemblyResult uploadResult = transloadit.uploadTusAssembly(
-                fileCount,
                 bytes,
                 uploadConfig.getString("fieldname"),
                 uploadConfig.getString("filename"),
