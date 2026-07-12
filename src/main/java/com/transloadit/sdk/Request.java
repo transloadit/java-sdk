@@ -515,12 +515,16 @@ public class Request {
                 && candidate.getScheme().equalsIgnoreCase(configured.getScheme())
                 && candidateHost.equalsIgnoreCase(configuredHost)
                 && candidatePort == configuredPort;
+        boolean configuredHttpsHost = candidateHost != null && configuredHost != null
+                && "https".equalsIgnoreCase(candidate.getScheme())
+                && candidatePort == 443
+                && candidateHost.equalsIgnoreCase(configuredHost);
         String normalizedHost = candidateHost == null ? "" : candidateHost.toLowerCase(java.util.Locale.ROOT);
         boolean api2Cell = "https".equalsIgnoreCase(candidate.getScheme())
                 && candidatePort == 443
                 && normalizedHost.startsWith("api2-")
                 && normalizedHost.endsWith(".transloadit.com");
-        if (candidate.getUserInfo() != null || !(configuredOrigin || api2Cell)) {
+        if (candidate.getUserInfo() != null || !(configuredOrigin || configuredHttpsHost || api2Cell)) {
             throw new LocalOperationException("Refusing to request an untrusted Assembly URL.");
         }
 
