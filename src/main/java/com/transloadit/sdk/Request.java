@@ -552,4 +552,25 @@ public class Request {
 
     // </api2-generated-endpoint assemblyUrlRequestSupport>
 
+
+    // <api2-generated-endpoint pathSegmentEncodingSupport>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    String encodePathSegment(String value) throws LocalOperationException {
+        if (".".equals(value) || "..".equals(value)) {
+            throw new LocalOperationException("Path parameters cannot be dot segments.");
+        }
+
+        try {
+            return URLEncoder.encode(value, "UTF-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException error) {
+            throw new LocalOperationException(error);
+        }
+    }
+
+    // </api2-generated-endpoint pathSegmentEncodingSupport>
+
 }

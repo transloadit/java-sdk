@@ -586,7 +586,7 @@ public class Transloadit {
 
     public AssemblyResponse getAssembly(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.get("/assemblies/" + id));
+        return new AssemblyResponse(request.get("/assemblies/" + request.encodePathSegment(id)));
     }
 
     // </api2-generated-endpoint getAssemblyStatus>
@@ -756,7 +756,7 @@ public class Transloadit {
 
     public Response getTemplate(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/templates/" + id));
+        return new Response(request.get("/templates/" + request.encodePathSegment(id)));
     }
 
     // </api2-generated-endpoint getTemplate>
@@ -780,7 +780,7 @@ public class Transloadit {
     public Response updateTemplate(String id, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.put("/templates/" + id, options));
+        return new Response(request.put("/templates/" + request.encodePathSegment(id), options));
     }
 
     // </api2-generated-endpoint updateTemplate>
@@ -803,7 +803,7 @@ public class Transloadit {
     public Response deleteTemplate(String id)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
+        return new Response(request.delete("/templates/" + request.encodePathSegment(id), new HashMap<String, Object>()));
     }
 
     // </api2-generated-endpoint deleteTemplate>
@@ -998,7 +998,7 @@ public class Transloadit {
     public Response createAssemblyWithId(String assemblyId, Map<String, Object> options, Map<String, String> extraData)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.post("/assemblies/" + assemblyId, options, extraData, null, null));
+        return new Response(request.post("/assemblies/" + request.encodePathSegment(assemblyId), options, extraData, null, null));
     }
 
     // </api2-generated-endpoint createAssemblyWithId>
@@ -1013,7 +1013,7 @@ public class Transloadit {
     public Response replayAssembly(String assemblyId, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.post("/assemblies/" + assemblyId + "/replay", options));
+        return new Response(request.post("/assemblies/" + request.encodePathSegment(assemblyId) + "/replay", options));
     }
 
     // </api2-generated-endpoint replayAssembly>
@@ -1028,7 +1028,7 @@ public class Transloadit {
     public Response replayAssemblyNotification(String assemblyId, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.post("/assembly_notifications/" + assemblyId + "/replay", options));
+        return new Response(request.post("/assembly_notifications/" + request.encodePathSegment(assemblyId) + "/replay", options));
     }
 
     // </api2-generated-endpoint replayAssemblyNotification>
@@ -1042,7 +1042,7 @@ public class Transloadit {
 
     public Response listAssemblyNotifications(String assemblyId) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/assembly_notifications/" + assemblyId));
+        return new Response(request.get("/assembly_notifications/" + request.encodePathSegment(assemblyId)));
     }
 
     // </api2-generated-endpoint listAssemblyNotifications>
@@ -1056,7 +1056,7 @@ public class Transloadit {
 
     public Response getBuiltinTemplate(String builtinTemplateSlug) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/templates/builtin/" + builtinTemplateSlug));
+        return new Response(request.get("/templates/builtin/" + request.encodePathSegment(builtinTemplateSlug)));
     }
 
     // </api2-generated-endpoint getBuiltinTemplate>
@@ -1070,7 +1070,7 @@ public class Transloadit {
 
     public Response getTemplateFull(String templateIdOrName) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/templates/" + templateIdOrName + "/full"));
+        return new Response(request.get("/templates/" + request.encodePathSegment(templateIdOrName) + "/full"));
     }
 
     // </api2-generated-endpoint getTemplateFull>
@@ -1084,7 +1084,7 @@ public class Transloadit {
 
     public Response getBuiltinTemplateFull(String builtinTemplateSlug) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/templates/builtin/" + builtinTemplateSlug + "/full"));
+        return new Response(request.get("/templates/builtin/" + request.encodePathSegment(builtinTemplateSlug) + "/full"));
     }
 
     // </api2-generated-endpoint getBuiltinTemplateFull>
@@ -1173,7 +1173,7 @@ public class Transloadit {
 
     public Response getTemplateCredentials(String identifier) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/template_credentials/" + identifier));
+        return new Response(request.get("/template_credentials/" + request.encodePathSegment(identifier)));
     }
 
     // </api2-generated-endpoint getTemplateCredentials>
@@ -1188,7 +1188,7 @@ public class Transloadit {
     public Response deleteTemplateCredentials(String identifier)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.delete("/template_credentials/" + identifier, new HashMap<String, Object>()));
+        return new Response(request.delete("/template_credentials/" + request.encodePathSegment(identifier), new HashMap<String, Object>()));
     }
 
     // </api2-generated-endpoint deleteTemplateCredentials>
@@ -1203,7 +1203,7 @@ public class Transloadit {
     public Response updateTemplateCredentials(String identifier, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.put("/template_credentials/" + identifier, options));
+        return new Response(request.put("/template_credentials/" + request.encodePathSegment(identifier), options));
     }
 
     // </api2-generated-endpoint updateTemplateCredentials>
@@ -1287,7 +1287,7 @@ public class Transloadit {
     public Response getBillForInvoice(String date, String invoiceId)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/bill/" + date + "/" + invoiceId));
+        return new Response(request.get("/bill/" + request.encodePathSegment(date) + "/" + request.encodePathSegment(invoiceId)));
     }
 
     // </api2-generated-endpoint getBillForInvoice>
