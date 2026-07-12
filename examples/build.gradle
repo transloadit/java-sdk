@@ -10,11 +10,13 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
 dependencies {
     implementation rootProject
+    implementation 'io.tus.java.client:tus-java-client:0.5.1'
     implementation 'org.json:json:20231013'
 }
 buildscript {
@@ -36,4 +38,24 @@ compileTestKotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_1_8)
     }
+}
+
+tasks.register('api2DevdockTemplateLifecycle', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTemplateLifecycle'
+}
+
+tasks.register('api2DevdockAssemblyLifecycle', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockAssemblyLifecycle'
+}
+
+tasks.register('api2DevdockTusAssembly', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTusAssembly'
+}
+
+tasks.register('api2DevdockTusResumeUpload', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.transloadit.examples.Api2DevdockTusResumeUpload'
 }

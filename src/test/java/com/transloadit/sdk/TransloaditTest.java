@@ -53,6 +53,37 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertEquals(transloadit.getHostUrl(), "http://localhost:" + PORT);
     }
 
+    @Test
+    public void issueBearerTokenUsesBasicAuthAndFormEncoding()
+            throws LocalOperationException, RequestException {
+        mockServerClient.when(HttpRequest.request()
+                        .withPath("/token")
+                        .withMethod("POST")
+                        .withHeader("Authorization", "Basic S0VZOlNFQ1JFVA==")
+                        .withHeader("Content-Type", "application/x-www-form-urlencoded")
+                        .withBody("grant_type=client_credentials&scope=assemblies%3Aread"))
+                .respond(HttpResponse.response()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"access_token\":\"abc\",\"expires_in\":21600,"
+                                + "\"scope\":\"assemblies:read\",\"token_type\":\"Bearer\"}"));
+
+        Map<String, String> options = new HashMap<String, String>();
+        options.put("scope", "assemblies:read");
+        Response response = transloadit.issueBearerToken(options);
+
+        Assertions.assertEquals(200, response.status());
+        Assertions.assertEquals("abc", response.json().getString("access_token"));
+    }
+
+    @Test
+    public void issueBearerTokenRejects127PrefixedDomain() {
+        Transloadit unsafe = new Transloadit("KEY", "SECRET", "http://127.attacker.com");
+
+        Assertions.assertThrows(
+                LocalOperationException.class,
+                () -> unsafe.issueBearerToken(Collections.<String, String>emptyMap()));
+    }
+
     /**
      * Tests if {@link Transloadit#getAssembly(String)} returns the specified Assembly's response
      * by verifying the assembly_id and host URL.
@@ -145,6 +176,20 @@ public class TransloaditTest extends MockHttpService {
 
         Assertions.assertEquals(assembly.getId(), "76fe5df1c93a0a530f3e583805cf98b4");
         Assertions.assertEquals(assembly.getUrl(), "http://localhost:9040/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("GET"));
+        Assertions.assertEquals(1, recorded.length);
+        Assertions.assertTrue(recorded[0].getQueryStringParameterList().isEmpty());
+        Assertions.assertNull(recorded[0].getBodyAsString());
+    }
+
+    @Test
+    public void getAssemblyByUrlRejectsUntrustedOrigins() {
+        Assertions.assertThrows(
+                LocalOperationException.class,
+                () -> transloadit.getAssemblyByUrl(
+                        "http://localhost:" + (PORT + 1) + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4"));
     }
 
     /**
@@ -164,6 +209,12 @@ public class TransloaditTest extends MockHttpService {
                 .cancelAssembly(transloadit.getHostUrl() + "/assemblies/76fe5df1c93a0a530f3e583805cf98b4");
 
         Assertions.assertEquals(assembly.json().getString("ok"), "ASSEMBLY_CANCELED");
+
+        HttpRequest[] recorded = mockServerClient.retrieveRecordedRequests(HttpRequest.request()
+                .withPath("/assemblies/76fe5df1c93a0a530f3e583805cf98b4").withMethod("DELETE"));
+        Assertions.assertEquals(1, recorded.length);
+        Assertions.assertTrue(recorded[0].getQueryStringParameterList().isEmpty());
+        Assertions.assertNull(recorded[0].getBodyAsString());
     }
 
     /**
@@ -399,4 +450,3 @@ public class TransloaditTest extends MockHttpService {
         Assertions.assertEquals(expectedUrl, url);
     }
 }
-

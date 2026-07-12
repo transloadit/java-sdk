@@ -1,5 +1,5 @@
 // Uncomment following line if you want to use the local java-sdk
 // for the example instead of pulling the JARs from JCenter.
 // This is useful for debugging and testing new features.
-// include ':examples'
+include ':examples'
 rootProject.name = 'transloadit'

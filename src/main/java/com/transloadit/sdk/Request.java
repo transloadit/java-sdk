@@ -484,4 +484,97 @@ public class Request {
         }
         return timeToWait;
     }
+
+    // <api2-generated-endpoint assemblyUrlRequestSupport>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    protected okhttp3.Response requestAssemblyUrl(String url, String method)
+            throws RequestException, LocalOperationException {
+        java.net.URI candidate;
+        java.net.URI configured;
+        try {
+            candidate = java.net.URI.create(url);
+            configured = java.net.URI.create(transloadit.getHostUrl());
+        } catch (IllegalArgumentException error) {
+            throw new LocalOperationException("Invalid Assembly URL.", error);
+        }
+
+        String candidateHost = candidate.getHost();
+        String configuredHost = configured.getHost();
+        int candidatePort = candidate.getPort() >= 0
+                ? candidate.getPort()
+                : ("https".equalsIgnoreCase(candidate.getScheme()) ? 443 : 80);
+        int configuredPort = configured.getPort() >= 0
+                ? configured.getPort()
+                : ("https".equalsIgnoreCase(configured.getScheme()) ? 443 : 80);
+        boolean configuredOrigin = candidateHost != null && configuredHost != null
+                && candidate.getScheme() != null && configured.getScheme() != null
+                && candidate.getScheme().equalsIgnoreCase(configured.getScheme())
+                && candidateHost.equalsIgnoreCase(configuredHost)
+                && candidatePort == configuredPort;
+        boolean configuredHttpsHost = candidateHost != null && configuredHost != null
+                && "https".equalsIgnoreCase(candidate.getScheme())
+                && candidatePort == 443
+                && candidateHost.equalsIgnoreCase(configuredHost);
+        String normalizedHost = candidateHost == null ? "" : candidateHost.toLowerCase(java.util.Locale.ROOT);
+        boolean api2Cell = "https".equalsIgnoreCase(candidate.getScheme())
+                && candidatePort == 443
+                && normalizedHost.startsWith("api2-")
+                && normalizedHost.endsWith(".transloadit.com");
+        if (candidate.getUserInfo() != null || !(configuredOrigin || configuredHttpsHost || api2Cell)) {
+            throw new LocalOperationException("Refusing to request an untrusted Assembly URL.");
+        }
+
+        okhttp3.Request.Builder builder = new okhttp3.Request.Builder()
+                .url(candidate.toString())
+                .addHeader("Transloadit-Client", this.version);
+        if ("GET".equals(method)) {
+            builder.get();
+        } else if ("DELETE".equals(method)) {
+            builder.delete();
+        } else {
+            throw new LocalOperationException("Unsupported Assembly URL method: " + method);
+        }
+
+        OkHttpClient client = httpClient.newBuilder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build();
+        try {
+            return client.newCall(builder.build()).execute();
+        } catch (IOException error) {
+            if (qualifiedForRetry(error)) {
+                delayBeforeRetry();
+                return requestAssemblyUrl(url, method);
+            }
+            throw new RequestException(error);
+        }
+    }
+
+    // </api2-generated-endpoint assemblyUrlRequestSupport>
+
+
+    // <api2-generated-endpoint pathSegmentEncodingSupport>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    String encodePathSegment(String value) throws LocalOperationException {
+        if (".".equals(value) || "..".equals(value)) {
+            throw new LocalOperationException("Path parameters cannot be dot segments.");
+        }
+
+        try {
+            return URLEncoder.encode(value, "UTF-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException error) {
+            throw new LocalOperationException(error);
+        }
+    }
+
+    // </api2-generated-endpoint pathSegmentEncodingSupport>
+
 }

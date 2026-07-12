@@ -320,6 +320,257 @@ public class Transloadit {
     }
 
     /**
+     * Creates an assembly.
+     *
+     * @param options a Map of options to create.
+     * @param extraData extra form data to create the assembly with.
+     * @return {@link AssemblyResponse}
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
+    // <api2-generated-endpoint createAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public AssemblyResponse createAssembly(Map<String, Object> options, Map<String, String> extraData)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new AssemblyResponse(request.post("/assemblies", options, extraData, null, null));
+    }
+
+    // </api2-generated-endpoint createAssembly>
+
+    // <api2-generated-feature createTusAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Creates a TUS-ready Assembly that waits for the requested number of resumable uploads before execution continues.
+     */
+    public AssemblyResponse createTusAssembly(int fileCount)
+            throws RequestException, LocalOperationException {
+        Map<String, Object> options = new HashMap<String, Object>();
+        options.put("await", false);
+        Map<String, Object> optionsSteps = new HashMap<String, Object>();
+        Map<String, Object> optionsStepsOriginal = new HashMap<String, Object>();
+        optionsStepsOriginal.put("output_meta", true);
+        optionsStepsOriginal.put("result", "debug");
+        optionsStepsOriginal.put("robot", "/upload/handle");
+        optionsSteps.put(":original", optionsStepsOriginal);
+        options.put("steps", optionsSteps);
+        Map<String, String> extraData = new HashMap<String, String>();
+        extraData.put("num_expected_upload_files", String.valueOf(fileCount));
+
+        return createAssembly(options, extraData);
+    }
+
+    // </api2-generated-feature createTusAssembly>
+
+    // <api2-generated-feature resumeTusUpload>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Resumes an interrupted TUS upload from the server-reported offset and waits for the Assembly to finish.
+     */
+    public AssemblyResponse resumeTusUpload(String uploadUrl, byte[] content, String assemblySslUrl)
+            throws RequestException, LocalOperationException {
+        java.net.URL storedUploadUrl;
+        try {
+            storedUploadUrl = new java.net.URL(uploadUrl);
+        } catch (java.net.MalformedURLException error) {
+            throw new LocalOperationException(error);
+        }
+
+        okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient();
+
+        int resumeOffset;
+        okhttp3.Request.Builder offsetRequestBuilder = new okhttp3.Request.Builder()
+                .url(storedUploadUrl)
+                .method("HEAD", null);
+        offsetRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        okhttp3.Request offsetRequest = offsetRequestBuilder.build();
+
+        okhttp3.Response offsetResponse;
+        try {
+            offsetResponse = httpClient.newCall(offsetRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (offsetResponse.code() != 200) {
+                throw new RequestException(String.format("TUS offset returned HTTP %d, expected 200", offsetResponse.code()));
+            }
+            String resumeOffsetHeader = offsetResponse.header("Upload-Offset");
+            if (resumeOffsetHeader == null || resumeOffsetHeader.isEmpty()) {
+                throw new RequestException("TUS offset did not return a Upload-Offset header");
+            }
+            try {
+                resumeOffset = Integer.parseInt(resumeOffsetHeader);
+            } catch (NumberFormatException error) {
+                throw new RequestException("TUS offset returned an invalid Upload-Offset header");
+            }
+        } finally {
+            offsetResponse.close();
+        }
+
+        okhttp3.Request.Builder uploadRequestBuilder = new okhttp3.Request.Builder()
+                .url(storedUploadUrl)
+                .method("PATCH", okhttp3.RequestBody.create(null, java.util.Arrays.copyOfRange(content, resumeOffset, content.length)));
+        uploadRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        uploadRequestBuilder.addHeader("Upload-Offset", String.valueOf(resumeOffset));
+        uploadRequestBuilder.addHeader("Content-Type", "application/offset+octet-stream");
+        okhttp3.Request uploadRequest = uploadRequestBuilder.build();
+
+        okhttp3.Response uploadResponse;
+        try {
+            uploadResponse = httpClient.newCall(uploadRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (uploadResponse.code() != 204) {
+                throw new RequestException(String.format("TUS upload returned HTTP %d, expected 204", uploadResponse.code()));
+            }
+            int uploadOffset;
+            try {
+                uploadOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
+            } catch (NumberFormatException error) {
+                throw new LocalOperationException(error);
+            }
+            if (uploadOffset != content.length) {
+                throw new RequestException(String.format("TUS upload offset %d, expected %d", uploadOffset, content.length));
+            }
+        } finally {
+            uploadResponse.close();
+        }
+
+        AssemblyResponse completedAssembly = waitForAssembly(assemblySslUrl);
+
+        return completedAssembly;
+    }
+
+    // </api2-generated-feature resumeTusUpload>
+
+    // <api2-generated-feature uploadTusAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Creates a TUS-ready Assembly, uploads one file with the TUS protocol, and waits for the Assembly to finish.
+     */
+    public UploadTusAssemblyResult uploadTusAssembly(byte[] content, String fieldname, String filename, Map<String, String> userMeta)
+            throws RequestException, LocalOperationException {
+        AssemblyResponse createdAssembly = createTusAssembly(1);
+
+        java.net.URL endpointUrl;
+        try {
+            endpointUrl = new java.net.URL(createdAssembly.getTusUrl());
+        } catch (java.net.MalformedURLException error) {
+            throw new LocalOperationException(error);
+        }
+
+        Map<String, String> metadataMap = new HashMap<String, String>();
+        if (userMeta != null) {
+            for (Map.Entry<String, String> entry : userMeta.entrySet()) {
+                metadataMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        metadataMap.put("assembly_url", String.valueOf(createdAssembly.getSslUrl()));
+        metadataMap.put("fieldname", String.valueOf(fieldname));
+        metadataMap.put("filename", String.valueOf(filename));
+
+        okhttp3.OkHttpClient httpClient = new okhttp3.OkHttpClient();
+
+        String uploadUrlText;
+        okhttp3.Request.Builder createRequestBuilder = new okhttp3.Request.Builder()
+                .url(endpointUrl)
+                .method("POST", okhttp3.RequestBody.create(null, new byte[0]));
+        createRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        createRequestBuilder.addHeader("Upload-Length", String.valueOf(content.length));
+        List<String> createMetadataParts = new ArrayList<String>();
+        for (Map.Entry<String, String> entry : metadataMap.entrySet()) {
+            createMetadataParts.add(entry.getKey() + " " + java.util.Base64.getEncoder().encodeToString(entry.getValue().getBytes(StandardCharsets.UTF_8)));
+        }
+        createRequestBuilder.addHeader("Upload-Metadata", String.join(",", createMetadataParts));
+        okhttp3.Request createRequest = createRequestBuilder.build();
+
+        okhttp3.Response createResponse;
+        try {
+            createResponse = httpClient.newCall(createRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (createResponse.code() != 201) {
+                throw new RequestException(String.format("TUS create returned HTTP %d, expected 201", createResponse.code()));
+            }
+            String uploadUrlLocation = createResponse.header("Location");
+            if (uploadUrlLocation == null || uploadUrlLocation.isEmpty()) {
+                throw new RequestException("TUS create did not return a Location header");
+            }
+            java.net.URL uploadUrl;
+            try {
+                uploadUrl = new java.net.URL(endpointUrl, uploadUrlLocation);
+            } catch (java.net.MalformedURLException error) {
+                throw new LocalOperationException(error);
+            }
+            uploadUrlText = uploadUrl.toString();
+        } finally {
+            createResponse.close();
+        }
+
+        okhttp3.Request.Builder uploadRequestBuilder = new okhttp3.Request.Builder()
+                .url(uploadUrlText)
+                .method("PATCH", okhttp3.RequestBody.create(null, content));
+        uploadRequestBuilder.addHeader("Tus-Resumable", "1.0.0");
+        uploadRequestBuilder.addHeader("Upload-Offset", "0");
+        uploadRequestBuilder.addHeader("Content-Type", "application/offset+octet-stream");
+        okhttp3.Request uploadRequest = uploadRequestBuilder.build();
+
+        okhttp3.Response uploadResponse;
+        try {
+            uploadResponse = httpClient.newCall(uploadRequest).execute();
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+        try {
+            if (uploadResponse.code() != 204) {
+                throw new RequestException(String.format("TUS upload returned HTTP %d, expected 204", uploadResponse.code()));
+            }
+            int uploadOffset;
+            try {
+                uploadOffset = Integer.parseInt(uploadResponse.header("Upload-Offset"));
+            } catch (NumberFormatException error) {
+                throw new LocalOperationException(error);
+            }
+            if (uploadOffset != content.length) {
+                throw new RequestException(String.format("TUS upload offset %d, expected %d", uploadOffset, content.length));
+            }
+        } finally {
+            uploadResponse.close();
+        }
+
+        String createdAssemblyAssemblySslUrl = createdAssembly.getSslUrl();
+        if (createdAssemblyAssemblySslUrl == null || createdAssemblyAssemblySslUrl.isEmpty()) {
+            throw new LocalOperationException("uploadTusAssembly needs createdAssembly.assembly_ssl_url");
+        }
+        AssemblyResponse completedAssembly = waitForAssembly(createdAssemblyAssemblySslUrl);
+
+        return new UploadTusAssemblyResult(completedAssembly, uploadUrlText);
+    }
+
+    // </api2-generated-feature uploadTusAssembly>
+
+    /**
      * Returns a single assembly.
      *
      * @param id id of the Assembly to retrieve.
@@ -327,10 +578,18 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getAssemblyStatus>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse getAssembly(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.get("/assemblies/" + id));
+        return new AssemblyResponse(request.get("/assemblies/" + request.encodePathSegment(id)));
     }
+
+    // </api2-generated-endpoint getAssemblyStatus>
 
     /**
      * Returns a single assembly.
@@ -340,11 +599,58 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getAssemblyStatus:urlAlternative>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse getAssemblyByUrl(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.get(url));
+        return new AssemblyResponse(request.requestAssemblyUrl(url, "GET"));
     }
+
+    // </api2-generated-endpoint getAssemblyStatus:urlAlternative>
+
+    // <api2-generated-feature waitForAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    /**
+     * Waits for an Assembly to finish uploading and executing.
+     * Use the returned assembly_ssl_url as the assembly URL.
+     */
+    public AssemblyResponse waitForAssembly(String assemblyUrl)
+            throws RequestException, LocalOperationException {
+        List<String> responsePollValues = java.util.Arrays.asList(
+                "ASSEMBLY_UPLOADING", "ASSEMBLY_EXECUTING");
+        while (true) {
+            AssemblyResponse response = getAssemblyByUrl(assemblyUrl);
+            org.json.JSONObject responseJson = response.json();
+
+            // Abort polling if the assembly has entered an error state
+            if (!responseJson.optString("error").isEmpty()) {
+                return response;
+            }
+
+            // The polling is done if the assembly is not uploading or executing anymore.
+            if (!(responsePollValues.contains(responseJson.optString("ok")))) {
+                return response;
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                throw new LocalOperationException(error);
+            }
+        }
+    }
+
+    // </api2-generated-feature waitForAssembly>
 
     /**
      * cancels a running assembly.
@@ -354,11 +660,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint cancelAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public AssemblyResponse cancelAssembly(String url)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new AssemblyResponse(request.delete(url, new HashMap<String, Object>()));
+        return new AssemblyResponse(request.requestAssemblyUrl(url, "DELETE"));
     }
+
+    // </api2-generated-endpoint cancelAssembly>
 
     /**
      * Returns a list of all assemblies under the user account.
@@ -368,11 +682,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint listAssemblies>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public ListResponse listAssemblies(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/assemblies", options));
     }
+
+    // </api2-generated-endpoint listAssemblies>
 
     /**
      * Returns a list of all assemblies under the user account.
@@ -395,6 +717,29 @@ public class Transloadit {
     }
 
     /**
+     * Creates a template.
+     *
+     * @param options a Map of options to create.
+     * @return {@link Response}
+     *
+     * @throws RequestException if request to transloadit server fails.
+     * @throws LocalOperationException if something goes wrong while running non-http operations.
+     */
+    // <api2-generated-endpoint createTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createTemplate(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/templates", options));
+    }
+
+    // </api2-generated-endpoint createTemplate>
+
+    /**
      * Returns a single template.
      *
      * @param id id of the template to retrieve.
@@ -403,10 +748,18 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response getTemplate(String id) throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.get("/templates/" + id));
+        return new Response(request.get("/templates/" + request.encodePathSegment(id)));
     }
+
+    // </api2-generated-endpoint getTemplate>
 
     /**
      * Updates the template with the specified id.
@@ -418,11 +771,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint updateTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response updateTemplate(String id, Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.put("/templates/" + id, options));
+        return new Response(request.put("/templates/" + request.encodePathSegment(id), options));
     }
+
+    // </api2-generated-endpoint updateTemplate>
 
     /**
      * Deletes a template.
@@ -433,11 +794,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint deleteTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response deleteTemplate(String id)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
-        return new Response(request.delete("/templates/" + id, new HashMap<String, Object>()));
+        return new Response(request.delete("/templates/" + request.encodePathSegment(id), new HashMap<String, Object>()));
     }
+
+    // </api2-generated-endpoint deleteTemplate>
 
     /**
      * Returns a list of all templates under the user account.
@@ -448,11 +817,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint listTemplates>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public ListResponse listTemplates(Map<String, Object> options)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new ListResponse(request.get("/templates", options));
     }
+
+    // </api2-generated-endpoint listTemplates>
 
     /**
      * Returns a list of all templates under the user account.
@@ -477,11 +854,19 @@ public class Transloadit {
      * @throws RequestException if request to transloadit server fails.
      * @throws LocalOperationException if something goes wrong while running non-http operations.
      */
+    // <api2-generated-endpoint getBill>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
     public Response getBill(int month, int year)
             throws RequestException, LocalOperationException {
         Request request = new Request(this);
         return new Response(request.get("/bill/" + year + String.format("-%02d", month)));
     }
+
+    // </api2-generated-endpoint getBill>
 
     /**
      * Returns Array List of String encoded Exceptions, which should be qualified for a retry attempt.
@@ -603,4 +988,308 @@ public class Transloadit {
             throw new LocalOperationException("Failed to create signature: " + e.getMessage());
         }
     }
+
+    // <api2-generated-endpoint createAssemblyWithId>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createAssemblyWithId(String assemblyId, Map<String, Object> options, Map<String, String> extraData)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assemblies/" + request.encodePathSegment(assemblyId), options, extraData, null, null));
+    }
+
+    // </api2-generated-endpoint createAssemblyWithId>
+
+
+    // <api2-generated-endpoint replayAssembly>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response replayAssembly(String assemblyId, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assemblies/" + request.encodePathSegment(assemblyId) + "/replay", options));
+    }
+
+    // </api2-generated-endpoint replayAssembly>
+
+
+    // <api2-generated-endpoint replayAssemblyNotification>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response replayAssemblyNotification(String assemblyId, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/assembly_notifications/" + request.encodePathSegment(assemblyId) + "/replay", options));
+    }
+
+    // </api2-generated-endpoint replayAssemblyNotification>
+
+
+    // <api2-generated-endpoint listAssemblyNotifications>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response listAssemblyNotifications(String assemblyId) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/assembly_notifications/" + request.encodePathSegment(assemblyId)));
+    }
+
+    // </api2-generated-endpoint listAssemblyNotifications>
+
+
+    // <api2-generated-endpoint getBuiltinTemplate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBuiltinTemplate(String builtinTemplateSlug) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/builtin/" + request.encodePathSegment(builtinTemplateSlug)));
+    }
+
+    // </api2-generated-endpoint getBuiltinTemplate>
+
+
+    // <api2-generated-endpoint getTemplateFull>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getTemplateFull(String templateIdOrName) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/" + request.encodePathSegment(templateIdOrName) + "/full"));
+    }
+
+    // </api2-generated-endpoint getTemplateFull>
+
+
+    // <api2-generated-endpoint getBuiltinTemplateFull>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBuiltinTemplateFull(String builtinTemplateSlug) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/templates/builtin/" + request.encodePathSegment(builtinTemplateSlug) + "/full"));
+    }
+
+    // </api2-generated-endpoint getBuiltinTemplateFull>
+
+
+    // <api2-generated-endpoint listPriorityJobSlots>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response listPriorityJobSlots(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/queues/job_slots", options));
+    }
+
+    // </api2-generated-endpoint listPriorityJobSlots>
+
+
+    // <api2-generated-endpoint listTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response listTemplateCredentials(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/template_credentials", options));
+    }
+
+    // </api2-generated-endpoint listTemplateCredentials>
+
+
+    // <api2-generated-endpoint listTemplateCredentialTypes>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response listTemplateCredentialTypes(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/template_credentials/types", options));
+    }
+
+    // </api2-generated-endpoint listTemplateCredentialTypes>
+
+
+    // <api2-generated-endpoint validateTemplateCredentialOauthOnCreate>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response validateTemplateCredentialOauthOnCreate(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/template_credentials/validateOauthOnCreate", options));
+    }
+
+    // </api2-generated-endpoint validateTemplateCredentialOauthOnCreate>
+
+
+    // <api2-generated-endpoint createTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response createTemplateCredentials(Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.post("/template_credentials", options));
+    }
+
+    // </api2-generated-endpoint createTemplateCredentials>
+
+
+    // <api2-generated-endpoint getTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getTemplateCredentials(String identifier) throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/template_credentials/" + request.encodePathSegment(identifier)));
+    }
+
+    // </api2-generated-endpoint getTemplateCredentials>
+
+
+    // <api2-generated-endpoint deleteTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response deleteTemplateCredentials(String identifier)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.delete("/template_credentials/" + request.encodePathSegment(identifier), new HashMap<String, Object>()));
+    }
+
+    // </api2-generated-endpoint deleteTemplateCredentials>
+
+
+    // <api2-generated-endpoint updateTemplateCredentials>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response updateTemplateCredentials(String identifier, Map<String, Object> options)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.put("/template_credentials/" + request.encodePathSegment(identifier), options));
+    }
+
+    // </api2-generated-endpoint updateTemplateCredentials>
+
+
+    // <api2-generated-endpoint issueBearerToken>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response issueBearerToken(Map<String, String> options)
+            throws RequestException, LocalOperationException {
+        if (this.secret == null) {
+            throw new LocalOperationException("Bearer token issuance requires an auth secret.");
+        }
+
+        java.net.URI endpoint;
+        try {
+            endpoint = java.net.URI.create(this.getHostUrl());
+        } catch (IllegalArgumentException error) {
+            throw new LocalOperationException("Invalid bearer token endpoint.", error);
+        }
+        String endpointHost = endpoint.getHost();
+        String normalizedEndpointHost = endpointHost != null
+                && endpointHost.startsWith("[") && endpointHost.endsWith("]")
+                ? endpointHost.substring(1, endpointHost.length() - 1)
+                : endpointHost;
+        String octet = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
+        boolean numericIpv4Loopback = normalizedEndpointHost != null
+                && normalizedEndpointHost.matches("127\\." + octet + "\\." + octet + "\\." + octet);
+        boolean loopback = "localhost".equals(normalizedEndpointHost)
+                || "::1".equals(normalizedEndpointHost)
+                || numericIpv4Loopback;
+        if (endpoint.getUserInfo() != null || endpointHost == null
+                || !("https".equals(endpoint.getScheme())
+                || ("http".equals(endpoint.getScheme()) && loopback))) {
+            throw new LocalOperationException("Refusing to send credentials to an insecure bearer token endpoint.");
+        }
+
+        String endpointPath = endpoint.getPath();
+        String tokenPath = (endpointPath.endsWith("/") ? endpointPath : endpointPath + "/") + "token";
+
+        okhttp3.FormBody.Builder form = new okhttp3.FormBody.Builder();
+        if (options != null && options.get("aud") != null) {
+            form.add("aud", options.get("aud"));
+        }
+        form.add("grant_type", "client_credentials");
+        if (options != null && options.get("scope") != null) {
+            form.add("scope", options.get("scope"));
+        }
+
+        String credentials = java.util.Base64.getEncoder().encodeToString(
+                (this.key + ":" + this.secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(endpoint.resolve(tokenPath).toString())
+                .post(form.build())
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Basic " + credentials)
+                .addHeader("Transloadit-Client", this.versionInfo)
+                .build();
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder()
+                .followRedirects(false)
+                .build();
+        try {
+            return new Response(client.newCall(request).execute());
+        } catch (java.io.IOException error) {
+            throw new RequestException(error);
+        }
+    }
+
+    // </api2-generated-endpoint issueBearerToken>
+
+
+    // <api2-generated-endpoint getBillForInvoice>
+
+    // This block is generated from Transloadit API2 contracts. If it looks wrong,
+    // please report the issue instead of editing this block by hand; the source fix
+    // belongs in the contract generator so all SDKs stay in sync.
+
+    public Response getBillForInvoice(String date, String invoiceId)
+            throws RequestException, LocalOperationException {
+        Request request = new Request(this);
+        return new Response(request.get("/bill/" + request.encodePathSegment(date) + "/" + request.encodePathSegment(invoiceId)));
+    }
+
+    // </api2-generated-endpoint getBillForInvoice>
+
 }
