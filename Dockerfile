@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24.22.1-bookworm-slim AS node
+FROM node:26.12.1-bookworm-slim AS node
 FROM eclipse-temurin:17-jdk AS base
 
 RUN apt-get update \
@@ -9,6 +9,7 @@ RUN apt-get update \
        unzip \
        ca-certificates \
        gnupg \
+       libatomic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Use the patched official runtime for signature parity tooling.
