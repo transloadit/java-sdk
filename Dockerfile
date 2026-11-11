@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:26.12.1-bookworm-slim AS node
+FROM node:26.13.1-bookworm-slim AS node
 FROM eclipse-temurin:17-jdk AS base
 
 RUN apt-get update \
